@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>名駅18 バス時刻表</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
 <style>
@@ -251,21 +250,29 @@
     font-weight: 700;
   }
   #map {
-    height: 260px;
     border-radius: 14px;
     overflow: hidden;
+    background: var(--bg);
   }
-  .stop-label {
-    background: var(--card);
+  #map svg { display: block; width: 100%; height: auto; }
+  .map-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .map-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
     color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px 6px;
-    font-size: 11px;
-    font-weight: 600;
-    box-shadow: none;
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
   }
-  .stop-label::before { display: none; }
+  .map-btn[hidden] { display: none; }
   .card-title {
     font-size: 13px;
     font-weight: 700;
@@ -382,8 +389,12 @@
 </div>
 
 <div class="card">
-  <div class="card-title">バス停の場所・ルート</div>
+  <div class="card-title">路線図</div>
   <div id="map"></div>
+  <div class="map-actions">
+    <a class="map-btn" id="mapDepLink" target="_blank" rel="noopener">📍 出発地を地図で</a>
+    <a class="map-btn" id="mapRouteLink" target="_blank" rel="noopener">🧭 ルートを地図で</a>
+  </div>
 </div>
 
 <div class="footer-note">出典: 名古屋市交通局 市バスGTFS-JPデータ</div>
@@ -408,26 +419,17 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 let DATA = null;
 let selectedDeparture = null;
 let selectedDestination = null;
 let departureStops = []; // candidate stop names for 出発地 tabs
 let destinationStops = []; // candidate stop names for 目的地 tabs
-let map = null;
-let markers = [];
-let routeLines = [];
 
 const ALL_STOP_NAMES = [];
 const DIRECTIONS_BY_STOP = {};
 const DEFAULT_STOPS = ["大池町", "水主町"];
 
-const rootStyles = getComputedStyle(document.documentElement);
-const THEME = {
-  dep: rootStyles.getPropertyValue("--dep").trim(),
-  dest: rootStyles.getPropertyValue("--dest").trim(),
-};
 
 function dayTypeForDate(d) {
   const y = d.getFullYear();
@@ -489,69 +491,120 @@ function removeDestination(name) {
   render();
 }
 
-function renderMap() {
-  if (!map) {
-    map = L.map("map", { zoomControl: false, attributionControl: true });
-  }
-  markers.forEach(m => map.removeLayer(m));
-  markers = [];
-  routeLines.forEach(l => map.removeLayer(l));
-  routeLines = [];
+const SVG_NS = "http://www.w3.org/2000/svg";
 
-  const trip = selectedDestination ? resolveTrip(selectedDeparture, selectedDestination) : null;
-  const bounds = [];
+function svgEl(tag, attrs, text) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
 
-  if (trip) {
-    const latlngs = trip.seq.slice(trip.depIdx, trip.destIdx + 1)
-      .map(sid => DATA.stops[sid])
-      .filter(Boolean)
-      .map(info => [info.lat, info.lon]);
-    const line = L.polyline(latlngs, { color: THEME.dest, weight: 4, opacity: 0.85 }).addTo(map);
-    routeLines.push(line);
-
-    const depInfo = DATA.stops[trip.depStopId];
-    const destInfo = DATA.stops[trip.destStopId];
-
-    const depMarker = L.circleMarker([depInfo.lat, depInfo.lon], {
-      radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dep, fillOpacity: 1,
-    }).addTo(map);
-    depMarker.bindTooltip(`出発: ${selectedDeparture}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
-    markers.push(depMarker);
-    bounds.push([depInfo.lat, depInfo.lon]);
-
-    const destMarker = L.circleMarker([destInfo.lat, destInfo.lon], {
-      radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dest, fillOpacity: 1,
-    }).addTo(map);
-    destMarker.bindTooltip(`到着: ${selectedDestination}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
-    markers.push(destMarker);
-    bounds.push([destInfo.lat, destInfo.lon]);
-  } else if (selectedDeparture) {
-    const dirs = DIRECTIONS_BY_STOP[selectedDeparture];
-    const id = findStopId(selectedDeparture, dirs[0]);
-    const info = DATA.stops[id];
-    if (info) {
-      const marker = L.circleMarker([info.lat, info.lon], {
-        radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dep, fillOpacity: 1,
-      }).addTo(map);
-      marker.bindTooltip(`出発: ${selectedDeparture}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
-      markers.push(marker);
-      bounds.push([info.lat, info.lon]);
+// one point per stop name along a direction, averaging stops that share a name
+function routePoints(dirLabel) {
+  const pts = [];
+  for (const sid of DATA.sequences[dirLabel]) {
+    const info = DATA.stops[sid];
+    if (!info) continue;
+    const last = pts[pts.length - 1];
+    if (last && last.name === info.name) {
+      last.lat = (last.lat + info.lat) / 2;
+      last.lon = (last.lon + info.lon) / 2;
+    } else {
+      pts.push({ name: info.name, lat: info.lat, lon: info.lon });
     }
   }
+  return pts;
+}
 
-  if (bounds.length) {
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-  } else {
-    map.setView([35.157, 136.905], 14);
+function gmapsPlace(info) {
+  return `https://www.google.com/maps/search/?api=1&query=${info.lat},${info.lon}`;
+}
+
+function renderMap() {
+  const box = document.getElementById("map");
+  box.innerHTML = "";
+
+  const trip = selectedDestination ? resolveTrip(selectedDeparture, selectedDestination) : null;
+  const dirLabel = trip ? trip.dirLabel : Object.keys(DATA.sequences)[0];
+  const pts = routePoints(dirLabel);
+
+  // equirectangular projection fitted into the viewBox
+  const W = 320, H = 300, PAD = 34;
+  const cosLat = Math.cos(35.15 * Math.PI / 180);
+  const xs = pts.map(p => p.lon * cosLat), ys = pts.map(p => p.lat);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const scale = Math.min((W - PAD * 2) / (maxX - minX), (H - PAD * 2) / (maxY - minY));
+  const offX = (W - (maxX - minX) * scale) / 2, offY = (H - (maxY - minY) * scale) / 2;
+  const proj = p => [offX + (p.lon * cosLat - minX) * scale, offY + (maxY - p.lat) * scale];
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "路線図" });
+  const toPath = list => list.map(p => proj(p).map(n => n.toFixed(1)).join(",")).join(" ");
+
+  svg.appendChild(svgEl("polyline", {
+    points: toPath(pts), fill: "none", stroke: "var(--border)", "stroke-width": 6,
+    "stroke-linecap": "round", "stroke-linejoin": "round",
+  }));
+
+  let depI = -1, destI = -1;
+  if (trip) {
+    depI = pts.findIndex(p => p.name === selectedDeparture);
+    destI = pts.findIndex(p => p.name === selectedDestination);
+    svg.appendChild(svgEl("polyline", {
+      points: toPath(pts.slice(depI, destI + 1)), fill: "none", stroke: "var(--dest)", "stroke-width": 6,
+      "stroke-linecap": "round", "stroke-linejoin": "round",
+    }));
+  } else if (selectedDeparture) {
+    depI = pts.findIndex(p => p.name === selectedDeparture);
   }
 
-  const tileUrl = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
-  if (!map._tileLayerAdded) {
-    L.tileLayer(tileUrl, {
-      attribution: "&copy; Esri &copy; OpenStreetMap contributors",
-      maxZoom: 19,
-    }).addTo(map);
-    map._tileLayerAdded = true;
+  const labels = [];
+  pts.forEach((p, i) => {
+    const [x, y] = proj(p);
+    const isDep = i === depI, isDest = i === destI;
+    const onTrip = trip && i > depI && i < destI;
+    svg.appendChild(svgEl("circle", {
+      cx: x, cy: y, r: isDep || isDest ? 8 : 3.5,
+      fill: isDep ? "var(--dep)" : isDest ? "var(--dest)" : onTrip ? "var(--card)" : "var(--past)",
+      stroke: isDep || isDest ? "#fff" : onTrip ? "var(--dest)" : "none",
+      "stroke-width": isDep || isDest ? 2.5 : 1.5,
+    }));
+    if (isDep) labels.push({ x, y, text: `出発: ${p.name}`, color: "var(--dep)" });
+    else if (isDest) labels.push({ x, y, text: `到着: ${p.name}`, color: "var(--dest)" });
+    else if (i === 0 || i === pts.length - 1) labels.push({ x, y, text: p.name, color: "var(--text-dim)", small: true });
+  });
+
+  labels.forEach(l => {
+    const size = l.small ? 10 : 12;
+    const width = l.text.length * size + 12;
+    // keep the label inside the frame; flip below the dot near the top edge
+    const lx = Math.max(4, Math.min(W - width - 4, l.x - width / 2));
+    const ly = l.y - 14 - size < 4 ? l.y + 12 : l.y - 14 - size;
+    svg.appendChild(svgEl("rect", {
+      x: lx, y: ly, width, height: size + 8, rx: 6,
+      fill: "var(--card)", stroke: "var(--border)",
+    }));
+    svg.appendChild(svgEl("text", {
+      x: lx + width / 2, y: ly + size + 2, "text-anchor": "middle",
+      "font-size": size, "font-weight": 700, fill: l.color,
+    }, l.text));
+  });
+
+  box.appendChild(svg);
+
+  const depLink = document.getElementById("mapDepLink");
+  const routeLink = document.getElementById("mapRouteLink");
+  if (trip) {
+    const depInfo = DATA.stops[trip.depStopId], destInfo = DATA.stops[trip.destStopId];
+    depLink.href = gmapsPlace(depInfo);
+    routeLink.href = `https://www.google.com/maps/dir/?api=1&origin=${depInfo.lat},${depInfo.lon}` +
+      `&destination=${destInfo.lat},${destInfo.lon}&travelmode=transit`;
+    routeLink.hidden = false;
+  } else {
+    const dirs = DIRECTIONS_BY_STOP[selectedDeparture] || [];
+    const info = DATA.stops[findStopId(selectedDeparture, dirs[0])];
+    if (info) depLink.href = gmapsPlace(info);
+    routeLink.hidden = true;
   }
 }
 
