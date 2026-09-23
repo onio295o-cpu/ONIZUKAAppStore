@@ -332,15 +332,25 @@
     color: var(--text-dim);
     margin-bottom: 6px;
   }
-  .add-select {
-    width: 100%;
-    padding: 12px 14px;
+  .pick-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pick-chip {
+    padding: 9px 14px;
     border-radius: 999px;
     border: 1.5px solid var(--border);
     background: var(--bg);
     color: var(--text);
-    font-size: 15px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
   }
+  .pick-chip.on { background: var(--dep); border-color: var(--dep); color: #fff; }
+  .pick-chip.on.dest { background: var(--dest); border-color: var(--dest); }
+  .pick-chip.on::before { content: "✓ "; }
   .sheet-hint {
     font-size: 12px;
     color: var(--text-dim);
@@ -402,20 +412,18 @@
 <div class="overlay" id="overlay" hidden>
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-title">バス停を追加</div>
+      <div class="sheet-title">バス停を編集</div>
       <div class="sheet-close" id="closeSheet">閉じる</div>
     </div>
     <div class="add-row">
-      <label class="add-label">出発地の候補に追加</label>
-      <input id="addDeparture" class="add-select" type="text" list="departureOptions" placeholder="バス停名を入力…" autocomplete="off">
-      <datalist id="departureOptions"></datalist>
+      <div class="add-label">出発地（路線順）</div>
+      <div class="pick-grid" id="pickDeparture"></div>
     </div>
     <div class="add-row">
-      <label class="add-label">目的地の候補に追加</label>
-      <input id="addDestination" class="add-select" type="text" list="destinationOptions" placeholder="バス停名を入力…" autocomplete="off">
-      <datalist id="destinationOptions"></datalist>
+      <div class="add-label">目的地（路線順）</div>
+      <div class="pick-grid" id="pickDestination"></div>
     </div>
-    <div class="sheet-hint">停留所名を入力するか一覧から選ぶと追加されます。削除は各タブの「×」からできます。</div>
+    <div class="sheet-hint">タップで追加、もう一度タップで外せます（✓ が付いているものがタブに表示されます）。</div>
   </div>
 </div>
 
@@ -447,7 +455,7 @@ function minutesNow(d) { return d.getHours() * 60 + d.getMinutes(); }
 function toMinutes(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; }
 
 function saveStops(key, list) {
-  localStorage.setItem(key, JSON.stringify(list));
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) {}
 }
 
 function loadStops(key) {
@@ -751,61 +759,60 @@ function buildAll() {
   buildDestinationTabs();
 }
 
-function fillAddDropdown(inputEl, datalistId, currentList, onAdd) {
-  const options = ALL_STOP_NAMES.filter(n => !currentList.includes(n));
-  const datalist = document.getElementById(datalistId);
-  datalist.innerHTML = "";
-  options.forEach(name => {
-    const opt = document.createElement("option");
-    opt.value = name;
-    datalist.appendChild(opt);
+function fillPicker(gridId, list, extraClass, onToggle) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = "";
+  ALL_STOP_NAMES.forEach(name => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "pick-chip " + extraClass + (list.includes(name) ? " on" : "");
+    chip.textContent = name;
+    chip.onclick = () => onToggle(name);
+    grid.appendChild(chip);
   });
-  inputEl.value = "";
-  inputEl.placeholder = options.length ? "バス停名を入力…" : "追加できる停留所はありません";
-  inputEl.disabled = !options.length;
-
-  const tryAdd = () => {
-    const val = inputEl.value.trim();
-    if (options.includes(val)) {
-      inputEl.value = "";
-      onAdd(val);
-    }
-  };
-  inputEl.oninput = tryAdd; // fires immediately when picked from the datalist suggestion list
-  inputEl.onchange = tryAdd;
-  inputEl.onkeydown = (e) => {
-    if (e.key === "Enter") tryAdd();
-  };
 }
 
 function buildSettingsSheet() {
-  fillAddDropdown(document.getElementById("addDeparture"), "departureOptions", departureStops, name => {
-    departureStops.push(name);
-    saveStops("busapp_departures", departureStops);
-    buildAll();
+  fillPicker("pickDeparture", departureStops, "", name => {
+    if (departureStops.includes(name)) {
+      removeDeparture(name);
+    } else {
+      departureStops.push(name);
+      saveStops("busapp_departures", departureStops);
+      buildAll();
+      render();
+    }
     buildSettingsSheet();
-    render();
   });
-  fillAddDropdown(document.getElementById("addDestination"), "destinationOptions", destinationStops, name => {
-    destinationStops.push(name);
-    saveStops("busapp_destinations", destinationStops);
-    if (!selectedDestination) selectedDestination = name;
-    buildAll();
+  fillPicker("pickDestination", destinationStops, "dest", name => {
+    if (destinationStops.includes(name)) {
+      removeDestination(name);
+    } else {
+      destinationStops.push(name);
+      saveStops("busapp_destinations", destinationStops);
+      if (!selectedDestination && name !== selectedDeparture) selectedDestination = name;
+      buildAll();
+      render();
+    }
     buildSettingsSheet();
-    render();
   });
 }
 
 function init(data) {
   DATA = data;
-  for (const info of Object.values(DATA.stops)) {
+  // list stops in route order (名古屋駅 → 名鉄神宮前), then any stragglers
+  const firstDir = Object.keys(DATA.sequences)[0];
+  const ordered = DATA.sequences[firstDir].map(sid => DATA.stops[sid]).filter(Boolean)
+    .concat(Object.values(DATA.stops));
+  for (const info of ordered) {
     if (!ALL_STOP_NAMES.includes(info.name)) ALL_STOP_NAMES.push(info.name);
+  }
+  for (const info of Object.values(DATA.stops)) {
     if (!DIRECTIONS_BY_STOP[info.name]) DIRECTIONS_BY_STOP[info.name] = [];
     if (!DIRECTIONS_BY_STOP[info.name].includes(info.direction)) {
       DIRECTIONS_BY_STOP[info.name].push(info.direction);
     }
   }
-  ALL_STOP_NAMES.sort();
 
   departureStops = loadStops("busapp_departures");
   destinationStops = loadStops("busapp_destinations");
