@@ -269,6 +269,12 @@
     box-shadow: none;
   }
   .stop-label::before { display: none; }
+  #map .leaflet-control-zoom a {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 22px;
+  }
   .card-title {
     font-size: 13px;
     font-weight: 700;
@@ -429,6 +435,7 @@ let destinationStops = []; // candidate stop names for 目的地 tabs
 let map = null;
 let markers = [];
 let routeLines = [];
+let lastViewKey = null; // re-center only when the selected stops change, not on every refresh
 
 const ALL_STOP_NAMES = [];
 const DIRECTIONS_BY_STOP = {};
@@ -502,7 +509,16 @@ function removeDestination(name) {
 
 function renderMap() {
   if (!map) {
-    map = L.map("map", { zoomControl: false, attributionControl: true });
+    map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
+    L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(map);
+    L.control.scale({ position: "bottomleft", imperial: false }).addTo(map);
+    // 国土地理院 淡色地図: plain, Japanese labels, no oversized highway/IC signs
+    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+      attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
+      maxNativeZoom: 18,
+      maxZoom: 20,
+      minZoom: 5,
+    }).addTo(map);
   }
   markers.forEach(m => map.removeLayer(m));
   markers = [];
@@ -510,7 +526,7 @@ function renderMap() {
   routeLines = [];
 
   const trip = selectedDestination ? resolveTrip(selectedDeparture, selectedDestination) : null;
-  const bounds = [];
+  let focus = null; // the stop to center on: destination if there is one, else departure
 
   if (trip) {
     const latlngs = trip.seq.slice(trip.depIdx, trip.destIdx + 1)
@@ -528,14 +544,13 @@ function renderMap() {
     }).addTo(map);
     depMarker.bindTooltip(`出発: ${selectedDeparture}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
     markers.push(depMarker);
-    bounds.push([depInfo.lat, depInfo.lon]);
 
     const destMarker = L.circleMarker([destInfo.lat, destInfo.lon], {
       radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dest, fillOpacity: 1,
     }).addTo(map);
     destMarker.bindTooltip(`到着: ${selectedDestination}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
     markers.push(destMarker);
-    bounds.push([destInfo.lat, destInfo.lon]);
+    focus = [destInfo.lat, destInfo.lon];
   } else if (selectedDeparture) {
     const dirs = DIRECTIONS_BY_STOP[selectedDeparture];
     const id = findStopId(selectedDeparture, dirs[0]);
@@ -546,23 +561,19 @@ function renderMap() {
       }).addTo(map);
       marker.bindTooltip(`出発: ${selectedDeparture}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
       markers.push(marker);
-      bounds.push([info.lat, info.lon]);
+      focus = [info.lat, info.lon];
     }
   }
 
-  if (bounds.length) {
-    map.fitBounds(bounds, { padding: [30, 30], maxZoom: 16 });
-  } else {
-    map.setView([35.157, 136.905], 14);
-  }
-
-  const tileUrl = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}";
-  if (!map._tileLayerAdded) {
-    L.tileLayer(tileUrl, {
-      attribution: "&copy; Esri &copy; OpenStreetMap contributors",
-      maxZoom: 19,
-    }).addTo(map);
-    map._tileLayerAdded = true;
+  const viewKey = `${selectedDeparture}|${selectedDestination}`;
+  if (viewKey !== lastViewKey) {
+    lastViewKey = viewKey;
+    if (focus) {
+      // about 100 m around the stop in every direction
+      map.fitBounds(L.latLng(focus).toBounds(200));
+    } else {
+      map.setView([35.157, 136.905], 14);
+    }
   }
 }
 
