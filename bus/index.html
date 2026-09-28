@@ -666,13 +666,24 @@ function tripTimes(trip) {
 async function findDepartures(dep, dest, services) {
   const depIdx = NAME_TO_IDX.get(dep), destIdx = NAME_TO_IDX.get(dest);
   const entries = await loadStop(depIdx);
-  const matches = [];
+  // A loop route can pass the departure stop twice before the destination
+  // (e.g. 栄26: 鶴舞公園 08:03 → round the loop → 鶴舞公園 08:35 → 東新町 08:41).
+  // That is one bus, so keep only the last boarding before each arrival.
+  const best = new Map(); // "pattern|arrival position" -> boarding position
   for (const [p, pos] of entries) {
     const seq = PATTERNS[p].s;
     for (let k = pos + 1; k < seq.length; k++) {
-      if (IDX.poles[seq[k]][0] === destIdx) { matches.push([p, pos, k]); break; }
+      if (IDX.poles[seq[k]][0] === destIdx) {
+        const key = `${p}|${k}`;
+        if (!best.has(key) || best.get(key) < pos) best.set(key, pos);
+        break;
+      }
     }
   }
+  const matches = [...best].map(([key, pos]) => {
+    const [p, j] = key.split("|").map(Number);
+    return [p, pos, j];
+  });
   const out = [];
   await Promise.all(matches.map(async ([p, pos, j]) => {
     for (const trip of await loadTrips(p)) {
