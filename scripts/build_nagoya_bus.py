@@ -6,9 +6,9 @@ Usage:
   build_nagoya_bus.py --download OUT_DIR        find + download the feed, then build
 
 Output (OUT_DIR):
-  index.json      feed info, day-type overrides, stop names, poles
+  index.json      feed info, service calendars, stop names, poles
   patterns.json   distinct stop sequences (route + headsign + poles)
-  stops/N.json    departures at stop name N: [[pattern, position, {daytype: [minutes]}], ...]
+  stops/N.json    departures at stop name N: [[pattern, position, {service_id: [minutes]}], ...]
 """
 import csv
 import io
@@ -17,11 +17,8 @@ import os
 import sys
 import urllib.request
 import zipfile
-from collections import Counter, defaultdict
-from datetime import date, datetime, timedelta, timezone
+from collections import defaultdict
 
-JST = timezone(timedelta(hours=9))
-DAY_TYPES = ["平日", "土曜", "日休"]
 
 # Known locations of the feed; the first that downloads wins. GTFS_URL overrides.
 FEED_API = "https://api.gtfs-data.jp/v2/feeds"
@@ -143,63 +140,21 @@ def to_minutes(hms):
     return int(h) * 60 + int(m)
 
 
-def parse_date(s):
-    return datetime.strptime(s, "%Y%m%d").date()
-
-
-def default_day_type(d):
-    return "日休" if d.weekday() == 6 else "土曜" if d.weekday() == 5 else "平日"
-
-
-def service_calendar(zf, today):
-    """Map each date (from today) to its set of active service_ids."""
-    active = defaultdict(set)
-    for row in read_table(zf, "calendar.txt"):
-        start, end = parse_date(row["start_date"]), parse_date(row["end_date"])
-        days = [row[k] == "1" for k in
-                ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")]
-        d = max(start, today)
-        while d <= end:
-            if days[d.weekday()]:
-                active[d].add(row["service_id"])
-            d += timedelta(days=1)
-    for row in read_table(zf, "calendar_dates.txt"):
-        d = parse_date(row["date"])
-        if d < today:
-            continue
-        if row["exception_type"] == "1":
-            active[d].add(row["service_id"])
-        else:
-            active[d].discard(row["service_id"])
-    return {d: frozenset(s) for d, s in active.items() if s}
-
-
-def classify_days(active):
-    """Pick the usual service set for each day type, then classify every date.
-
-    Returns ({service_id: set(day types)}, {yyyymmdd: day type} for dates that
-    differ from their weekday's default, e.g. national holidays and お盆/年末年始).
-    """
-    usual = {}
-    for dt in DAY_TYPES:
-        sets = Counter(s for d, s in active.items() if default_day_type(d) == dt)
-        if sets:
-            usual[dt] = sets.most_common(1)[0][0]
-    service_types = defaultdict(set)
-    for dt, services in usual.items():
-        for sid in services:
-            service_types[sid].add(dt)
-    overrides = {}
-    for d, s in sorted(active.items()):
-        match = [dt for dt in DAY_TYPES if usual.get(dt) == s]
-        if match and match[0] != default_day_type(d):
-            overrides[d.strftime("%Y%m%d")] = match[0]
-    return service_types, overrides
+def export_calendar(zf):
+    """Service calendars as the app evaluates them per date (calendar + calendar_dates)."""
+    calendar = [[r["service_id"],
+                 "".join(r[k] for k in ("monday", "tuesday", "wednesday", "thursday",
+                                        "friday", "saturday", "sunday")),
+                 r["start_date"], r["end_date"]]
+                for r in read_table(zf, "calendar.txt")]
+    exceptions = defaultdict(lambda: [[], []])  # date -> [added, removed]
+    for r in read_table(zf, "calendar_dates.txt"):
+        exceptions[r["date"]][0 if r["exception_type"] == "1" else 1].append(r["service_id"])
+    return calendar, dict(sorted(exceptions.items()))
 
 
 def build(zip_bytes, out_dir, source_url=""):
     zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
-    today = datetime.now(JST).date()
 
     stops = {r["stop_id"]: r for r in read_table(zf, "stops.txt")}
     routes = {r["route_id"]: r for r in read_table(zf, "routes.txt")}
@@ -218,9 +173,7 @@ def build(zip_bytes, out_dir, source_url=""):
             if key:
                 kana[key] = r["translation"]
 
-    service_types, overrides = classify_days(service_calendar(zf, today))
-    print("day types per service:", {k: sorted(v) for k, v in service_types.items()})
-    print("overridden dates:", len(overrides))
+    calendar, exceptions = export_calendar(zf)
 
     # group stop_times by trip
     by_trip = defaultdict(list)
@@ -245,15 +198,12 @@ def build(zip_bytes, out_dir, source_url=""):
         return pole_idx[stop_id]
 
     patterns, pattern_idx = [], {}
-    # departures[name][(pattern, position)][day type] -> minutes
+    # departures[name][(pattern, position)][service_id] -> minutes
     departures = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
     for trip_id, rows in by_trip.items():
         trip = trips.get(trip_id)
         if not trip:
             continue
-        types = service_types.get(trip["service_id"])
-        if not types:
-            continue  # special-day-only service
         rows.sort(key=lambda r: int(r["stop_sequence"]))
         route = routes.get(trip["route_id"], {})
         label = (route.get("route_short_name") or route.get("route_long_name") or "").strip()
@@ -270,9 +220,7 @@ def build(zip_bytes, out_dir, source_url=""):
             t = r.get("departure_time") or r.get("arrival_time")
             if not t or r.get("pickup_type") == "1":
                 continue
-            m = to_minutes(t)
-            for dt in types:
-                departures[poles[seq[pos]][0]][(p, pos)][dt].append(m)
+            departures[poles[seq[pos]][0]][(p, pos)][trip["service_id"]].append(to_minutes(t))
 
     for n in names:
         n["lat"] = round(sum(n["lat"]) / len(n["lat"]), 6)
@@ -288,16 +236,17 @@ def build(zip_bytes, out_dir, source_url=""):
 
     for n, entries in departures.items():
         dump(f"stops/{n}.json", [
-            [p, pos, {dt: sorted(ts) for dt, ts in by_type.items()}]
-            for (p, pos), by_type in sorted(entries.items())
+            [p, pos, {sid: sorted(ts) for sid, ts in by_service.items()}]
+            for (p, pos), by_service in sorted(entries.items())
         ])
     dump("patterns.json", patterns)
     dump("index.json", {
         "generated_from": " ".join(x for x in (feed_info.get("feed_publisher_name", "名古屋市交通局"),
                                                 "GTFS-JP", feed_info.get("feed_version", "")) if x),
         "source_url": source_url,
-        "built_at": datetime.now(JST).strftime("%Y-%m-%d %H:%M"),
-        "day_overrides": overrides,
+        "valid": [feed_info.get("feed_start_date", ""), feed_info.get("feed_end_date", "")],
+        "calendar": calendar,
+        "exceptions": exceptions,
         "names": [[n["n"], n["k"], n["lat"], n["lon"]] for n in names],
         "poles": poles,
     })

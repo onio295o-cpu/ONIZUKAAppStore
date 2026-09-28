@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>名駅18 バス時刻表</title>
+<title>名古屋市バス 時刻表</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
@@ -245,6 +245,14 @@
   .time-cell.past {
     color: var(--past);
   }
+  .time-route {
+    display: block;
+    font-family: var(--font-body);
+    font-size: 10px;
+    font-weight: 700;
+    opacity: 0.75;
+    margin-top: 2px;
+  }
   .time-cell.next {
     background: var(--dep);
     color: #fff;
@@ -334,18 +342,44 @@
     color: var(--text-dim);
     margin-bottom: 6px;
   }
-  .pick-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .pick-chip {
-    padding: 9px 14px;
+  .search-box {
+    width: 100%;
+    padding: 12px 16px;
     border-radius: 999px;
     border: 1.5px solid var(--border);
     background: var(--bg);
     color: var(--text);
-    font-size: 14px;
+    font-size: 16px;
+    font-family: inherit;
+    margin-bottom: 8px;
+  }
+  .result-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 2px;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-name {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    min-width: 0;
+  }
+  .result-kana {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-dim);
+  }
+  .pick-chip {
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    flex: 0 0 auto;
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
@@ -373,7 +407,7 @@
         <circle cx="16.5" cy="18.5" r="1.6" fill="#fff"/>
       </svg>
     </div>
-    <h1>名駅18 バス時刻表</h1>
+    <h1>名古屋市バス 時刻表</h1>
   </div>
   <div class="subtitle" id="subtitle">読み込み中…</div>
 
@@ -401,11 +435,11 @@
 </div>
 
 <div class="card">
-  <div class="card-title">バス停の場所・ルート</div>
+  <div class="card-title">バス停の場所・ルート（次の便）</div>
   <div id="map"></div>
 </div>
 
-<div class="footer-note">出典: 名古屋市交通局 市バスGTFS-JPデータ</div>
+<div class="footer-note" id="source">出典: 名古屋市交通局 市バスGTFS-JPデータ</div>
 
 <div class="overlay" id="overlay" hidden>
   <div class="sheet">
@@ -413,33 +447,30 @@
       <div class="sheet-title">バス停を編集</div>
       <div class="sheet-close" id="closeSheet">閉じる</div>
     </div>
-    <div class="add-row">
-      <div class="add-label">出発地（路線順）</div>
-      <div class="pick-grid" id="pickDeparture"></div>
-    </div>
-    <div class="add-row">
-      <div class="add-label">目的地（路線順）</div>
-      <div class="pick-grid" id="pickDestination"></div>
-    </div>
-    <div class="sheet-hint">タップで追加、もう一度タップで外せます（✓ が付いているものがタブに表示されます）。</div>
+    <input id="stopSearch" class="search-box" type="search" placeholder="バス停名・よみがなで検索（例: 東新町、ひがししんまち）" autocomplete="off">
+    <div class="sheet-hint" id="searchHint"></div>
+    <div id="stopResults"></div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-let DATA = null;
+let IDX = null;       // data/index.json
+let PATTERNS = null;  // data/patterns.json
+const STOP_CACHE = {};
 let selectedDeparture = null;
 let selectedDestination = null;
-let departureStops = []; // candidate stop names for 出発地 tabs
-let destinationStops = []; // candidate stop names for 目的地 tabs
+let departureStops = []; // stop names shown as 出発地 tabs
+let destinationStops = []; // stop names shown as 目的地 tabs
 let map = null;
 let markers = [];
 let routeLines = [];
 let lastViewKey = null; // re-center only when the selected stops change, not on every refresh
+let renderToken = 0;
 
-const ALL_STOP_NAMES = [];
-const DIRECTIONS_BY_STOP = {};
+const NAME_TO_IDX = new Map();
 const DEFAULT_STOPS = ["大池町", "水主町"];
+const MAX_RESULTS = 40;
 
 const rootStyles = getComputedStyle(document.documentElement);
 const THEME = {
@@ -447,20 +478,39 @@ const THEME = {
   dest: rootStyles.getPropertyValue("--dest").trim(),
 };
 
-function dayTypeForDate(d) {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  const key = `${y}${m}${day}`;
-  if (DATA.holiday_dates.includes(key)) return "日休";
-  const dow = d.getDay();
-  if (dow === 0) return "日休";
-  if (dow === 6) return "土曜";
-  return "平日";
+// strip ideographic variation selectors etc. so "高辻" matches "高辻󠄀"
+function norm(s) {
+  return s.normalize("NFKC")
+    .replace(/[︀-️]|\uDB40[\uDD00-\uDDEF]/g, "")
+    .replace(/\s/g, "")
+    .replace(/[ァ-ヶ]/g, c => String.fromCharCode(c.charCodeAt(0) - 0x60));
+}
+
+function dateKey(d) {
+  return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, "0")}${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// service_ids running on a date, from GTFS calendar + calendar_dates
+function activeServices(d) {
+  const key = dateKey(d);
+  const dow = (d.getDay() + 6) % 7; // GTFS order: Monday first
+  const on = new Set();
+  for (const [sid, days, start, end] of IDX.calendar) {
+    if (days[dow] === "1" && key >= start && key <= end) on.add(sid);
+  }
+  const [added, removed] = IDX.exceptions[key] || [[], []];
+  added.forEach(sid => on.add(sid));
+  removed.forEach(sid => on.delete(sid));
+  return on;
+}
+
+function dayLabel(services, d) {
+  for (const t of ["平日", "土曜", "日休"]) if (services.has(t)) return t;
+  return services.size ? [...services][0] : "運休日";
 }
 
 function minutesNow(d) { return d.getHours() * 60 + d.getMinutes(); }
-function toMinutes(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; }
+function fmt(min) { return `${String(Math.floor(min / 60)).padStart(2, "0")}:${String(min % 60).padStart(2, "0")}`; }
 
 function saveStops(key, list) {
   try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) {}
@@ -469,22 +519,41 @@ function saveStops(key, list) {
 function loadStops(key) {
   try {
     const raw = JSON.parse(localStorage.getItem(key));
-    if (Array.isArray(raw) && raw.length) return raw.filter(n => ALL_STOP_NAMES.includes(n));
+    if (Array.isArray(raw) && raw.length) {
+      const ok = raw.filter(n => NAME_TO_IDX.has(n));
+      if (ok.length) return ok;
+    }
   } catch (e) {}
-  return DEFAULT_STOPS.slice();
+  return DEFAULT_STOPS.filter(n => NAME_TO_IDX.has(n));
 }
 
-// finds a direction/sequence where `dep` appears before `dest`, and returns
-// the departure stop_id to read the timetable from.
-function resolveTrip(dep, dest) {
-  for (const [dirLabel, seq] of Object.entries(DATA.sequences)) {
-    const depIdx = seq.findIndex(sid => DATA.stops[sid] && DATA.stops[sid].name === dep);
-    const destIdx = seq.findIndex(sid => DATA.stops[sid] && DATA.stops[sid].name === dest);
-    if (depIdx !== -1 && destIdx !== -1 && depIdx < destIdx) {
-      return { dirLabel, seq, depIdx, destIdx, depStopId: seq[depIdx], destStopId: seq[destIdx] };
+function loadStop(nameIdx) {
+  if (!STOP_CACHE[nameIdx]) {
+    STOP_CACHE[nameIdx] = fetch(`data/stops/${nameIdx}.json`)
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => { delete STOP_CACHE[nameIdx]; return []; });
+  }
+  return STOP_CACHE[nameIdx];
+}
+
+// every departure from `dep` whose bus later stops at `dest`, on the given services
+async function findDepartures(dep, dest, services) {
+  const depIdx = NAME_TO_IDX.get(dep), destIdx = NAME_TO_IDX.get(dest);
+  const entries = await loadStop(depIdx);
+  const out = [];
+  for (const [p, pos, times] of entries) {
+    const seq = PATTERNS[p].s;
+    let j = -1;
+    for (let k = pos + 1; k < seq.length; k++) {
+      if (IDX.poles[seq[k]][0] === destIdx) { j = k; break; }
+    }
+    if (j === -1) continue;
+    for (const [sid, mins] of Object.entries(times)) {
+      if (services.has(sid)) for (const min of mins) out.push({ min, p, pos, j });
     }
   }
-  return null;
+  out.sort((a, b) => a.min - b.min);
+  return out;
 }
 
 function removeDeparture(name) {
@@ -507,7 +576,9 @@ function removeDestination(name) {
   render();
 }
 
-function renderMap() {
+function poleLatLng(pole) { return [IDX.poles[pole][1], IDX.poles[pole][2]]; }
+
+function renderMap(dep) {
   if (!map) {
     map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
     L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(map);
@@ -525,72 +596,55 @@ function renderMap() {
   routeLines.forEach(l => map.removeLayer(l));
   routeLines = [];
 
-  const trip = selectedDestination ? resolveTrip(selectedDeparture, selectedDestination) : null;
+  const addMarker = (latlng, color, label) => {
+    const m = L.circleMarker(latlng, {
+      radius: 11, color: "#ffffff", weight: 2, fillColor: color, fillOpacity: 1,
+    }).addTo(map);
+    m.bindTooltip(label, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
+    markers.push(m);
+  };
+
   let focus = null; // the stop to center on: destination if there is one, else departure
-
-  if (trip) {
-    const latlngs = trip.seq.slice(trip.depIdx, trip.destIdx + 1)
-      .map(sid => DATA.stops[sid])
-      .filter(Boolean)
-      .map(info => [info.lat, info.lon]);
-    const line = L.polyline(latlngs, { color: THEME.dest, weight: 4, opacity: 0.85 }).addTo(map);
-    routeLines.push(line);
-
-    const depInfo = DATA.stops[trip.depStopId];
-    const destInfo = DATA.stops[trip.destStopId];
-
-    const depMarker = L.circleMarker([depInfo.lat, depInfo.lon], {
-      radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dep, fillOpacity: 1,
-    }).addTo(map);
-    depMarker.bindTooltip(`出発: ${selectedDeparture}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
-    markers.push(depMarker);
-
-    const destMarker = L.circleMarker([destInfo.lat, destInfo.lon], {
-      radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dest, fillOpacity: 1,
-    }).addTo(map);
-    destMarker.bindTooltip(`到着: ${selectedDestination}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
-    markers.push(destMarker);
-    focus = [destInfo.lat, destInfo.lon];
+  if (dep) {
+    const seq = PATTERNS[dep.p].s;
+    const latlngs = seq.slice(dep.pos, dep.j + 1).map(poleLatLng);
+    routeLines.push(L.polyline(latlngs, { color: THEME.dest, weight: 4, opacity: 0.85 }).addTo(map));
+    addMarker(latlngs[0], THEME.dep, `出発: ${selectedDeparture}`);
+    addMarker(latlngs[latlngs.length - 1], THEME.dest, `到着: ${selectedDestination}`);
+    focus = latlngs[latlngs.length - 1];
   } else if (selectedDeparture) {
-    const dirs = DIRECTIONS_BY_STOP[selectedDeparture];
-    const id = findStopId(selectedDeparture, dirs[0]);
-    const info = DATA.stops[id];
-    if (info) {
-      const marker = L.circleMarker([info.lat, info.lon], {
-        radius: 11, color: "#ffffff", weight: 2, fillColor: THEME.dep, fillOpacity: 1,
-      }).addTo(map);
-      marker.bindTooltip(`出発: ${selectedDeparture}`, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
-      markers.push(marker);
-      focus = [info.lat, info.lon];
-    }
+    const [, , lat, lon] = IDX.names[NAME_TO_IDX.get(selectedDeparture)];
+    addMarker([lat, lon], THEME.dep, `出発: ${selectedDeparture}`);
+    focus = [lat, lon];
   }
 
-  const viewKey = `${selectedDeparture}|${selectedDestination}`;
+  // key on the route too, so a different line to the same stops re-centers once
+  const viewKey = `${selectedDeparture}|${selectedDestination}|${dep ? dep.p : ""}`;
   if (viewKey !== lastViewKey) {
     lastViewKey = viewKey;
     if (focus) {
       // about 100 m around the stop in every direction
       map.fitBounds(L.latLng(focus).toBounds(200));
     } else {
-      map.setView([35.157, 136.905], 14);
+      map.setView([35.17, 136.91], 13);
     }
   }
 }
 
-function findStopId(stopName, direction) {
-  for (const [id, info] of Object.entries(DATA.stops)) {
-    if (info.name === stopName && info.direction === direction) return id;
-  }
-  return null;
+function routeText(d) {
+  const pat = PATTERNS[d.p];
+  return [pat.r, pat.h].filter(Boolean).join(" ");
 }
 
-function render() {
+async function render() {
+  const token = ++renderToken;
   const now = new Date();
-  const dType = dayTypeForDate(now);
+  const services = activeServices(now);
+  const dType = dayLabel(services, now);
   const nowMin = minutesNow(now);
 
   document.getElementById("subtitle").textContent =
-    `${DATA.route}系統 ／ ${now.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", weekday: "short" })}`;
+    `名古屋市営バス ／ ${now.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", weekday: "short" })}`;
   document.getElementById("dayType").textContent = `本日のダイヤ: ${dType}`;
 
   const nextLabel = document.getElementById("nextLabel");
@@ -601,61 +655,71 @@ function render() {
   if (!selectedDestination) {
     nextLabel.textContent = "目的地を選んでください";
     nextTimeEl.textContent = "--:--";
-    nextSubEl.textContent = "マイバス停をもう1件追加すると時刻表が表示されます";
+    nextSubEl.textContent = "「＋ バス停を編集」から目的地を追加すると時刻表が表示されます";
     grid.innerHTML = "";
-    renderMap();
+    renderMap(null);
     return;
   }
 
-  const trip = resolveTrip(selectedDeparture, selectedDestination);
-  if (!trip) {
-    nextLabel.textContent = "この組み合わせは運行していません";
+  const deps = await findDepartures(selectedDeparture, selectedDestination, services);
+  if (token !== renderToken) return; // a newer render started while loading
+
+  nextLabel.textContent = `次のバス（${selectedDeparture} → ${selectedDestination}）`;
+  if (!deps.length) {
+    // does anything run between them on another day type?
+    const every = new Set(IDX.calendar.map(c => c[0]));
+    const other = await findDepartures(selectedDeparture, selectedDestination, every);
+    if (token !== renderToken) return;
     nextTimeEl.textContent = "--:--";
-    nextSubEl.textContent = "出発地と目的地の順序が路線と逆かもしれません";
+    nextSubEl.textContent = other.length
+      ? `本日（${dType}ダイヤ）はこの区間の便がありません`
+      : "この2つを直通で結ぶバスはありません（向きが逆か、乗り換えが必要です）";
     grid.innerHTML = "";
-    renderMap();
+    renderMap(other[0] || null);
     return;
   }
 
-  const info = DATA.stops[trip.depStopId];
-  const times = info.times[dType];
-  let nextIdx = times.findIndex(t => toMinutes(t) >= nowMin);
-
+  const nextIdx = deps.findIndex(d => d.min >= nowMin);
+  const multiRoute = new Set(deps.map(d => PATTERNS[d.p].r)).size > 1;
   if (nextIdx === -1) {
-    nextLabel.textContent = `次のバス（${selectedDeparture} → ${selectedDestination}）`;
     nextTimeEl.textContent = "--:--";
-    nextSubEl.textContent = "本日の運行は終了しました" + (times.length ? `（始発 ${times[0]}）` : "");
+    nextSubEl.textContent = `本日の運行は終了しました（始発 ${fmt(deps[0].min)} ${routeText(deps[0])}）`;
   } else {
-    const t = times[nextIdx];
-    const diff = toMinutes(t) - nowMin;
-    nextLabel.textContent = `次のバス（${selectedDeparture} → ${selectedDestination}）`;
-    nextTimeEl.textContent = t;
-    nextSubEl.textContent = diff <= 0 ? "まもなく発車" : `あと ${diff} 分`;
-    if (times[nextIdx + 1]) nextSubEl.textContent += ` ／ 次々便 ${times[nextIdx + 1]}`;
+    const d = deps[nextIdx];
+    const diff = d.min - nowMin;
+    nextTimeEl.textContent = fmt(d.min);
+    nextSubEl.textContent = (diff <= 0 ? "まもなく発車" : `あと ${diff} 分`) + ` ／ ${routeText(d)}`;
+    if (deps[nextIdx + 1]) nextSubEl.textContent += ` ／ 次々便 ${fmt(deps[nextIdx + 1].min)}`;
   }
 
   grid.innerHTML = "";
   const cells = [];
-  times.forEach((t, i) => {
+  deps.forEach((d, i) => {
     const cell = document.createElement("div");
     cell.className = "time-cell";
-    if (toMinutes(t) < nowMin) cell.classList.add("past");
+    if (d.min < nowMin) cell.classList.add("past");
     if (i === nextIdx) cell.classList.add("next");
-    cell.textContent = t;
+    cell.textContent = fmt(d.min);
+    if (multiRoute) {
+      const r = document.createElement("span");
+      r.className = "time-route";
+      r.textContent = PATTERNS[d.p].r;
+      cell.appendChild(r);
+    }
     grid.appendChild(cell);
     cells.push(cell);
   });
   // horizontally scroll so 1 previous departure + the next few are in view
   const scrollBox = document.getElementById("timeGridScroll");
-  const anchorCell = nextIdx > 0 ? cells[nextIdx - 1] : cells[0];
+  const anchorCell = nextIdx > 0 ? cells[nextIdx - 1] : nextIdx === -1 ? null : cells[0];
   if (anchorCell) {
     const cellLeft = anchorCell.getBoundingClientRect().left - scrollBox.getBoundingClientRect().left + scrollBox.scrollLeft;
     scrollBox.scrollLeft = Math.max(0, cellLeft - 4);
   } else {
-    scrollBox.scrollLeft = 0;
+    scrollBox.scrollLeft = scrollBox.scrollWidth;
   }
 
-  renderMap();
+  renderMap(deps[nextIdx === -1 ? 0 : nextIdx]);
 }
 
 function makeTab(name, isActive, activeClass, onSelect, onRemove) {
@@ -720,60 +784,87 @@ function buildAll() {
   buildDestinationTabs();
 }
 
-function fillPicker(gridId, list, extraClass, onToggle) {
-  const grid = document.getElementById(gridId);
-  grid.innerHTML = "";
-  ALL_STOP_NAMES.forEach(name => {
-    const chip = document.createElement("button");
-    chip.type = "button";
-    chip.className = "pick-chip " + extraClass + (list.includes(name) ? " on" : "");
-    chip.textContent = name;
-    chip.onclick = () => onToggle(name);
-    grid.appendChild(chip);
-  });
+function toggleDeparture(name) {
+  if (departureStops.includes(name)) {
+    removeDeparture(name);
+  } else {
+    departureStops.push(name);
+    saveStops("busapp_departures", departureStops);
+    buildAll();
+    render();
+  }
 }
 
+function toggleDestination(name) {
+  if (destinationStops.includes(name)) {
+    removeDestination(name);
+  } else {
+    destinationStops.push(name);
+    saveStops("busapp_destinations", destinationStops);
+    if (!selectedDestination && name !== selectedDeparture) selectedDestination = name;
+    buildAll();
+    render();
+  }
+}
+
+// search box + results; with an empty query it lists the stops already saved
 function buildSettingsSheet() {
-  fillPicker("pickDeparture", departureStops, "", name => {
-    if (departureStops.includes(name)) {
-      removeDeparture(name);
-    } else {
-      departureStops.push(name);
-      saveStops("busapp_departures", departureStops);
-      buildAll();
-      render();
+  const q = norm(document.getElementById("stopSearch").value);
+  const list = document.getElementById("stopResults");
+  list.innerHTML = "";
+  let names;
+  if (!q) {
+    names = [...new Set([...departureStops, ...destinationStops])];
+  } else {
+    const hits = [];
+    IDX.names.forEach(([name, kana]) => {
+      const n = norm(name), k = kana ? norm(kana) : "";
+      const rank = n === q || k === q ? 0 : n.startsWith(q) || k.startsWith(q) ? 1
+        : n.includes(q) || k.includes(q) ? 2 : -1;
+      if (rank >= 0) hits.push([rank, name]);
+    });
+    hits.sort((a, b) => a[0] - b[0] || a[1].length - b[1].length);
+    names = hits.slice(0, MAX_RESULTS).map(h => h[1]);
+  }
+  document.getElementById("searchHint").textContent = !q
+    ? "登録中のバス停（名前やよみがなで検索すると、市バスの全停留所から追加できます）"
+    : names.length ? "" : "見つかりませんでした";
+  names.forEach(name => {
+    const [, kana] = IDX.names[NAME_TO_IDX.get(name)];
+    const row = document.createElement("div");
+    row.className = "result-row";
+    const label = document.createElement("div");
+    label.className = "result-name";
+    label.textContent = name;
+    if (kana) {
+      const k = document.createElement("span");
+      k.className = "result-kana";
+      k.textContent = kana;
+      label.appendChild(k);
     }
-    buildSettingsSheet();
-  });
-  fillPicker("pickDestination", destinationStops, "dest", name => {
-    if (destinationStops.includes(name)) {
-      removeDestination(name);
-    } else {
-      destinationStops.push(name);
-      saveStops("busapp_destinations", destinationStops);
-      if (!selectedDestination && name !== selectedDeparture) selectedDestination = name;
-      buildAll();
-      render();
+    row.appendChild(label);
+    for (const [text, listRef, toggle, cls] of [
+      ["出発地", departureStops, toggleDeparture, ""],
+      ["目的地", destinationStops, toggleDestination, "dest"],
+    ]) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "pick-chip " + cls + (listRef.includes(name) ? " on" : "");
+      b.textContent = text;
+      b.onclick = () => { toggle(name); buildSettingsSheet(); };
+      row.appendChild(b);
     }
-    buildSettingsSheet();
+    list.appendChild(row);
   });
 }
 
-function init(data) {
-  DATA = data;
-  // list stops in route order (名古屋駅 → 名鉄神宮前), then any stragglers
-  const firstDir = Object.keys(DATA.sequences)[0];
-  const ordered = DATA.sequences[firstDir].map(sid => DATA.stops[sid]).filter(Boolean)
-    .concat(Object.values(DATA.stops));
-  for (const info of ordered) {
-    if (!ALL_STOP_NAMES.includes(info.name)) ALL_STOP_NAMES.push(info.name);
-  }
-  for (const info of Object.values(DATA.stops)) {
-    if (!DIRECTIONS_BY_STOP[info.name]) DIRECTIONS_BY_STOP[info.name] = [];
-    if (!DIRECTIONS_BY_STOP[info.name].includes(info.direction)) {
-      DIRECTIONS_BY_STOP[info.name].push(info.direction);
-    }
-  }
+function init([index, patterns]) {
+  IDX = index;
+  PATTERNS = patterns;
+  IDX.names.forEach(([name], i) => NAME_TO_IDX.set(name, i));
+  const v = IDX.valid[1];
+  document.getElementById("source").textContent =
+    `出典: ${IDX.generated_from}` + (v ? `（${v.slice(0, 4)}/${Number(v.slice(4, 6))}/${Number(v.slice(6))} まで有効）` : "");
 
   departureStops = loadStops("busapp_departures");
   destinationStops = loadStops("busapp_destinations");
@@ -781,11 +872,13 @@ function init(data) {
   selectedDestination = destinationStops.find(n => n !== selectedDeparture) || null;
 
   buildAll();
-  buildSettingsSheet();
   render();
   setInterval(render, 15000);
 
+  const search = document.getElementById("stopSearch");
+  search.oninput = buildSettingsSheet;
   document.getElementById("editStopsBtn").onclick = () => {
+    search.value = "";
     buildSettingsSheet();
     document.getElementById("overlay").hidden = false;
   };
@@ -797,8 +890,10 @@ function init(data) {
   };
 }
 
-fetch("timetable.json")
-  .then(r => r.json())
+Promise.all([
+  fetch("data/index.json", { cache: "no-cache" }).then(r => r.json()),
+  fetch("data/patterns.json", { cache: "no-cache" }).then(r => r.json()),
+])
   .then(init)
   .catch(err => {
     document.getElementById("subtitle").textContent = "データの読み込みに失敗しました: " + err;

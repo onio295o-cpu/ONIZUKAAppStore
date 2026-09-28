@@ -4,12 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       gtfs_url:
-        description: "GTFS zip URL (leave empty to look it up automatically)"
+        description: "GTFS zip URL (leave empty to use the newest zip in gtfs/)"
         required: false
-  schedule:
-    - cron: "0 18 1 * *" # 03:00 JST on the 2nd of every month
   push:
     paths:
+      - gtfs/**
       - scripts/build_nagoya_bus.py
       - .github/workflows/nagoya-bus-data.yml
 
@@ -32,10 +31,19 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Download feed and build data
+      # Uses the newest zip in gtfs/ (upload a new one there after a 市バス ダイヤ改正);
+      # with a gtfs_url input it downloads that instead.
+      - name: Build data
         env:
           GTFS_URL: ${{ github.event.inputs.gtfs_url }}
-        run: python3 -u scripts/build_nagoya_bus.py --download bus/data
+        run: |
+          zip=$(ls -1 gtfs/*.zip 2>/dev/null | sort | tail -n 1)
+          if [ -n "$GTFS_URL" ] || [ -z "$zip" ]; then
+            python3 -u scripts/build_nagoya_bus.py --download bus/data
+          else
+            echo "building from $zip"
+            python3 -u scripts/build_nagoya_bus.py "$zip" bus/data
+          fi
 
       - name: Commit changes
         run: |
