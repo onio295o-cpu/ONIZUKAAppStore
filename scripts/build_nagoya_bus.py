@@ -8,7 +8,9 @@ Usage:
 Output (OUT_DIR):
   index.json      feed info, service calendars, stop names, poles
   patterns.json   distinct stop sequences (route + headsign + poles)
-  stops/N.json    departures at stop name N: [[pattern, position, {service_id: [minutes]}], ...]
+  stops/N.json    where you can board at stop name N: [[pattern, position], ...]
+  trips/P.json    every trip of pattern P: [[service, first minute, gap, gap, ...], ...]
+                  (service indexes index.json "services"; gaps are minutes between stops)
 """
 import csv
 import io
@@ -198,8 +200,8 @@ def build(zip_bytes, out_dir, source_url=""):
         return pole_idx[stop_id]
 
     patterns, pattern_idx = [], {}
-    # departures[name][(pattern, position)][service_id] -> minutes
-    departures = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+    boardings = defaultdict(set)      # stop name -> {(pattern, position)}
+    pattern_trips = defaultdict(list)  # pattern -> [(service, [minutes at each stop])]
     for trip_id, rows in by_trip.items():
         trip = trips.get(trip_id)
         if not trip:
@@ -216,28 +218,41 @@ def build(zip_bytes, out_dir, source_url=""):
             pattern_idx[key] = len(patterns)
             patterns.append({"r": label, "h": headsign, "s": list(seq)})
         p = pattern_idx[key]
+        times = []
+        for k, r in enumerate(rows):
+            # when the bus leaves each stop; at the last stop, when it arrives
+            t = r.get("arrival_time") if k == len(rows) - 1 else r.get("departure_time")
+            t = t or r.get("departure_time") or r.get("arrival_time")
+            times.append(to_minutes(t) if t else None)
+        if None in times:
+            continue
+        pattern_trips[p].append((trip["service_id"], times))
         for pos, r in enumerate(rows[:-1]):  # nobody boards at the last stop
-            t = r.get("departure_time") or r.get("arrival_time")
-            if not t or r.get("pickup_type") == "1":
-                continue
-            departures[poles[seq[pos]][0]][(p, pos)][trip["service_id"]].append(to_minutes(t))
+            if r.get("pickup_type") != "1":
+                boardings[poles[seq[pos]][0]].add((p, pos))
 
     for n in names:
         n["lat"] = round(sum(n["lat"]) / len(n["lat"]), 6)
         n["lon"] = round(sum(n["lon"]) / len(n["lon"]), 6)
 
-    os.makedirs(os.path.join(out_dir, "stops"), exist_ok=True)
-    for f in os.listdir(os.path.join(out_dir, "stops")):
-        os.remove(os.path.join(out_dir, "stops", f))
+    for sub in ("stops", "trips"):
+        os.makedirs(os.path.join(out_dir, sub), exist_ok=True)
+        for f in os.listdir(os.path.join(out_dir, sub)):
+            os.remove(os.path.join(out_dir, sub, f))
+    services = sorted({sid for trips_ in pattern_trips.values() for sid, _ in trips_})
+    service_idx = {sid: i for i, sid in enumerate(services)}
 
     def dump(path, obj):
         with open(os.path.join(out_dir, path), "w", encoding="utf-8") as f:
             json.dump(obj, f, ensure_ascii=False, separators=(",", ":"))
 
-    for n, entries in departures.items():
-        dump(f"stops/{n}.json", [
-            [p, pos, {sid: sorted(ts) for sid, ts in by_service.items()}]
-            for (p, pos), by_service in sorted(entries.items())
+    for n, entries in boardings.items():
+        dump(f"stops/{n}.json", [list(e) for e in sorted(entries)])
+    for p, trips_ in pattern_trips.items():
+        trips_.sort(key=lambda t: (t[1][0], t[0]))
+        dump(f"trips/{p}.json", [
+            [service_idx[sid], times[0]] + [b - a for a, b in zip(times, times[1:])]
+            for sid, times in trips_
         ])
     dump("patterns.json", patterns)
     dump("index.json", {
@@ -246,12 +261,13 @@ def build(zip_bytes, out_dir, source_url=""):
         "source_url": source_url,
         "valid": [feed_info.get("feed_start_date", ""), feed_info.get("feed_end_date", "")],
         "calendar": calendar,
+        "services": services,
         "exceptions": exceptions,
         "names": [[n["n"], n["k"], n["lat"], n["lon"]] for n in names],
         "poles": poles,
     })
     print(f"stop names: {len(names)}, poles: {len(poles)}, patterns: {len(patterns)}, "
-          f"stop files: {len(departures)}")
+          f"trips: {sum(map(len, pattern_trips.values()))}")
 
 
 def main():

@@ -180,6 +180,36 @@
     overflow: hidden;
     margin-top: 16px;
   }
+  .next-card { cursor: pointer; }
+  .next-arrive {
+    font-size: 15px;
+    font-weight: 700;
+    margin-top: 8px;
+    font-variant-numeric: tabular-nums;
+  }
+  .next-arrive b {
+    font-family: var(--font-display);
+    font-size: 22px;
+  }
+  .next-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    position: relative;
+    z-index: 1;
+  }
+  .card-btn {
+    padding: 7px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.14);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .card-btn[hidden] { display: none; }
   .next-card::after {
     content: "";
     position: absolute;
@@ -218,7 +248,6 @@
   }
   .time-card { padding-bottom: 14px; }
   .time-grid-scroll {
-    max-width: 284px;
     overflow-x: auto;
     overflow-y: hidden;
     scroll-behavior: smooth;
@@ -252,6 +281,11 @@
     font-weight: 700;
     opacity: 0.75;
     margin-top: 2px;
+  }
+  .time-cell { cursor: pointer; }
+  .time-cell.picked {
+    outline: 2.5px solid var(--dest);
+    outline-offset: 1px;
   }
   .time-cell.next {
     background: var(--dep);
@@ -342,6 +376,61 @@
     color: var(--text-dim);
     margin-bottom: 6px;
   }
+  .stop-list { margin: 0; padding: 0; list-style: none; }
+  .stop-row {
+    display: grid;
+    grid-template-columns: 52px 18px 1fr auto;
+    align-items: center;
+    column-gap: 8px;
+    min-height: 38px;
+    font-size: 14px;
+  }
+  .stop-row .t {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+  }
+  .stop-row .dot {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .stop-row .dot::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--dest);
+  }
+  .stop-row:first-child .dot::before { top: 50%; }
+  .stop-row:last-child .dot::before { bottom: 50%; }
+  .stop-row .dot i {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--card);
+    border: 2.5px solid var(--dest);
+  }
+  .stop-row.start .dot i, .stop-row.end .dot i { width: 16px; height: 16px; border-color: #fff; }
+  .stop-row.start .dot i { background: var(--dep); }
+  .stop-row.end .dot i { background: var(--dest); }
+  .stop-row.end .n, .stop-row.start .n { font-weight: 700; }
+  .stop-row .e {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .detail-summary {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: -8px 0 14px;
+    line-height: 1.6;
+  }
+  .detail-summary b { color: var(--text); }
   .search-box {
     width: 100%;
     padding: 12px 16px;
@@ -421,10 +510,15 @@
   <div class="tabs-row no-margin" id="destinationSelect"></div>
 </div>
 
-<div class="card next-card">
+<div class="card next-card" id="nextCard" role="button" tabindex="0">
   <div class="next-label" id="nextLabel">次のバス</div>
   <div class="next-time" id="nextTime">--:--</div>
+  <div class="next-arrive" id="nextArrive"></div>
   <div class="next-sub" id="nextSub"></div>
+  <div class="next-actions">
+    <button type="button" class="card-btn" id="detailBtn" hidden>途中の停留所・時刻 ›</button>
+    <button type="button" class="card-btn" id="backToNextBtn" hidden>次の便に戻る</button>
+  </div>
 </div>
 
 <div class="card time-card">
@@ -435,7 +529,7 @@
 </div>
 
 <div class="card">
-  <div class="card-title">バス停の場所・ルート（次の便）</div>
+  <div class="card-title" id="mapTitle">バス停の場所・ルート</div>
   <div id="map"></div>
 </div>
 
@@ -453,6 +547,17 @@
   </div>
 </div>
 
+<div class="overlay" id="detailOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-title" id="detailTitle">途中の停留所</div>
+      <div class="sheet-close" id="closeDetail">閉じる</div>
+    </div>
+    <div class="detail-summary" id="detailSummary"></div>
+    <ol class="stop-list" id="detailList"></ol>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 let IDX = null;       // data/index.json
@@ -467,6 +572,11 @@ let markers = [];
 let routeLines = [];
 let lastViewKey = null; // re-center only when the selected stops change, not on every refresh
 let renderToken = 0;
+let picked = null;       // key of a departure the user tapped, null = follow the next bus
+let pickedRoute = null;  // "dep|dest" the pick belongs to
+let shownDep = null;     // departure currently in the big card
+let lastScrollKey = null;
+const TRIP_CACHE = {};
 
 const NAME_TO_IDX = new Map();
 const DEFAULT_STOPS = ["大池町", "水主町"];
@@ -536,23 +646,42 @@ function loadStop(nameIdx) {
   return STOP_CACHE[nameIdx];
 }
 
+function loadTrips(p) {
+  if (!TRIP_CACHE[p]) {
+    TRIP_CACHE[p] = fetch(`data/trips/${p}.json`)
+      .then(r => r.ok ? r.json() : [])
+      .catch(() => { delete TRIP_CACHE[p]; return []; });
+  }
+  return TRIP_CACHE[p];
+}
+
+// minutes at every stop of a trip stored as [service, first, gap, gap, ...]
+function tripTimes(trip) {
+  const out = [trip[1]];
+  for (let k = 2; k < trip.length; k++) out.push(out[out.length - 1] + trip[k]);
+  return out;
+}
+
 // every departure from `dep` whose bus later stops at `dest`, on the given services
 async function findDepartures(dep, dest, services) {
   const depIdx = NAME_TO_IDX.get(dep), destIdx = NAME_TO_IDX.get(dest);
   const entries = await loadStop(depIdx);
-  const out = [];
-  for (const [p, pos, times] of entries) {
+  const matches = [];
+  for (const [p, pos] of entries) {
     const seq = PATTERNS[p].s;
-    let j = -1;
     for (let k = pos + 1; k < seq.length; k++) {
-      if (IDX.poles[seq[k]][0] === destIdx) { j = k; break; }
-    }
-    if (j === -1) continue;
-    for (const [sid, mins] of Object.entries(times)) {
-      if (services.has(sid)) for (const min of mins) out.push({ min, p, pos, j });
+      if (IDX.poles[seq[k]][0] === destIdx) { matches.push([p, pos, k]); break; }
     }
   }
-  out.sort((a, b) => a.min - b.min);
+  const out = [];
+  await Promise.all(matches.map(async ([p, pos, j]) => {
+    for (const trip of await loadTrips(p)) {
+      if (!services.has(IDX.services[trip[0]])) continue;
+      const times = tripTimes(trip);
+      out.push({ min: times[pos], arr: times[j], p, pos, j, times, key: `${p}|${trip[1]}|${pos}` });
+    }
+  }));
+  out.sort((a, b) => a.min - b.min || a.arr - b.arr);
   return out;
 }
 
@@ -631,9 +760,51 @@ function renderMap(dep) {
   }
 }
 
+function openDetail() {
+  const d = shownDep;
+  if (!d) return;
+  const pat = PATTERNS[d.p];
+  document.getElementById("detailTitle").textContent = routeText(d);
+  const stops = d.j - d.pos;
+  document.getElementById("detailSummary").innerHTML = "";
+  const sum = document.getElementById("detailSummary");
+  sum.append(`${fmt(d.min)} 発 → ${fmt(d.arr)} 着 ／ `);
+  const b = document.createElement("b");
+  b.textContent = `所要 ${d.arr - d.min} 分`;
+  sum.append(b, ` ／ ${stops} 停留所先`);
+  const list = document.getElementById("detailList");
+  list.innerHTML = "";
+  for (let k = d.pos; k <= d.j; k++) {
+    const li = document.createElement("li");
+    li.className = "stop-row" + (k === d.pos ? " start" : k === d.j ? " end" : "");
+    const t = document.createElement("span");
+    t.className = "t";
+    t.textContent = fmt(d.times[k]);
+    const dot = document.createElement("span");
+    dot.className = "dot";
+    dot.appendChild(document.createElement("i"));
+    const n = document.createElement("span");
+    n.className = "n";
+    n.textContent = IDX.names[IDX.poles[pat.s[k]][0]][0];
+    const e = document.createElement("span");
+    e.className = "e";
+    e.textContent = k === d.pos ? "乗車" : k === d.j ? `着 +${d.times[k] - d.min}分` : `+${d.times[k] - d.min}分`;
+    li.append(t, dot, n, e);
+    list.appendChild(li);
+  }
+  document.getElementById("detailOverlay").hidden = false;
+}
+
 function routeText(d) {
   const pat = PATTERNS[d.p];
   return [pat.r, pat.h].filter(Boolean).join(" ");
+}
+
+function clearCardExtras() {
+  shownDep = null;
+  document.getElementById("nextArrive").textContent = "";
+  document.getElementById("detailBtn").hidden = true;
+  document.getElementById("backToNextBtn").hidden = true;
 }
 
 async function render() {
@@ -656,6 +827,7 @@ async function render() {
     nextLabel.textContent = "目的地を選んでください";
     nextTimeEl.textContent = "--:--";
     nextSubEl.textContent = "「＋ バス停を編集」から目的地を追加すると時刻表が表示されます";
+    clearCardExtras();
     grid.innerHTML = "";
     renderMap(null);
     return;
@@ -674,22 +846,48 @@ async function render() {
     nextSubEl.textContent = other.length
       ? `本日（${dType}ダイヤ）はこの区間の便がありません`
       : "この2つを直通で結ぶバスはありません（向きが逆か、乗り換えが必要です）";
+    clearCardExtras();
     grid.innerHTML = "";
     renderMap(other[0] || null);
     return;
   }
 
   const nextIdx = deps.findIndex(d => d.min >= nowMin);
+  const routeKey = `${selectedDeparture}|${selectedDestination}`;
+  if (pickedRoute !== routeKey) picked = null;
+  let shownIdx = picked ? deps.findIndex(d => d.key === picked) : -1;
+  if (shownIdx === -1) {
+    picked = null;
+    shownIdx = nextIdx;
+  }
   const multiRoute = new Set(deps.map(d => PATTERNS[d.p].r)).size > 1;
-  if (nextIdx === -1) {
+  const arriveEl = document.getElementById("nextArrive");
+  const detailBtn = document.getElementById("detailBtn");
+  const backBtn = document.getElementById("backToNextBtn");
+  backBtn.hidden = !picked;
+
+  if (shownIdx === -1) {
+    shownDep = null;
     nextTimeEl.textContent = "--:--";
+    arriveEl.textContent = "";
     nextSubEl.textContent = `本日の運行は終了しました（始発 ${fmt(deps[0].min)} ${routeText(deps[0])}）`;
+    detailBtn.hidden = true;
   } else {
-    const d = deps[nextIdx];
+    const d = deps[shownIdx];
+    shownDep = d;
+    if (picked) nextLabel.textContent = `選択した便（${selectedDeparture} → ${selectedDestination}）`;
     const diff = d.min - nowMin;
     nextTimeEl.textContent = fmt(d.min);
-    nextSubEl.textContent = (diff <= 0 ? "まもなく発車" : `あと ${diff} 分`) + ` ／ ${routeText(d)}`;
-    if (deps[nextIdx + 1]) nextSubEl.textContent += ` ／ 次々便 ${fmt(deps[nextIdx + 1].min)}`;
+    arriveEl.innerHTML = "";
+    const at = document.createElement("b");
+    at.textContent = fmt(d.arr);
+    arriveEl.append("→ ", at, ` 着 ／ 所要 ${d.arr - d.min} 分`);
+    nextSubEl.textContent = (diff < 0 ? "発車済み" : diff === 0 ? "まもなく発車" : `あと ${diff} 分`) + ` ／ ${routeText(d)}`;
+    if (!picked && deps[shownIdx + 1]) {
+      const n2 = deps[shownIdx + 1];
+      nextSubEl.textContent += ` ／ 次々便 ${fmt(n2.min)}（${n2.arr - n2.min}分）`;
+    }
+    detailBtn.hidden = false;
   }
 
   grid.innerHTML = "";
@@ -699,27 +897,40 @@ async function render() {
     cell.className = "time-cell";
     if (d.min < nowMin) cell.classList.add("past");
     if (i === nextIdx) cell.classList.add("next");
+    if (picked && i === shownIdx) cell.classList.add("picked");
     cell.textContent = fmt(d.min);
-    if (multiRoute) {
-      const r = document.createElement("span");
-      r.className = "time-route";
-      r.textContent = PATTERNS[d.p].r;
-      cell.appendChild(r);
-    }
+    const r = document.createElement("span");
+    r.className = "time-route";
+    r.textContent = (multiRoute ? PATTERNS[d.p].r + "・" : "") + `${d.arr - d.min}分`;
+    cell.appendChild(r);
+    cell.onclick = () => {
+      // tapping the next bus (or the picked one again) goes back to following the next bus
+      picked = i === nextIdx || d.key === picked ? null : d.key;
+      pickedRoute = routeKey;
+      render();
+    };
     grid.appendChild(cell);
     cells.push(cell);
   });
-  // horizontally scroll so 1 previous departure + the next few are in view
+  // scroll so 1 previous departure + the next few are in view, but only when that
+  // target changes, so the 15 s refresh doesn't undo the user's own scrolling
   const scrollBox = document.getElementById("timeGridScroll");
-  const anchorCell = nextIdx > 0 ? cells[nextIdx - 1] : nextIdx === -1 ? null : cells[0];
-  if (anchorCell) {
-    const cellLeft = anchorCell.getBoundingClientRect().left - scrollBox.getBoundingClientRect().left + scrollBox.scrollLeft;
-    scrollBox.scrollLeft = Math.max(0, cellLeft - 4);
-  } else {
-    scrollBox.scrollLeft = scrollBox.scrollWidth;
+  const anchorIdx = picked ? shownIdx : nextIdx;
+  const scrollKey = `${routeKey}|${anchorIdx}`;
+  if (scrollKey !== lastScrollKey) {
+    lastScrollKey = scrollKey;
+    const anchorCell = anchorIdx > 0 ? cells[anchorIdx - 1] : anchorIdx === -1 ? null : cells[0];
+    if (anchorCell) {
+      const cellLeft = anchorCell.getBoundingClientRect().left - scrollBox.getBoundingClientRect().left + scrollBox.scrollLeft;
+      scrollBox.scrollLeft = Math.max(0, cellLeft - 4);
+    } else {
+      scrollBox.scrollLeft = scrollBox.scrollWidth;
+    }
   }
 
-  renderMap(deps[nextIdx === -1 ? 0 : nextIdx]);
+  document.getElementById("mapTitle").textContent =
+    `バス停の場所・ルート（${picked ? "選択した便" : "次の便"}）`;
+  renderMap(deps[shownIdx === -1 ? 0 : shownIdx]);
 }
 
 function makeTab(name, isActive, activeClass, onSelect, onRemove) {
@@ -874,6 +1085,20 @@ function init([index, patterns]) {
   buildAll();
   render();
   setInterval(render, 15000);
+
+  document.getElementById("nextCard").onclick = openDetail;
+  document.getElementById("detailBtn").onclick = (e) => { e.stopPropagation(); openDetail(); };
+  document.getElementById("backToNextBtn").onclick = (e) => {
+    e.stopPropagation();
+    picked = null;
+    render();
+  };
+  document.getElementById("closeDetail").onclick = () => {
+    document.getElementById("detailOverlay").hidden = true;
+  };
+  document.getElementById("detailOverlay").onclick = (e) => {
+    if (e.target.id === "detailOverlay") document.getElementById("detailOverlay").hidden = true;
+  };
 
   const search = document.getElementById("stopSearch");
   search.oninput = buildSettingsSheet;
