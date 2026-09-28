@@ -105,6 +105,12 @@ def scrape_zip_links():
             continue
         links = re.findall(r'href="([^"]+\.zip[^"]*)"', html, re.I)
         print(f"page {page}: {len(links)} zip links", links[:10])
+        title = re.search(r"<title>(.*?)</title>", html, re.S)
+        print("  title:", title.group(1).strip() if title else "")
+        for m in re.finditer(r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>', html, re.S):
+            text = re.sub(r"<[^>]+>", "", m.group(2)).strip()
+            if re.search(r"gtfs|GTFS|オープンデータ|opendata|odpt|ダウンロード", m.group(1) + text):
+                print("  link:", text[:60], "->", m.group(1))
         found += [urljoin(page, l) for l in links if "gtfs" in l.lower() or "bus" in l.lower()]
     return found
 
