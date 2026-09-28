@@ -63,7 +63,50 @@ def discover_feed_urls():
                 walk(v)
 
     walk(catalogue)
+    if not urls:
+        # log anything Nagoya-related so the right ids can be found
+        seen = set()
+
+        def dump(node):
+            if isinstance(node, dict):
+                text = json.dumps(node, ensure_ascii=False)
+                if "名古屋" in text and len(text) < 3000 and text not in seen:
+                    seen.add(text)
+                    print("catalogue entry:", text[:600])
+                for v in node.values():
+                    dump(v)
+            elif isinstance(node, list):
+                for v in node:
+                    dump(v)
+        dump(catalogue)
+        print("catalogue top-level:", type(catalogue).__name__, str(catalogue)[:300])
+    urls += scrape_zip_links()
     return urls
+
+
+# 名古屋市交通局 open data pages that link the GTFS zip
+OPEN_DATA_PAGES = [
+    "https://www.kotsu.city.nagoya.jp/jp/pc/ABOUT/TRP0001435.htm",
+    "https://www.kotsu.city.nagoya.jp/jp/pc/ABOUT/TRP0001281.htm",
+    "https://www.kotsu.city.nagoya.jp/jp/pc/opendata/",
+    "https://www.city.nagoya.jp/kotsu/page/0000158235.html",
+]
+
+
+def scrape_zip_links():
+    import re
+    from urllib.parse import urljoin
+    found = []
+    for page in OPEN_DATA_PAGES:
+        try:
+            html = http_get(page).decode("utf-8", "replace")
+        except Exception as e:  # noqa: BLE001
+            print(f"page {page}: {e}")
+            continue
+        links = re.findall(r'href="([^"]+\.zip[^"]*)"', html, re.I)
+        print(f"page {page}: {len(links)} zip links", links[:10])
+        found += [urljoin(page, l) for l in links if "gtfs" in l.lower() or "bus" in l.lower()]
+    return found
 
 
 def download_feed():

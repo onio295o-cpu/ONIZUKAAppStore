@@ -35,7 +35,7 @@ jobs:
       - name: Download feed and build data
         env:
           GTFS_URL: ${{ github.event.inputs.gtfs_url }}
-        run: python3 scripts/build_nagoya_bus.py --download bus/data
+        run: python3 -u scripts/build_nagoya_bus.py --download bus/data
 
       - name: Commit changes
         run: |
