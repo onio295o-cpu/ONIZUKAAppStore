@@ -1,0 +1,50 @@
+name: Update Nagoya city bus data
+
+on:
+  workflow_dispatch:
+    inputs:
+      gtfs_url:
+        description: "GTFS zip URL (leave empty to look it up automatically)"
+        required: false
+  schedule:
+    - cron: "0 18 1 * *" # 03:00 JST on the 2nd of every month
+  push:
+    paths:
+      - scripts/build_nagoya_bus.py
+      - .github/workflows/nagoya-bus-data.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nagoya-bus-data
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/zealous-fermi-efwz91
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Download feed and build data
+        env:
+          GTFS_URL: ${{ github.event.inputs.gtfs_url }}
+        run: python3 scripts/build_nagoya_bus.py --download bus/data
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add bus/data
+          if git diff --cached --quiet; then
+            echo "data unchanged"
+          else
+            git commit -m "Update Nagoya city bus data"
+            git push origin HEAD:claude/zealous-fermi-efwz91
+          fi
