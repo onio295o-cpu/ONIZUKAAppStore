@@ -607,6 +607,104 @@
     margin-top: 4px;
   }
 
+  /* ---------- 出発地 / 目的地 boxes ---------- */
+  .subtitle { margin-bottom: 12px; }
+  .od-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+  }
+  .od-box {
+    min-width: 0;
+    text-align: left;
+    padding: 7px 12px 9px;
+    border-radius: 18px;
+    background: #fff;
+    border: 2px solid var(--dep);
+    box-shadow: 0 3px 0 var(--dep-dark);
+    color: var(--text);
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .od-box.dest { border-color: var(--dest); box-shadow: 0 3px 0 var(--dest-dark); }
+  .od-box:active, .od-box.open { transform: translateY(2px); box-shadow: none; }
+  .od-label { display: block; font-size: 11px; font-weight: 800; color: var(--dep-dark); }
+  .od-box.dest .od-label { color: var(--dest-dark); }
+  .od-name-row { display: flex; align-items: center; gap: 4px; }
+  .od-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 800;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .od-name.empty { color: var(--text-dim); font-size: 13px; }
+  .od-caret { color: var(--dep); font-size: 14px; }
+  .od-box.dest .od-caret { color: var(--dest); }
+  .swap-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--dep-dark);
+    font-size: 18px;
+    font-weight: 800;
+    box-shadow: 0 3px 0 var(--border);
+    cursor: pointer;
+    font-family: var(--font-body);
+  }
+  .swap-btn:active { transform: translateY(2px); box-shadow: none; }
+  .od-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    width: min(78%, 320px);
+    background: #fff;
+    border: 2px solid var(--dep);
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(120, 45, 0, 0.22);
+    padding: 8px;
+    z-index: 30;
+  }
+  .od-menu.dep { left: 0; }
+  .od-menu.dest { right: 0; border-color: var(--dest); }
+  .od-menu[hidden] { display: none; }
+  .od-menu-title { font-size: 11px; font-weight: 800; color: var(--text-dim); padding: 4px 8px 6px; }
+  .od-empty { font-size: 13px; color: var(--text-dim); padding: 6px 8px 10px; }
+  .od-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 8px 10px 10px;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .od-item:active { background: var(--bg); }
+  .od-item.sel { background: var(--dep-soft); color: var(--dep-dark); }
+  .od-menu.dest .od-item.sel { background: var(--dest-soft); color: var(--dest-dark); }
+  .od-item-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .od-x {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    color: var(--text-dim);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .od-add { width: 100%; margin-top: 6px; padding: 10px; font-size: 14px; }
+  .od-add::before, .result-row .pick-chip::before { content: none; }
+
   /* ---------- pop theme ---------- */
   h1, .page-title { color: var(--dep-dark); font-weight: 800; }
   .bus-mark { background: var(--dep); box-shadow: 0 3px 0 var(--dep-dark); border-radius: 12px; }
@@ -781,14 +879,18 @@
   </div>
   <div class="subtitle" id="subtitle">読み込み中…</div>
 
-  <div class="section-label">
-    <span>出発地</span>
-    <span class="edit-link" id="editStopsBtn">＋ バス停を編集</span>
+  <div class="od-row">
+    <button type="button" class="od-box dep" id="depBox">
+      <span class="od-label">出発地</span>
+      <span class="od-name-row"><span class="od-name" id="depName"></span><span class="od-caret">▾</span></span>
+    </button>
+    <button type="button" class="swap-btn" id="swapBtn" aria-label="出発地と目的地を入れ替え">⇄</button>
+    <button type="button" class="od-box dest" id="destBox">
+      <span class="od-label">目的地</span>
+      <span class="od-name-row"><span class="od-name" id="destName"></span><span class="od-caret">▾</span></span>
+    </button>
+    <div class="od-menu" id="odMenu" hidden></div>
   </div>
-  <div class="tabs-row" id="departureSelect"></div>
-
-  <div class="section-label dest"><span>目的地</span></div>
-  <div class="tabs-row no-margin" id="destinationSelect"></div>
 </div>
 
 <div class="card next-card" id="nextCard" role="button" tabindex="0">
@@ -858,7 +960,7 @@
 <div class="overlay" id="overlay" hidden>
   <div class="sheet">
     <div class="sheet-header">
-      <div class="sheet-title">バス停を編集</div>
+      <div class="sheet-title" id="searchSheetTitle">バス停を検索</div>
       <div class="sheet-close" id="closeSheet">閉じる</div>
     </div>
     <input id="stopSearch" class="search-box" type="search" placeholder="バス停名・よみがなで検索（例: 東新町、ひがししんまち）" autocomplete="off">
@@ -1034,26 +1136,6 @@ async function findDepartures(dep, dest, services) {
   return out;
 }
 
-function removeDeparture(name) {
-  if (departureStops.length <= 1) return;
-  departureStops = departureStops.filter(n => n !== name);
-  saveStops("busapp_departures", departureStops);
-  if (selectedDeparture === name) selectedDeparture = departureStops[0];
-  buildAll();
-  render();
-}
-
-function removeDestination(name) {
-  if (destinationStops.length <= 1) return;
-  destinationStops = destinationStops.filter(n => n !== name);
-  saveStops("busapp_destinations", destinationStops);
-  if (selectedDestination === name) {
-    selectedDestination = destinationStops.find(n => n !== selectedDeparture) || null;
-  }
-  buildAll();
-  render();
-}
-
 function poleLatLng(pole) { return [IDX.poles[pole][1], IDX.poles[pole][2]]; }
 
 function renderMap(dep) {
@@ -1172,10 +1254,10 @@ async function render() {
   const nextSubEl = document.getElementById("nextSub");
   const grid = document.getElementById("timeGrid");
 
-  if (!selectedDestination) {
-    nextLabel.textContent = "目的地を選んでください";
+  if (!selectedDeparture || !selectedDestination) {
+    nextLabel.textContent = !selectedDeparture ? "出発地を選んでください" : "目的地を選んでください";
     nextTimeEl.textContent = "--:--";
-    nextSubEl.textContent = "「＋ バス停を編集」から目的地を追加すると時刻表が表示されます";
+    nextSubEl.textContent = "上のボックスをタップして、バス停を選ぶと時刻表が表示されます";
     clearCardExtras();
     grid.innerHTML = "";
     renderMap(null);
@@ -1282,130 +1364,154 @@ async function render() {
   renderMap(deps[shownIdx === -1 ? 0 : shownIdx]);
 }
 
-function makeTab(name, isActive, activeClass, onSelect, onRemove) {
-  const btn = document.createElement("div");
-  btn.className = "tab-btn" + (isActive ? " " + activeClass : "");
-  const label = document.createElement("span");
-  label.textContent = name;
-  btn.appendChild(label);
-  if (onRemove) {
-    const x = document.createElement("span");
-    x.className = "tab-x";
-    x.textContent = "×";
-    x.onclick = (e) => {
-      e.stopPropagation();
-      onRemove(name);
-    };
-    btn.appendChild(x);
-  }
-  btn.onclick = onSelect;
-  return btn;
+// ---------- 出発地 / 目的地 boxes ----------
+const HISTORY_MAX = 5;
+let sheetSide = "dep";   // which side the search sheet fills
+let odMenuSide = null;   // which dropdown is open
+
+function sideList(side) { return side === "dep" ? departureStops : destinationStops; }
+
+function saveSide(side) {
+  saveStops(side === "dep" ? "busapp_departures" : "busapp_destinations", sideList(side));
 }
 
-function buildDepartureTabs() {
-  const row = document.getElementById("departureSelect");
-  row.innerHTML = "";
-  departureStops.forEach(name => {
-    const btn = makeTab(name, name === selectedDeparture, "active", () => {
-      selectedDeparture = name;
-      if (selectedDestination === name) {
-        selectedDestination = destinationStops.find(n => n !== name) || null;
-      }
-      buildAll();
-      render();
-    }, departureStops.length > 1 ? removeDeparture : null);
-    row.appendChild(btn);
-  });
+// choose a stop for one side; its history keeps the 5 most recent, newest first
+function chooseStop(side, name) {
+  const list = [name, ...sideList(side).filter(n => n !== name)].slice(0, HISTORY_MAX);
+  if (side === "dep") {
+    departureStops = list;
+    selectedDeparture = name;
+    if (selectedDestination === name) selectedDestination = destinationStops.find(n => n !== name) || null;
+  } else {
+    destinationStops = list;
+    selectedDestination = name;
+    if (selectedDeparture === name) selectedDeparture = departureStops.find(n => n !== name) || null;
+  }
+  saveSide(side);
+  closeOdMenu();
+  buildAll();
+  render();
 }
 
-function buildDestinationTabs() {
-  const row = document.getElementById("destinationSelect");
-  row.innerHTML = "";
-  const options = destinationStops.filter(n => n !== selectedDeparture);
-  if (!options.length) {
-    const msg = document.createElement("div");
-    msg.className = "no-stops-msg";
-    msg.textContent = "＋ バス停を編集からもう1件追加してください";
-    row.appendChild(msg);
-    return;
+function removeFromHistory(side, name) {
+  const list = sideList(side).filter(n => n !== name);
+  if (side === "dep") {
+    departureStops = list;
+    if (selectedDeparture === name) selectedDeparture = list.find(n => n !== selectedDestination) || null;
+  } else {
+    destinationStops = list;
+    if (selectedDestination === name) selectedDestination = list.find(n => n !== selectedDeparture) || null;
   }
-  options.forEach(name => {
-    const btn = makeTab(name, name === selectedDestination, "dest-active", () => {
-      selectedDestination = name;
-      buildDestinationTabs();
-      render();
-    }, destinationStops.length > 1 ? removeDestination : null);
-    row.appendChild(btn);
-  });
+  saveSide(side);
+  buildAll();
+  openOdMenu(side);
+  render();
+}
+
+function swapStops() {
+  const dep = selectedDeparture, dest = selectedDestination;
+  if (!dep || !dest) return;
+  departureStops = [dest, ...departureStops.filter(n => n !== dest)].slice(0, HISTORY_MAX);
+  destinationStops = [dep, ...destinationStops.filter(n => n !== dep)].slice(0, HISTORY_MAX);
+  selectedDeparture = dest;
+  selectedDestination = dep;
+  saveSide("dep");
+  saveSide("dest");
+  closeOdMenu();
+  buildAll();
+  render();
 }
 
 function buildAll() {
-  buildDepartureTabs();
-  buildDestinationTabs();
-}
-
-function toggleDeparture(name) {
-  if (departureStops.includes(name)) {
-    removeDeparture(name);
-  } else {
-    departureStops.push(name);
-    saveStops("busapp_departures", departureStops);
-    buildAll();
-    render();
+  for (const [side, value] of [["dep", selectedDeparture], ["dest", selectedDestination]]) {
+    const el = document.getElementById(`${side}Name`);
+    el.textContent = value || "選択してください";
+    el.classList.toggle("empty", !value);
+    document.getElementById(`${side}Box`).classList.toggle("open", odMenuSide === side);
   }
 }
 
-function toggleDestination(name) {
-  if (destinationStops.includes(name)) {
-    removeDestination(name);
-  } else {
-    destinationStops.push(name);
-    saveStops("busapp_destinations", destinationStops);
-    if (!selectedDestination && name !== selectedDeparture) selectedDestination = name;
-    buildAll();
-    render();
+function openOdMenu(side) {
+  odMenuSide = side;
+  const menu = document.getElementById("odMenu");
+  menu.className = `od-menu ${side}`;
+  menu.innerHTML = "";
+  const title = document.createElement("div");
+  title.className = "od-menu-title";
+  title.textContent = "最近使ったバス停";
+  menu.appendChild(title);
+  const list = sideList(side);
+  if (!list.length) {
+    const none = document.createElement("div");
+    none.className = "od-empty";
+    none.textContent = "まだありません";
+    menu.appendChild(none);
   }
+  const current = side === "dep" ? selectedDeparture : selectedDestination;
+  list.forEach(name => {
+    const item = document.createElement("div");
+    item.className = "od-item" + (name === current ? " sel" : "");
+    const label = document.createElement("span");
+    label.className = "od-item-name";
+    label.textContent = (name === current ? "✓ " : "") + name;
+    const x = document.createElement("button");
+    x.type = "button";
+    x.className = "od-x";
+    x.setAttribute("aria-label", `${name} を履歴から削除`);
+    x.textContent = "×";
+    x.onclick = (e) => { e.stopPropagation(); removeFromHistory(side, name); };
+    item.append(label, x);
+    item.onclick = () => chooseStop(side, name);
+    menu.appendChild(item);
+  });
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "pick-chip od-add" + (side === "dest" ? " dest on" : " on");
+  add.textContent = "＋ バス停を検索して追加";
+  add.onclick = () => openStopSearch(side);
+  menu.appendChild(add);
+  menu.hidden = false;
+  buildAll();
 }
 
-// search box + results; with an empty query it lists the stops already saved
+function closeOdMenu() {
+  odMenuSide = null;
+  document.getElementById("odMenu").hidden = true;
+  buildAll();
+}
+
+function openStopSearch(side) {
+  sheetSide = side;
+  closeOdMenu();
+  document.getElementById("searchSheetTitle").textContent = `${side === "dep" ? "出発地" : "目的地"}を検索`;
+  const search = document.getElementById("stopSearch");
+  search.value = "";
+  buildSettingsSheet();
+  document.getElementById("overlay").hidden = false;
+  search.focus();
+}
+
+// search results for the side being chosen; with an empty query, that side's history
 function buildSettingsSheet() {
-  const q = norm(document.getElementById("stopSearch").value);
+  const q = document.getElementById("stopSearch").value;
   const list = document.getElementById("stopResults");
   list.innerHTML = "";
-  let names;
-  if (!q) {
-    names = [...new Set([...departureStops, ...destinationStops])];
-  } else {
-    names = searchStopNames(q);
-  }
-  document.getElementById("searchHint").textContent = !q
-    ? "登録中のバス停（名前やよみがなで検索すると、市バスの全停留所から追加できます）"
+  const names = norm(q) ? searchStopNames(q) : sideList(sheetSide);
+  document.getElementById("searchHint").textContent = !norm(q)
+    ? "最近使ったバス停（名前やよみがなで、市バスの全停留所から探せます）"
     : names.length ? "" : "見つかりませんでした";
   names.forEach(name => {
-    const [, kana] = IDX.names[NAME_TO_IDX.get(name)];
     const row = document.createElement("div");
-    row.className = "result-row";
-    const label = document.createElement("div");
-    label.className = "result-name";
-    label.textContent = name;
-    if (kana) {
-      const k = document.createElement("span");
-      k.className = "result-kana";
-      k.textContent = kana;
-      label.appendChild(k);
-    }
-    row.appendChild(label);
-    for (const [text, listRef, toggle, cls] of [
-      ["出発地", departureStops, toggleDeparture, ""],
-      ["目的地", destinationStops, toggleDestination, "dest"],
-    ]) {
-      const b = document.createElement("button");
-      b.type = "button";
-      b.className = "pick-chip " + cls + (listRef.includes(name) ? " on" : "");
-      b.textContent = text;
-      b.onclick = () => { toggle(name); buildSettingsSheet(); };
-      row.appendChild(b);
-    }
+    row.className = "result-row tappable";
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "pick-chip on" + (sheetSide === "dest" ? " dest" : "");
+    b.textContent = sheetSide === "dep" ? "出発地にする" : "目的地にする";
+    row.append(nameLabel(name), b);
+    row.onclick = () => {
+      document.getElementById("overlay").hidden = true;
+      chooseStop(sheetSide, name);
+    };
     list.appendChild(row);
   });
 }
@@ -1560,22 +1666,9 @@ async function openStopSheet(name) {
 }
 
 function useInRoute(name, asDestination) {
-  const list = asDestination ? destinationStops : departureStops;
-  if (!list.includes(name)) {
-    list.push(name);
-    saveStops(asDestination ? "busapp_destinations" : "busapp_departures", list);
-  }
-  if (asDestination) {
-    selectedDestination = name;
-    if (selectedDeparture === name) selectedDeparture = departureStops.find(n => n !== name) || selectedDeparture;
-  } else {
-    selectedDeparture = name;
-    if (selectedDestination === name) selectedDestination = destinationStops.find(n => n !== name) || null;
-  }
   document.getElementById("stopOverlay").hidden = true;
-  buildAll();
   showView("route");
-  render();
+  chooseStop(asDestination ? "dest" : "dep", name);
 }
 
 // ---------- バス停 tab ----------
@@ -1804,13 +1897,21 @@ function init([index, patterns]) {
     if (e.target.id === "detailOverlay") document.getElementById("detailOverlay").hidden = true;
   };
 
-  const search = document.getElementById("stopSearch");
-  search.oninput = buildSettingsSheet;
-  document.getElementById("editStopsBtn").onclick = () => {
-    search.value = "";
-    buildSettingsSheet();
-    document.getElementById("overlay").hidden = false;
-  };
+  document.getElementById("stopSearch").oninput = buildSettingsSheet;
+  for (const side of ["dep", "dest"]) {
+    document.getElementById(`${side}Box`).onclick = (e) => {
+      e.stopPropagation();
+      if (odMenuSide === side) closeOdMenu(); else openOdMenu(side);
+    };
+  }
+  document.getElementById("swapBtn").onclick = (e) => { e.stopPropagation(); swapStops(); };
+  // while a dropdown is open, a tap elsewhere only closes it (and doesn't press what's under it)
+  document.addEventListener("click", (e) => {
+    if (!odMenuSide || e.target.closest(".od-row")) return;
+    e.stopPropagation();
+    e.preventDefault();
+    closeOdMenu();
+  }, true);
   document.getElementById("closeSheet").onclick = () => {
     document.getElementById("overlay").hidden = true;
   };
