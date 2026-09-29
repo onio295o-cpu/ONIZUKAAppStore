@@ -6,41 +6,29 @@
 <title>名古屋市バス 時刻表</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <style>
   :root {
-    color-scheme: light dark;
-    --bg: #f6efdf;
-    --bg-alt: #efe4cb;
-    --card: #fffcf4;
-    --text: #2b2519;
-    --text-dim: #8c8168;
-    --dep: #1d4e89;
-    --dep-soft: #dce7f4;
-    --dest: #2f8f5c;
-    --dest-soft: #ddf0e3;
-    --border: #e6d9b8;
-    --past: #cabf9f;
-    --shadow: 0 2px 10px rgba(60, 45, 10, 0.08);
-    --radius: 18px;
-    --font-display: "Space Grotesk", "Zen Kaku Gothic New", sans-serif;
-    --font-body: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
-  }
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg: #1b1710;
-      --bg-alt: #241f16;
-      --card: #262119;
-      --text: #f2e9d8;
-      --text-dim: #a89a7c;
-      --dep: #7fb0f2;
-      --dep-soft: #253850;
-      --dest: #6fcf9a;
-      --dest-soft: #203a2c;
-      --border: #3c3324;
-      --past: #574e38;
-      --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
-    }
+    /* always the bright orange theme, even when the phone is in dark mode */
+    color-scheme: light;
+    --bg: #fff6ec;
+    --bg-alt: #ffe6cc;
+    --card: #ffffff;
+    --text: #4a2f18;
+    --text-dim: #a8835f;
+    --dep: #ff7a1a;
+    --dep-dark: #d9590a;
+    --dep-soft: #ffe7d3;
+    --dest: #19a974;
+    --dest-dark: #0f7f56;
+    --dest-soft: #d9f5e9;
+    --border: #ffd8b5;
+    --past: #d8c2ab;
+    --navy: #2d3b6b;
+    --shadow: 0 4px 14px rgba(217, 89, 10, 0.12);
+    --radius: 22px;
+    --font-display: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", sans-serif;
+    --font-body: "M PLUS Rounded 1c", "Hiragino Maru Gothic ProN", -apple-system, BlinkMacSystemFont, sans-serif;
   }
   * { box-sizing: border-box; }
   body {
@@ -618,6 +606,160 @@
     color: var(--text-dim);
     margin-top: 4px;
   }
+
+  /* ---------- pop theme ---------- */
+  h1, .page-title { color: var(--dep-dark); font-weight: 800; }
+  .bus-mark { background: var(--dep); box-shadow: 0 3px 0 var(--dep-dark); border-radius: 12px; }
+  .sticky-header { box-shadow: 0 10px 14px -12px rgba(217, 89, 10, 0.35); }
+  .card { border: 2px solid var(--border); box-shadow: 0 4px 0 var(--border); }
+  .next-card {
+    background: linear-gradient(140deg, #ffa24a 0%, #ff7a1a 55%, #f25f0c 100%);
+    box-shadow: 0 5px 0 var(--dep-dark);
+    border: none;
+  }
+  .next-card::after { background: rgba(255,255,255,0.14); }
+  .section-label > span:first-child { background: var(--dep-soft); color: var(--dep-dark); }
+  .edit-link { color: var(--dep-dark); }
+
+  /* chunky buttons that sink when pressed */
+  .tab-btn, .pick-chip, .card-btn, .float-btn, .star-btn, .time-cell, .map-btn {
+    font-family: var(--font-body);
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .tab-btn {
+    border: 2px solid var(--border);
+    background: #fff;
+    box-shadow: 0 3px 0 var(--border);
+    font-weight: 700;
+  }
+  .tab-btn.active { background: var(--dep); border-color: var(--dep); box-shadow: 0 3px 0 var(--dep-dark); }
+  .tab-btn.dest-active { background: var(--dest); border-color: var(--dest); box-shadow: 0 3px 0 var(--dest-dark); }
+  .tab-btn:active, .pick-chip:active, .card-btn:active, .float-btn:active, .star-btn:active, .time-cell:active {
+    transform: translateY(2px);
+    box-shadow: none;
+  }
+  .pick-chip {
+    border: 2px solid var(--border);
+    background: #fff;
+    box-shadow: 0 3px 0 var(--border);
+    font-weight: 700;
+  }
+  .pick-chip.on { background: var(--dep); border-color: var(--dep); box-shadow: 0 3px 0 var(--dep-dark); }
+  .pick-chip.on.dest, .pick-chip.dest.on { background: var(--dest); border-color: var(--dest); box-shadow: 0 3px 0 var(--dest-dark); }
+  .card-btn {
+    background: #fff;
+    color: var(--dep-dark);
+    border: none;
+    box-shadow: 0 3px 0 rgba(120, 45, 0, 0.35);
+    padding: 8px 14px;
+  }
+  .time-cell {
+    background: var(--bg);
+    border-radius: 14px;
+    box-shadow: 0 3px 0 var(--border);
+    font-weight: 700;
+  }
+  .time-cell.next { background: var(--dep); box-shadow: 0 3px 0 var(--dep-dark); }
+  .time-cell.past { box-shadow: none; }
+  .star-btn { background: #fff; border: 2px solid var(--border); box-shadow: 0 3px 0 var(--border); }
+  .star-btn.on { color: #f5a300; border-color: #ffd36b; box-shadow: 0 3px 0 #f2c14e; background: #fff8e1; }
+  .search-box { border: 2px solid var(--border); background: #fff; font-family: var(--font-body); }
+  .search-box:focus { outline: none; border-color: var(--dep); box-shadow: 0 0 0 4px var(--dep-soft); }
+  .dir-route { background: var(--dep); color: #fff; border-radius: 8px; }
+  .sheet { border-top: 4px solid var(--dep); }
+  .sheet-close { color: var(--dep-dark); }
+  .sheet-title { font-weight: 800; }
+
+  /* bottom tabs: three separate pop buttons */
+  .tabbar {
+    gap: 10px;
+    padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(255, 246, 236, 0.94);
+    border-top: none;
+    box-shadow: 0 -8px 18px -12px rgba(217, 89, 10, 0.35);
+    backdrop-filter: blur(6px);
+  }
+  .tab {
+    border: 2px solid var(--border);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 4px 0 var(--border);
+    color: var(--text-dim);
+    padding: 7px 0 6px;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .tab:active { transform: translateY(3px); box-shadow: none; }
+  .tab.active {
+    background: var(--dep);
+    border-color: var(--dep);
+    box-shadow: 0 4px 0 var(--dep-dark);
+    color: #fff;
+  }
+  body {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    min-height: 100vh;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  #view-map { bottom: calc(74px + env(safe-area-inset-bottom)); }
+
+  /* map: white stops with a navy ring, haloed names, round floating buttons */
+  .stop-name {
+    background: none;
+    border: none;
+    box-shadow: none;
+    padding: 0 0 0 4px;
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--navy);
+    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
+  }
+  .stop-name::before { display: none; }
+  .stop-label {
+    border: 2px solid var(--dep);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-weight: 800;
+    color: var(--dep-dark);
+  }
+  .map-side {
+    position: absolute;
+    z-index: 1;
+    right: 12px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .round-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: #fff;
+    color: var(--navy);
+    box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: transform 0.08s;
+  }
+  .round-btn:active { transform: scale(0.92); }
+  .round-btn svg { width: 26px; height: 26px; }
+  .round-btn.locate { color: var(--dep); }
+  #map .leaflet-control-zoom {
+    border: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  #map .leaflet-control-zoom a { color: var(--navy); font-family: var(--font-body); }
+  .map-msg { border: 2px solid var(--border); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -678,8 +820,14 @@
 <main class="view" id="view-map" hidden>
   <div id="stopMap"></div>
   <div class="map-float">
-    <button type="button" class="float-btn" id="locateBtn">◎ 現在地</button>
     <div class="map-msg" id="mapMsg" hidden></div>
+  </div>
+  <div class="map-side">
+    <button type="button" class="round-btn" id="mapZoomIn" aria-label="拡大">＋</button>
+    <button type="button" class="round-btn" id="mapZoomOut" aria-label="縮小">−</button>
+    <button type="button" class="round-btn locate" id="locateBtn" aria-label="現在地">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M20.5 3.5L3.5 10.6l7.3 2.6 2.6 7.3z"/></svg>
+    </button>
   </div>
 </main>
 
@@ -729,8 +877,8 @@
       </div>
     </div>
     <div class="sheet-actions">
-      <button type="button" class="pick-chip" id="useAsDep">出発地にしてルート検索</button>
-      <button type="button" class="pick-chip dest" id="useAsDest">目的地にしてルート検索</button>
+      <button type="button" class="pick-chip" id="useAsDep">🚏 出発地にする</button>
+      <button type="button" class="pick-chip dest" id="useAsDest">🏁 目的地にする</button>
     </div>
     <div class="day-type" id="stopSheetDay"></div>
     <div id="stopSheetBody"></div>
@@ -928,7 +1076,7 @@ function renderMap(dep) {
 
   const addMarker = (latlng, color, label) => {
     const m = L.circleMarker(latlng, {
-      radius: 11, color: "#ffffff", weight: 2, fillColor: color, fillOpacity: 1,
+      radius: 11, color: "#ffffff", weight: 3.5, fillColor: color, fillOpacity: 1,
     }).addTo(map);
     m.bindTooltip(label, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
     markers.push(m);
@@ -1498,16 +1646,25 @@ function locateMe(fly) {
   }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
 }
 
+// a steady colour per route family (基幹, 栄, 名駅, …) so lines are easy to tell apart
+const ROUTE_COLORS = ["#3949ab", "#29b6d6", "#8bc34a", "#9c27b0", "#ff9800", "#e91e63", "#00897b", "#5c6bc0", "#43a047", "#f4511e"];
+function routeColor(label) {
+  const family = label.replace(/[０-９0-9\s]+$/, "") || label;
+  let h = 0;
+  for (const ch of family) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return ROUTE_COLORS[h % ROUTE_COLORS.length];
+}
+
 // stop names as labels once zoomed in far enough to read them
 function updateMapLabels() {
   labelLayer.clearLayers();
-  if (stopMap.getZoom() < 16.5) return;
+  if (stopMap.getZoom() < 16) return;
   const b = stopMap.getBounds();
   let n = 0;
   for (const [name, , lat, lon] of IDX.names) {
     if (!b.contains([lat, lon])) continue;
     if (++n > 120) break;
-    labelLayer.addLayer(L.tooltip({ permanent: true, direction: "top", offset: [0, -8], className: "stop-label", interactive: false })
+    labelLayer.addLayer(L.tooltip({ permanent: true, direction: "right", offset: [10, 0], className: "stop-name", interactive: false })
       .setLatLng([lat, lon]).setContent(name));
   }
 }
@@ -1515,8 +1672,9 @@ function updateMapLabels() {
 function initStopMap() {
   if (stopMap) return;
   stopMap = L.map("stopMap", { zoomControl: false, zoomSnap: 0.25 });
-  L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(stopMap);
   L.control.scale({ position: "bottomleft", imperial: false }).addTo(stopMap);
+  document.getElementById("mapZoomIn").onclick = () => stopMap.zoomIn();
+  document.getElementById("mapZoomOut").onclick = () => stopMap.zoomOut();
   L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
     attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
     maxNativeZoom: 18,
@@ -1524,14 +1682,43 @@ function initStopMap() {
     minZoom: 10,
   }).addTo(stopMap);
   const renderer = L.canvas({ padding: 0.5, tolerance: 8 }); // 1,500 markers stay fast on canvas
+  // bus routes as coloured lines (stop to stop), each segment drawn once per route
+  // (the feed has no road shapes, so lines run straight from stop to stop)
+  const drawn = new Set();
+  const lines = [];
+  for (const pat of PATTERNS) {
+    const color = routeColor(pat.r);
+    let line = [];
+    const flush = () => {
+      if (line.length > 1) lines.push(L.polyline(line, { renderer, color, weight: 3.5, opacity: 0.75, interactive: false }).addTo(stopMap));
+      line = [];
+    };
+    for (let k = 1; k < pat.s.length; k++) {
+      const a = pat.s[k - 1], b = pat.s[k];
+      const key = `${pat.r}|${Math.min(a, b)}|${Math.max(a, b)}`;
+      // express runs skip stops; their long straight hops would cut across blocks
+      if (drawn.has(key) || L.latLng(poleLatLng(a)).distanceTo(poleLatLng(b)) > 700) { flush(); continue; }
+      drawn.add(key);
+      if (!line.length) line.push(poleLatLng(a));
+      line.push(poleLatLng(b));
+    }
+    flush();
+  }
+  // up close the straight lines visibly cut corners, so fade them there
+  const lineStyle = () => {
+    const close = stopMap.getZoom() >= 16;
+    lines.forEach(l => l.setStyle({ opacity: close ? 0.35 : 0.75, weight: close ? 3 : 3.5 }));
+  };
+  stopMap.on("zoomend", lineStyle);
   for (const [name, , lat, lon] of IDX.names) {
     L.circleMarker([lat, lon], {
-      renderer, radius: 7, color: "#fff", weight: 2, fillColor: THEME.dep, fillOpacity: 1,
+      renderer, radius: 8, color: "#2d3b6b", weight: 3.5, fillColor: "#fff", fillOpacity: 1,
     }).addTo(stopMap).on("click", () => openStopSheet(name));
   }
   labelLayer = L.layerGroup().addTo(stopMap);
   stopMap.on("zoomend moveend", updateMapLabels);
   stopMap.setView([35.1682, 136.9086], 15); // 栄 until the location arrives
+  lineStyle();
   locateMe(true);
 }
 
