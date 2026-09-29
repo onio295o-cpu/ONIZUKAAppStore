@@ -431,6 +431,143 @@
     line-height: 1.6;
   }
   .detail-summary b { color: var(--text); }
+  body { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+  .view[hidden] { display: none !important; }
+  .tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding-bottom: env(safe-area-inset-bottom);
+    box-shadow: 0 -6px 16px -10px rgba(60, 45, 10, 0.25);
+  }
+  .tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 8px 0 9px;
+    border: 0;
+    background: none;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+  }
+  .tab svg { width: 24px; height: 24px; }
+  .tab.active { color: var(--dep); }
+  #view-map {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: calc(58px + env(safe-area-inset-bottom));
+  }
+  #stopMap {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  #stopMap .leaflet-control-zoom a {
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 22px;
+  }
+  .map-float {
+    position: absolute;
+    z-index: 1;
+    left: 12px;
+    top: max(12px, env(safe-area-inset-top));
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    right: 64px;
+    flex-wrap: wrap;
+  }
+  .float-btn {
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--dep);
+    font-size: 14px;
+    font-weight: 700;
+    font-family: inherit;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+  }
+  .map-msg {
+    padding: 9px 12px;
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--text);
+    font-size: 12px;
+    box-shadow: var(--shadow);
+  }
+  .map-msg[hidden] { display: none; }
+  .page-title {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 4px 0 14px;
+  }
+  .result-row.tappable { cursor: pointer; }
+  .row-go {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--dep);
+    white-space: nowrap;
+  }
+  .star-btn {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text-dim);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .star-btn.on { color: #e0a800; border-color: #e0a800; }
+  .sheet-actions {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 14px;
+  }
+  .sheet-actions .pick-chip { flex: 1; font-size: 13px; }
+  .dir-box {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .dir-head {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+  }
+  .dir-route {
+    font-weight: 700;
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    background: var(--dep-soft);
+    color: var(--dep);
+  }
+  .dir-headsign { font-weight: 700; font-size: 14px; }
+  .dir-next {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 4px 0 8px;
+  }
   .search-box {
     width: 100%;
     padding: 12px 16px;
@@ -485,6 +622,8 @@
 </head>
 <body>
 
+<main class="view" id="view-route">
+
 <div class="sticky-header">
   <div class="app-header">
     <div class="bus-mark">
@@ -534,6 +673,39 @@
 </div>
 
 <div class="footer-note" id="source">出典: 名古屋市交通局 市バスGTFS-JPデータ</div>
+</main>
+
+<main class="view" id="view-map" hidden>
+  <div id="stopMap"></div>
+  <div class="map-float">
+    <button type="button" class="float-btn" id="locateBtn">◎ 現在地</button>
+    <div class="map-msg" id="mapMsg" hidden></div>
+  </div>
+</main>
+
+<main class="view" id="view-stops" hidden>
+  <div class="page-title">バス停</div>
+  <input id="favSearch" class="search-box" type="search" placeholder="バス停名・よみがなで検索して時刻表を見る" autocomplete="off">
+  <div id="favResults"></div>
+  <div class="section-label"><span>お気に入り</span></div>
+  <div class="no-stops-msg" id="favEmpty">まだありません。検索結果や時刻表の ☆ を押すと追加できます。</div>
+  <div id="favList"></div>
+</main>
+
+<nav class="tabbar">
+  <button type="button" class="tab active" id="tab-route">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="6" r="2.5"/><path d="M8.5 18H15a3.5 3.5 0 0 0 0-7H9a3.5 3.5 0 0 1 0-7h6.5"/></svg>
+    ルート検索
+  </button>
+  <button type="button" class="tab" id="tab-map">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+    MAP
+  </button>
+  <button type="button" class="tab" id="tab-stops">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z"/></svg>
+    バス停
+  </button>
+</nav>
 
 <div class="overlay" id="overlay" hidden>
   <div class="sheet">
@@ -544,6 +716,24 @@
     <input id="stopSearch" class="search-box" type="search" placeholder="バス停名・よみがなで検索（例: 東新町、ひがししんまち）" autocomplete="off">
     <div class="sheet-hint" id="searchHint"></div>
     <div id="stopResults"></div>
+  </div>
+</div>
+
+<div class="overlay" id="stopOverlay" hidden>
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-title"><span id="stopSheetTitle"></span> <span class="result-kana" id="stopSheetKana"></span></div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button type="button" class="star-btn" id="stopSheetStar">☆</button>
+        <div class="sheet-close" id="closeStopSheet">閉じる</div>
+      </div>
+    </div>
+    <div class="sheet-actions">
+      <button type="button" class="pick-chip" id="useAsDep">出発地にしてルート検索</button>
+      <button type="button" class="pick-chip dest" id="useAsDest">目的地にしてルート検索</button>
+    </div>
+    <div class="day-type" id="stopSheetDay"></div>
+    <div id="stopSheetBody"></div>
   </div>
 </div>
 
@@ -771,8 +961,8 @@ function renderMap(dep) {
   }
 }
 
-function openDetail() {
-  const d = shownDep;
+function openDetail(dep) {
+  const d = dep && dep.times ? dep : shownDep;
   if (!d) return;
   const pat = PATTERNS[d.p];
   document.getElementById("detailTitle").textContent = routeText(d);
@@ -1038,15 +1228,7 @@ function buildSettingsSheet() {
   if (!q) {
     names = [...new Set([...departureStops, ...destinationStops])];
   } else {
-    const hits = [];
-    IDX.names.forEach(([name, kana]) => {
-      const n = norm(name), k = kana ? norm(kana) : "";
-      const rank = n === q || k === q ? 0 : n.startsWith(q) || k.startsWith(q) ? 1
-        : n.includes(q) || k.includes(q) ? 2 : -1;
-      if (rank >= 0) hits.push([rank, name]);
-    });
-    hits.sort((a, b) => a[0] - b[0] || a[1].length - b[1].length);
-    names = hits.slice(0, MAX_RESULTS).map(h => h[1]);
+    names = searchStopNames(q);
   }
   document.getElementById("searchHint").textContent = !q
     ? "登録中のバス停（名前やよみがなで検索すると、市バスの全停留所から追加できます）"
@@ -1080,6 +1262,329 @@ function buildSettingsSheet() {
   });
 }
 
+// ---------- shared stop search ----------
+function searchStopNames(query) {
+  const q = norm(query);
+  if (!q) return [];
+  const hits = [];
+  IDX.names.forEach(([name, kana]) => {
+    const n = norm(name), k = kana ? norm(kana) : "";
+    const rank = n === q || k === q ? 0 : n.startsWith(q) || k.startsWith(q) ? 1
+      : n.includes(q) || k.includes(q) ? 2 : -1;
+    if (rank >= 0) hits.push([rank, name]);
+  });
+  hits.sort((a, b) => a[0] - b[0] || a[1].length - b[1].length);
+  return hits.slice(0, MAX_RESULTS).map(h => h[1]);
+}
+
+function nameLabel(name) {
+  const [, kana] = IDX.names[NAME_TO_IDX.get(name)];
+  const label = document.createElement("div");
+  label.className = "result-name";
+  label.textContent = name;
+  if (kana) {
+    const k = document.createElement("span");
+    k.className = "result-kana";
+    k.textContent = kana;
+    label.appendChild(k);
+  }
+  return label;
+}
+
+// ---------- favourites ----------
+let favStops = [];
+
+function isFav(name) { return favStops.includes(name); }
+
+function toggleFav(name) {
+  favStops = isFav(name) ? favStops.filter(n => n !== name) : [...favStops, name];
+  saveStops("busapp_favstops", favStops);
+  if (currentView === "stops") buildStopsView();
+}
+
+function starButton(name, onChange) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "star-btn" + (isFav(name) ? " on" : "");
+  b.textContent = isFav(name) ? "★" : "☆";
+  b.setAttribute("aria-label", isFav(name) ? "お気に入りから外す" : "お気に入りに追加");
+  b.onclick = (e) => {
+    e.stopPropagation();
+    toggleFav(name);
+    b.className = "star-btn" + (isFav(name) ? " on" : "");
+    b.textContent = isFav(name) ? "★" : "☆";
+    if (onChange) onChange();
+  };
+  return b;
+}
+
+// ---------- one stop's timetable ----------
+let sheetStop = null;
+
+// every boarding at `name` today, grouped by route + destination
+async function stopTimetable(name) {
+  const services = activeServices(new Date());
+  const entries = await loadStop(NAME_TO_IDX.get(name));
+  const groups = new Map();
+  await Promise.all(entries.map(async ([p, pos]) => {
+    const pat = PATTERNS[p];
+    const end = pat.s.length - 1;
+    const key = `${pat.r}|${pat.h}`;
+    if (!groups.has(key)) groups.set(key, { r: pat.r, h: pat.h, deps: [] });
+    for (const trip of await loadTrips(p)) {
+      if (!services.has(IDX.services[trip[0]])) continue;
+      const times = tripTimes(trip);
+      groups.get(key).deps.push({ min: times[pos], arr: times[end], p, pos, j: end, times });
+    }
+  }));
+  const nowMin = minutesNow(new Date());
+  const list = [...groups.values()].filter(g => g.deps.length);
+  list.forEach(g => {
+    g.deps.sort((a, b) => a.min - b.min);
+    g.next = g.deps.find(d => d.min >= nowMin);
+  });
+  // groups with a bus still to come first, soonest first
+  list.sort((a, b) => (a.next ? a.next.min : 1e9) - (b.next ? b.next.min : 1e9) || a.r.localeCompare(b.r));
+  return list;
+}
+
+async function openStopSheet(name) {
+  sheetStop = name;
+  const [, kana] = IDX.names[NAME_TO_IDX.get(name)];
+  document.getElementById("stopSheetTitle").textContent = name;
+  document.getElementById("stopSheetKana").textContent = kana || "";
+  const star = document.getElementById("stopSheetStar");
+  star.replaceWith(Object.assign(starButton(name), { id: "stopSheetStar" }));
+  const body = document.getElementById("stopSheetBody");
+  body.textContent = "読み込み中…";
+  document.getElementById("stopOverlay").hidden = false;
+
+  const groups = await stopTimetable(name);
+  if (sheetStop !== name) return;
+  const services = activeServices(new Date());
+  document.getElementById("stopSheetDay").textContent = `本日のダイヤ: ${dayLabel(services, new Date())}`;
+  body.innerHTML = "";
+  if (!groups.length) {
+    body.textContent = "本日このバス停から出る便はありません";
+    return;
+  }
+  const nowMin = minutesNow(new Date());
+  groups.forEach(g => {
+    const box = document.createElement("div");
+    box.className = "dir-box";
+    const head = document.createElement("div");
+    head.className = "dir-head";
+    const r = document.createElement("span");
+    r.className = "dir-route";
+    r.textContent = g.r;
+    const h = document.createElement("span");
+    h.className = "dir-headsign";
+    h.textContent = g.h;
+    head.append(r, h);
+    const next = document.createElement("div");
+    next.className = "dir-next";
+    if (g.next) {
+      const diff = g.next.min - nowMin;
+      next.textContent = `次 ${fmt(g.next.min)}（${diff === 0 ? "まもなく" : `あと ${diff} 分`}）`;
+    } else {
+      next.textContent = "本日の運行は終了しました";
+    }
+    const scroll = document.createElement("div");
+    scroll.className = "time-grid-scroll";
+    const grid = document.createElement("div");
+    grid.className = "time-grid";
+    let anchor = null;
+    g.deps.forEach((d, i) => {
+      const cell = document.createElement("div");
+      cell.className = "time-cell" + (d.min < nowMin ? " past" : "") + (d === g.next ? " next" : "");
+      cell.textContent = fmt(d.min);
+      cell.onclick = () => openDetail(d);
+      grid.appendChild(cell);
+      if (d === g.next) anchor = grid.children[Math.max(0, i - 1)];
+    });
+    scroll.appendChild(grid);
+    box.append(head, next, scroll);
+    body.appendChild(box);
+    requestAnimationFrame(() => {
+      scroll.scrollLeft = anchor ? anchor.offsetLeft - 4 : scroll.scrollWidth;
+    });
+  });
+}
+
+function useInRoute(name, asDestination) {
+  const list = asDestination ? destinationStops : departureStops;
+  if (!list.includes(name)) {
+    list.push(name);
+    saveStops(asDestination ? "busapp_destinations" : "busapp_departures", list);
+  }
+  if (asDestination) {
+    selectedDestination = name;
+    if (selectedDeparture === name) selectedDeparture = departureStops.find(n => n !== name) || selectedDeparture;
+  } else {
+    selectedDeparture = name;
+    if (selectedDestination === name) selectedDestination = destinationStops.find(n => n !== name) || null;
+  }
+  document.getElementById("stopOverlay").hidden = true;
+  buildAll();
+  showView("route");
+  render();
+}
+
+// ---------- バス停 tab ----------
+function buildStopsView() {
+  const q = document.getElementById("favSearch").value;
+  const results = document.getElementById("favResults");
+  results.innerHTML = "";
+  searchStopNames(q).forEach(name => {
+    const row = document.createElement("div");
+    row.className = "result-row tappable";
+    row.append(nameLabel(name), starButton(name));
+    row.onclick = () => openStopSheet(name);
+    results.appendChild(row);
+  });
+  if (q.trim() && !results.children.length) results.textContent = "見つかりませんでした";
+
+  const favs = document.getElementById("favList");
+  favs.innerHTML = "";
+  document.getElementById("favEmpty").hidden = favStops.length > 0;
+  favStops.forEach(name => {
+    const row = document.createElement("div");
+    row.className = "result-row tappable";
+    row.append(nameLabel(name), starButton(name));
+    const go = document.createElement("span");
+    go.className = "row-go";
+    go.textContent = "時刻表 ›";
+    row.appendChild(go);
+    row.onclick = () => openStopSheet(name);
+    favs.appendChild(row);
+  });
+}
+
+// ---------- MAP tab ----------
+let stopMap = null;
+let meMarker = null;
+let meCircle = null;
+let labelLayer = null;
+
+function mapMessage(text) {
+  const el = document.getElementById("mapMsg");
+  el.textContent = text;
+  el.hidden = !text;
+  clearTimeout(mapMessage.t);
+  if (text) mapMessage.t = setTimeout(() => { el.hidden = true; }, 5000);
+}
+
+function locateMe(fly) {
+  if (!navigator.geolocation) {
+    mapMessage("この端末では現在地を取得できません");
+    return;
+  }
+  mapMessage("現在地を取得中…");
+  navigator.geolocation.getCurrentPosition(pos => {
+    mapMessage("");
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    if (!meMarker) {
+      meCircle = L.circle(ll, { radius: pos.coords.accuracy, color: "#3b82f6", weight: 1, fillOpacity: 0.12, interactive: false }).addTo(stopMap);
+      meMarker = L.circleMarker(ll, { radius: 8, color: "#fff", weight: 3, fillColor: "#3b82f6", fillOpacity: 1, interactive: false }).addTo(stopMap);
+    } else {
+      meMarker.setLatLng(ll);
+      meCircle.setLatLng(ll).setRadius(pos.coords.accuracy);
+    }
+    if (fly) stopMap.setView(ll, 17);
+  }, err => {
+    mapMessage(err.code === 1
+      ? "現在地の利用が許可されていません（ブラウザの設定で位置情報を許可してください）"
+      : "現在地を取得できませんでした");
+  }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+}
+
+// stop names as labels once zoomed in far enough to read them
+function updateMapLabels() {
+  labelLayer.clearLayers();
+  if (stopMap.getZoom() < 16.5) return;
+  const b = stopMap.getBounds();
+  let n = 0;
+  for (const [name, , lat, lon] of IDX.names) {
+    if (!b.contains([lat, lon])) continue;
+    if (++n > 120) break;
+    labelLayer.addLayer(L.tooltip({ permanent: true, direction: "top", offset: [0, -8], className: "stop-label", interactive: false })
+      .setLatLng([lat, lon]).setContent(name));
+  }
+}
+
+function initStopMap() {
+  if (stopMap) return;
+  stopMap = L.map("stopMap", { zoomControl: false, zoomSnap: 0.25 });
+  L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(stopMap);
+  L.control.scale({ position: "bottomleft", imperial: false }).addTo(stopMap);
+  L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
+    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
+    maxNativeZoom: 18,
+    maxZoom: 20,
+    minZoom: 10,
+  }).addTo(stopMap);
+  const renderer = L.canvas({ padding: 0.5, tolerance: 8 }); // 1,500 markers stay fast on canvas
+  for (const [name, , lat, lon] of IDX.names) {
+    L.circleMarker([lat, lon], {
+      renderer, radius: 7, color: "#fff", weight: 2, fillColor: THEME.dep, fillOpacity: 1,
+    }).addTo(stopMap).on("click", () => openStopSheet(name));
+  }
+  labelLayer = L.layerGroup().addTo(stopMap);
+  stopMap.on("zoomend moveend", updateMapLabels);
+  stopMap.setView([35.1682, 136.9086], 15); // 栄 until the location arrives
+  locateMe(true);
+}
+
+// ---------- tabs ----------
+let currentView = "route";
+
+function showView(view) {
+  currentView = view;
+  for (const v of ["route", "map", "stops"]) {
+    document.getElementById(`view-${v}`).hidden = v !== view;
+    document.getElementById(`tab-${v}`).classList.toggle("active", v === view);
+  }
+  try { history.replaceState(null, "", view === "route" ? location.pathname : `#${view}`); } catch (e) {}
+  if (view === "map") {
+    initStopMap();
+    stopMap.invalidateSize();
+  } else if (view === "stops") {
+    buildStopsView();
+  } else if (map) {
+    map.invalidateSize();
+  }
+  window.scrollTo(0, 0);
+}
+
+function initTabs() {
+  favStops = (() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem("busapp_favstops"));
+      if (Array.isArray(raw)) return raw.filter(n => NAME_TO_IDX.has(n));
+    } catch (e) {}
+    return [];
+  })();
+  for (const v of ["route", "map", "stops"]) {
+    document.getElementById(`tab-${v}`).onclick = () => showView(v);
+  }
+  document.getElementById("locateBtn").onclick = () => locateMe(true);
+  document.getElementById("favSearch").oninput = buildStopsView;
+  document.getElementById("closeStopSheet").onclick = () => {
+    sheetStop = null;
+    document.getElementById("stopOverlay").hidden = true;
+  };
+  document.getElementById("stopOverlay").onclick = (e) => {
+    if (e.target.id === "stopOverlay") {
+      sheetStop = null;
+      document.getElementById("stopOverlay").hidden = true;
+    }
+  };
+  document.getElementById("useAsDep").onclick = () => useInRoute(sheetStop, false);
+  document.getElementById("useAsDest").onclick = () => useInRoute(sheetStop, true);
+  const start = location.hash.slice(1);
+  showView(["map", "stops"].includes(start) ? start : "route");
+}
+
 function init([index, patterns]) {
   IDX = index;
   PATTERNS = patterns;
@@ -1096,6 +1601,7 @@ function init([index, patterns]) {
   buildAll();
   render();
   setInterval(render, 15000);
+  initTabs();
 
   document.getElementById("nextCard").onclick = openDetail;
   document.getElementById("detailBtn").onclick = (e) => { e.stopPropagation(); openDetail(); };
