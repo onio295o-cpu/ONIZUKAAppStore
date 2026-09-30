@@ -1239,11 +1239,25 @@ function pathThrough(seq, from, to) {
   return pts;
 }
 
+// show each on-the-way stop's time/name unless it would overlap a label already shown
+// (the 発/着 labels win, then stops in route order)
 function syncMidLabels() {
-  const show = map.getZoom() >= 15.5;
-  markers.forEach(m => {
-    if (!m.midStop) return;
-    if (show) m.openTooltip(); else m.closeTooltip();
+  const mids = markers.filter(m => m.midStop);
+  if (!mids.length || map.getZoom() === undefined) return;
+  mids.forEach(m => m.openTooltip());
+  const rect = m => {
+    const el = m.getTooltip() && m.getTooltip().getElement();
+    return el ? el.getBoundingClientRect() : null;
+  };
+  const hit = (a, b) => a.left < b.right + 3 && b.left < a.right + 3 && a.top < b.bottom + 2 && b.top < a.bottom + 2;
+  const kept = markers.filter(m => !m.midStop).map(rect).filter(Boolean);
+  mids.forEach(m => {
+    const r = rect(m);
+    if (!r || kept.some(k => hit(r, k))) {
+      m.closeTooltip();
+    } else {
+      kept.push(r);
+    }
   });
 }
 
@@ -1284,7 +1298,11 @@ function renderMap(dep) {
         radius: 6, color: "#2d3b6b", weight: 3, fillColor: "#fff", fillOpacity: 1,
       }).addTo(map);
       const name = IDX.names[IDX.poles[seq[k]][0]][0];
-      m.bindTooltip(twoLine(fmt(dep.times[k]), name), { permanent: true, direction: "right", offset: [8, 0], className: "stop-name small two" });
+      // alternate above/below the line so neighbouring stops' labels have room
+      const above = (k - dep.pos) % 2 === 1;
+      m.bindTooltip(twoLine(fmt(dep.times[k]), name), {
+        permanent: true, direction: above ? "top" : "bottom", offset: [0, above ? -6 : 6], className: "stop-name small two",
+      });
       m.midStop = true;
       markers.push(m);
     }
