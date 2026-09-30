@@ -815,6 +815,10 @@
   }
   .stop-name::before { display: none; }
   .stop-name.small { font-size: 12px; font-weight: 700; }
+  .two div { display: flex; flex-direction: column; line-height: 1.2; }
+  .two b { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .stop-name.two b { color: var(--dep-dark); }
+  .stop-label.two { text-align: center; padding: 3px 8px; }
   .stop-label {
     border: 2px solid var(--dep);
     border-radius: 10px;
@@ -1139,15 +1143,48 @@ async function findDepartures(dep, dest, services) {
 
 function poleLatLng(pole) { return [IDX.poles[pole][1], IDX.poles[pole][2]]; }
 
-// CARTO Voyager: a clean, Google-Maps-like street map (OpenStreetMap data)
-function baseTiles() {
-  return L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+// Base map: CARTO Voyager (clean, Google-Maps-like, OpenStreetMap data, no API key).
+// If its tiles can't be loaded on this network/browser, fall back to OpenStreetMap,
+// then to 国土地理院, so the map never stays blank.
+const TILE_SOURCES = [
+  ["https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-    subdomains: "abcd",
-    maxNativeZoom: 20,
-    maxZoom: 20,
-    minZoom: 10,
+    subdomains: "abcd", maxNativeZoom: 20,
+  }],
+  ["https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
+    maxNativeZoom: 19,
+  }],
+  ["https://cyberjapandata.gsi.go.jp/xyz/std/{z}/{x}/{y}.png", {
+    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
+    maxNativeZoom: 18,
+  }],
+];
+
+function addBaseTiles(target, i = 0) {
+  const [url, opts] = TILE_SOURCES[i];
+  const layer = L.tileLayer(url, { ...opts, maxZoom: 20, minZoom: 10 });
+  let loaded = 0, failed = 0;
+  layer.on("tileload", () => { loaded++; });
+  layer.on("tileerror", () => {
+    // several failures before any success: this source is unreachable here
+    if (++failed === 4 && loaded === 0 && i + 1 < TILE_SOURCES.length) {
+      target.removeLayer(layer);
+      addBaseTiles(target, i + 1);
+    }
   });
+  layer.addTo(target);
+}
+
+// two-line map label: time on top, stop name underneath
+function twoLine(top, bottom) {
+  const el = document.createElement("div");
+  const t = document.createElement("b");
+  t.textContent = top;
+  const n = document.createElement("span");
+  n.textContent = bottom;
+  el.append(t, n);
+  return el;
 }
 
 // road-following geometry per stop-to-stop leg (bus/data/legs.json, built by
@@ -1206,7 +1243,7 @@ function renderMap(dep) {
     map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
     L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(map);
     L.control.scale({ position: "bottomleft", imperial: false }).addTo(map);
-    baseTiles().addTo(map);
+    addBaseTiles(map);
   }
   markers.forEach(m => map.removeLayer(m));
   markers = [];
@@ -1217,7 +1254,7 @@ function renderMap(dep) {
     const m = L.circleMarker(latlng, {
       radius: 11, color: "#ffffff", weight: 3.5, fillColor: color, fillOpacity: 1,
     }).addTo(map);
-    m.bindTooltip(label, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label" });
+    m.bindTooltip(label, { permanent: true, direction: "top", offset: [0, -6], className: "stop-label two" });
     markers.push(m);
   };
 
@@ -1233,15 +1270,15 @@ function renderMap(dep) {
         radius: 6, color: "#2d3b6b", weight: 3, fillColor: "#fff", fillOpacity: 1,
       }).addTo(map);
       const name = IDX.names[IDX.poles[seq[k]][0]][0];
-      m.bindTooltip(`${name} ${fmt(dep.times[k])}`, { permanent: true, direction: "right", offset: [8, 0], className: "stop-name small" });
+      m.bindTooltip(twoLine(fmt(dep.times[k]), name), { permanent: true, direction: "right", offset: [8, 0], className: "stop-name small two" });
       markers.push(m);
     }
-    addMarker(poleLatLng(seq[dep.pos]), THEME.dep, `出発: ${selectedDeparture} ${fmt(dep.min)}`);
-    addMarker(poleLatLng(seq[dep.j]), THEME.dest, `到着: ${selectedDestination} ${fmt(dep.arr)}`);
+    addMarker(poleLatLng(seq[dep.pos]), THEME.dep, twoLine(`${fmt(dep.min)} 発`, selectedDeparture));
+    addMarker(poleLatLng(seq[dep.j]), THEME.dest, twoLine(`${fmt(dep.arr)} 着`, selectedDestination));
     focus = poleLatLng(seq[dep.j]);
   } else if (selectedDeparture) {
     const [, , lat, lon] = IDX.names[NAME_TO_IDX.get(selectedDeparture)];
-    addMarker([lat, lon], THEME.dep, `出発: ${selectedDeparture}`);
+    addMarker([lat, lon], THEME.dep, twoLine("出発", selectedDeparture));
     focus = [lat, lon];
   }
 
@@ -1837,7 +1874,7 @@ function initStopMap() {
   L.control.scale({ position: "bottomleft", imperial: false }).addTo(stopMap);
   document.getElementById("mapZoomIn").onclick = () => stopMap.zoomIn();
   document.getElementById("mapZoomOut").onclick = () => stopMap.zoomOut();
-  baseTiles().addTo(stopMap);
+  addBaseTiles(stopMap);
   const renderer = L.canvas({ padding: 0.5, tolerance: 8 }); // 1,500 markers stay fast on canvas
   stopMap.createPane("routes").style.zIndex = 390; // under the stop markers
   const lineRenderer = L.canvas({ pane: "routes", padding: 0.5 });
