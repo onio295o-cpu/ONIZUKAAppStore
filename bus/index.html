@@ -1143,13 +1143,14 @@ async function findDepartures(dep, dest, services) {
 
 function poleLatLng(pole) { return [IDX.poles[pole][1], IDX.poles[pole][2]]; }
 
-// Base map: CARTO Voyager (clean, Google-Maps-like, OpenStreetMap data, no API key).
-// If its tiles can't be loaded on this network/browser, fall back to OpenStreetMap,
-// then to 国土地理院, so the map never stays blank.
+// Base map: OSM Bright 日本語 from OpenStreetMap Foundation Japan (clean, Google-Maps-like,
+// Japanese labels, no API key). If its tiles can't be loaded on this network/browser,
+// fall back to OpenStreetMap, then to 国土地理院, so the map never stays blank.
+// (CARTO now answers keyless requests with "API KEY REQUIRED" images, so it's not used.)
 const TILE_SOURCES = [
-  ["https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
-    subdomains: "abcd", maxNativeZoom: 20,
+  ["https://tile.openstreetmap.jp/styles/osm-bright-ja/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, <a href="https://www.openstreetmap.jp/" target="_blank" rel="noopener">OSMFJ</a>',
+    maxNativeZoom: 18,
   }],
   ["https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>',
@@ -1238,6 +1239,14 @@ function pathThrough(seq, from, to) {
   return pts;
 }
 
+function syncMidLabels() {
+  const show = map.getZoom() >= 15.5;
+  markers.forEach(m => {
+    if (!m.midStop) return;
+    if (show) m.openTooltip(); else m.closeTooltip();
+  });
+}
+
 function renderMap(dep) {
   if (!map) {
     map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
@@ -1259,6 +1268,11 @@ function renderMap(dep) {
   };
 
   let focus = null; // the stop to center on: destination if there is one, else departure
+  if (!map.midLabelsHooked) {
+    // names of the stops on the way only when zoomed in enough for them not to overlap
+    map.on("zoomend", syncMidLabels);
+    map.midLabelsHooked = true;
+  }
   if (dep) {
     const seq = PATTERNS[dep.p].s;
     const path = pathThrough(seq, dep.pos, dep.j);
@@ -1271,6 +1285,7 @@ function renderMap(dep) {
       }).addTo(map);
       const name = IDX.names[IDX.poles[seq[k]][0]][0];
       m.bindTooltip(twoLine(fmt(dep.times[k]), name), { permanent: true, direction: "right", offset: [8, 0], className: "stop-name small two" });
+      m.midStop = true;
       markers.push(m);
     }
     addMarker(poleLatLng(seq[dep.pos]), THEME.dep, twoLine(`${fmt(dep.min)} 発`, selectedDeparture));
@@ -1281,6 +1296,8 @@ function renderMap(dep) {
     addMarker([lat, lon], THEME.dep, twoLine("出発", selectedDeparture));
     focus = [lat, lon];
   }
+
+  syncMidLabels();
 
   // key on the route too, so a different line to the same stops re-centers once
   const viewKey = `${selectedDeparture}|${selectedDestination}|${dep ? dep.p : ""}`;
