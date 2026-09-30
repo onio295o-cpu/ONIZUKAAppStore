@@ -70,10 +70,20 @@ def gtfs_data(org, match=None):
             continue
         if match and match not in (f.get("feed_name") or "") + (f.get("feed_id") or ""):
             continue
-        url = (f"https://api.gtfs-data.jp/v2/organizations/{org}/feeds/{f['feed_id']}"
-               "/files/feed.zip?rid=current")
+        base = f"https://api.gtfs-data.jp/v2/organizations/{org}/feeds/{f['feed_id']}/files/feed.zip"
         print(f"  {f.get('feed_name')} ({f['feed_id']})")
-        out.append(get(url))
+        # the repository copy of the current revision, else the operator's own link, else the next revision
+        urls = [base + "?rid=current", f.get("feed_src_gtfs_current_url"), base + "?rid=next",
+                f.get("feed_src_gtfs_next_url")]
+        for url in filter(None, urls):
+            try:
+                out.append(get(url))
+                break
+            except Exception as e:  # noqa: BLE001 - try the next source
+                print(f"    {url}: {e}")
+        else:
+            print("    catalogue entry:", json.dumps({k: v for k, v in f.items() if "url" in k or "date" in k},
+                                                  ensure_ascii=False))
     return out
 
 
