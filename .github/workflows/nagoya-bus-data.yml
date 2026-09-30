@@ -60,5 +60,7 @@ jobs:
             echo "data unchanged"
           else
             git commit -m "Update Nagoya city bus data"
+            # the branch may have moved while this ran (routing takes a while)
+            git pull --rebase origin claude/zealous-fermi-efwz91
             git push origin HEAD:claude/zealous-fermi-efwz91
           fi
