@@ -10,6 +10,7 @@ on:
     paths:
       - gtfs/**
       - scripts/build_nagoya_bus.py
+      - scripts/build_shapes.py
       - .github/workflows/nagoya-bus-data.yml
 
 permissions:
@@ -44,6 +45,11 @@ jobs:
             echo "building from $zip"
             python3 -u scripts/build_nagoya_bus.py "$zip" bus/data
           fi
+
+      # Road-following lines between stops (the feed has no shapes.txt).
+      # bus/data/legs.json caches earlier results, so only new legs are routed.
+      - name: Route stop-to-stop legs along roads
+        run: python3 -u scripts/build_shapes.py bus/data
 
       - name: Commit changes
         run: |
