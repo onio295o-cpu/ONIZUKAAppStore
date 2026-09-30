@@ -1,0 +1,30 @@
+name: Find GTFS feeds
+
+# One-off helper: lists the feeds and download links on gtfs.site's 愛知県 page.
+on:
+  push:
+    paths:
+      - .github/workflows/find-feeds.yml
+
+jobs:
+  find:
+    runs-on: ubuntu-latest
+    steps:
+      - name: List feeds on gtfs.site
+        run: |
+          curl -sL --max-time 60 -A "Mozilla/5.0 ONIZUKAAppStore" "https://www.gtfs.site/chubu/aichi" -o page.html
+          echo "bytes: $(wc -c < page.html)"
+          python3 - <<'PY'
+          import re, html
+          s = open("page.html", encoding="utf-8", errors="replace").read()
+          print("title:", re.search(r"<title>(.*?)</title>", s, re.S).group(1).strip() if "<title>" in s else "")
+          for m in re.finditer(r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>', s, re.S):
+              text = html.unescape(re.sub(r"<[^>]+>", " ", m.group(2))).split()
+              text = " ".join(text)[:80]
+              href = html.unescape(m.group(1))
+              if any(k in (href + text) for k in (".zip", "gtfs", "GTFS", "名鉄", "バス", "download", "ダウンロード")):
+                  print(f"{text} -> {href}")
+          # plain-text mentions around 名鉄
+          for m in re.finditer(r"名鉄", s):
+              print("CTX:", re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", s[max(0, m.start()-300):m.end()+500])))[:600])
+          PY
