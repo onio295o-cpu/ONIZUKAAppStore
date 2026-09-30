@@ -607,6 +607,51 @@
     margin-top: 4px;
   }
 
+  /* ---------- stops served / reachable ---------- */
+  .chain-label { font-size: 11px; font-weight: 800; color: var(--text-dim); margin: 2px 0 6px; }
+  .stop-chain { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chain-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 2px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 2px 0 var(--border);
+    cursor: pointer;
+  }
+  .chain-chip small { font-size: 10px; color: var(--dep-dark); font-weight: 800; }
+  .chain-chip.last { border-color: var(--dep); }
+  .chain-chip:active { transform: translateY(2px); box-shadow: none; }
+  .times-toggle {
+    margin-top: 10px;
+    border: none;
+    background: none;
+    padding: 4px 0;
+    color: var(--dep-dark);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .time-grid-scroll[hidden] { display: none; }
+  .direct-tag {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--dest);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    vertical-align: 2px;
+  }
+
   /* ---------- 出発地 / 目的地 boxes ---------- */
   .subtitle { margin-bottom: 12px; }
   .od-row {
@@ -1642,15 +1687,47 @@ function openStopSearch(side) {
   search.focus();
 }
 
-// search results for the side being chosen; with an empty query, that side's history
-function buildSettingsSheet() {
+// stops a bus from `dep` reaches without changing: name -> fewest stops away
+const REACH_CACHE = {};
+function reachableFrom(dep) {
+  if (!REACH_CACHE[dep]) {
+    REACH_CACHE[dep] = loadStop(NAME_TO_IDX.get(dep)).then(entries => {
+      const reach = new Map();
+      for (const [p, pos] of entries) {
+        const seq = PATTERNS[p].s;
+        for (let k = pos + 1; k < seq.length; k++) {
+          const n = IDX.names[IDX.poles[seq[k]][0]][0];
+          if (n !== dep && (!reach.has(n) || reach.get(n) > k - pos)) reach.set(n, k - pos);
+        }
+      }
+      return reach;
+    });
+  }
+  return REACH_CACHE[dep];
+}
+
+// search results for the side being chosen. Empty query: for 目的地, the stops
+// reachable directly from the 出発地 (nearest first); otherwise that side's history.
+async function buildSettingsSheet() {
   const q = document.getElementById("stopSearch").value;
   const list = document.getElementById("stopResults");
+  const hint = document.getElementById("searchHint");
+  const dep = sheetSide === "dest" ? selectedDeparture : null;
+  const reach = dep ? await reachableFrom(dep) : null;
+  if (q !== document.getElementById("stopSearch").value) return; // typed on meanwhile
   list.innerHTML = "";
-  const names = norm(q) ? searchStopNames(q) : sideList(sheetSide);
-  document.getElementById("searchHint").textContent = !norm(q)
-    ? "最近使ったバス停（名前やよみがなで、市バスの全停留所から探せます）"
-    : names.length ? "" : "見つかりませんでした";
+  let names;
+  if (norm(q)) {
+    names = searchStopNames(q);
+    if (reach) names.sort((a, b) => (reach.has(b) ? 1 : 0) - (reach.has(a) ? 1 : 0));
+    hint.textContent = names.length ? (reach ? `「直通」は ${dep} から乗り換えなしで行けるバス停です` : "") : "見つかりませんでした";
+  } else if (reach) {
+    names = [...reach].sort((a, b) => a[1] - b[1]).map(e => e[0]);
+    hint.textContent = `${dep} から乗り換えなしで行けるバス停（${names.length}か所・近い順）`;
+  } else {
+    names = sideList(sheetSide);
+    hint.textContent = "最近使ったバス停（名前やよみがなで、市バスの全停留所から探せます）";
+  }
   names.forEach(name => {
     const row = document.createElement("div");
     row.className = "result-row tappable";
@@ -1658,7 +1735,14 @@ function buildSettingsSheet() {
     b.type = "button";
     b.className = "pick-chip on" + (sheetSide === "dest" ? " dest" : "");
     b.textContent = sheetSide === "dep" ? "出発地にする" : "目的地にする";
-    row.append(nameLabel(name), b);
+    const label = nameLabel(name);
+    if (reach && reach.has(name)) {
+      const tag = document.createElement("span");
+      tag.className = "direct-tag";
+      tag.textContent = `直通・${reach.get(name)}停先`;
+      label.insertBefore(tag, label.firstChild.nextSibling);
+    }
+    row.append(label, b);
     row.onclick = () => {
       document.getElementById("overlay").hidden = true;
       chooseStop(sheetSide, name);
@@ -1735,7 +1819,10 @@ async function stopTimetable(name) {
     const pat = PATTERNS[p];
     const end = pat.s.length - 1;
     const key = `${pat.r}|${pat.h}`;
-    if (!groups.has(key)) groups.set(key, { r: pat.r, h: pat.h, deps: [] });
+    if (!groups.has(key)) groups.set(key, { r: pat.r, h: pat.h, deps: [], p, pos });
+    const g = groups.get(key);
+    // the group's stop list follows its longest remaining run
+    if (end - pos > PATTERNS[g.p].s.length - 1 - g.pos) { g.p = p; g.pos = pos; }
     for (const trip of await loadTrips(p)) {
       if (!services.has(IDX.services[trip[0]])) continue;
       const times = tripTimes(trip);
@@ -1794,8 +1881,42 @@ async function openStopSheet(name) {
     } else {
       next.textContent = "本日の運行は終了しました";
     }
+    // where this bus goes from here: every stop it calls at, with minutes from here
+    const pat = PATTERNS[g.p];
+    const sample = g.deps.find(d => d.p === g.p && d.pos === g.pos) || null;
+    const chain = document.createElement("div");
+    chain.className = "stop-chain";
+    const seen = new Set([name]);
+    for (let k = g.pos + 1; k < pat.s.length; k++) {
+      const stopName = IDX.names[IDX.poles[pat.s[k]][0]][0];
+      if (seen.has(stopName)) continue; // both poles of one stop, or a loop coming back
+      seen.add(stopName);
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "chain-chip" + (k === pat.s.length - 1 ? " last" : "");
+      const n = document.createElement("span");
+      n.textContent = stopName;
+      chip.appendChild(n);
+      if (sample) {
+        const m = document.createElement("small");
+        m.textContent = `${sample.times[k] - sample.times[g.pos]}分`;
+        chip.appendChild(m);
+      }
+      chip.onclick = () => routeBetween(name, stopName);
+      chain.appendChild(chip);
+    }
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "times-toggle";
+    toggle.textContent = `本日の時刻表（${g.deps.length}本） ▾`;
     const scroll = document.createElement("div");
     scroll.className = "time-grid-scroll";
+    scroll.hidden = true;
+    toggle.onclick = () => {
+      scroll.hidden = !scroll.hidden;
+      toggle.textContent = `本日の時刻表（${g.deps.length}本） ${scroll.hidden ? "▾" : "▴"}`;
+      if (!scroll.hidden) scroll.scrollLeft = anchor ? anchor.offsetLeft - 4 : scroll.scrollWidth;
+    };
     const grid = document.createElement("div");
     grid.className = "time-grid";
     let anchor = null;
@@ -1808,12 +1929,20 @@ async function openStopSheet(name) {
       if (d === g.next) anchor = grid.children[Math.max(0, i - 1)];
     });
     scroll.appendChild(grid);
-    box.append(head, next, scroll);
+    const label = document.createElement("div");
+    label.className = "chain-label";
+    label.textContent = "停車するバス停（タップでルート検索）";
+    box.append(head, next, label, chain, toggle, scroll);
     body.appendChild(box);
-    requestAnimationFrame(() => {
-      scroll.scrollLeft = anchor ? anchor.offsetLeft - 4 : scroll.scrollWidth;
-    });
   });
+}
+
+// open ルート検索 for dep → dest in one go
+function routeBetween(dep, dest) {
+  document.getElementById("stopOverlay").hidden = true;
+  showView("route");
+  chooseStop("dep", dep);
+  chooseStop("dest", dest);
 }
 
 function useInRoute(name, asDestination) {
