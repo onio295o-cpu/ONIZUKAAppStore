@@ -1,0 +1,20 @@
+{
+  "_comment": "Bus feeds the app combines. 'id' is the zip name in gtfs/feeds/. 'area' tells same-named stops apart (e.g. 市役所（春日井市）); 'label' prefixes route names (empty for 市バス). Sources: 'bodik' = CKAN dataset on data.bodik.jp, 'gtfs-data' = every feed of that organization on gtfs-data.jp.",
+  "feeds": [
+    {"id": "nagoya", "label": "", "area": "名古屋市", "source": "bodik", "dataset": "231002_7109030000_bus-gtfs-jp"},
+    {"id": "aoi", "label": "あおい交通", "area": "あおい交通", "source": "gtfs-data", "org": "aoi-komaki"},
+    {"id": "chitabus", "label": "知多バス", "area": "知多バス", "source": "gtfs-data", "org": "chitabus"},
+    {"id": "meitetsu-tobu", "label": "名鉄東部交通", "area": "西尾市", "source": "gtfs-data", "org": "nishiocity", "feed_match": "名鉄"},
+    {"id": "kasugai", "label": "春日井市", "area": "春日井市", "source": "gtfs-data", "org": "kasugaicity"},
+    {"id": "nagakute", "label": "長久手市", "area": "長久手市", "source": "gtfs-data", "org": "nagakutecity"},
+    {"id": "nisshin", "label": "日進市", "area": "日進市", "source": "gtfs-data", "org": "nisshincity"},
+    {"id": "owariasahi", "label": "尾張旭市", "area": "尾張旭市", "source": "gtfs-data", "org": "owariasahicity"},
+    {"id": "toyoake", "label": "豊明市", "area": "豊明市", "source": "gtfs-data", "org": "toyoakecity"},
+    {"id": "kitanagoya", "label": "北名古屋市", "area": "北名古屋市", "source": "gtfs-data", "org": "kitanagoyacity"},
+    {"id": "ama", "label": "あま市", "area": "あま市", "source": "gtfs-data", "org": "amacity"},
+    {"id": "oguchi", "label": "大口町", "area": "大口町", "source": "gtfs-data", "org": "oguchitown"},
+    {"id": "toyoyama", "label": "豊山町", "area": "豊山町", "source": "gtfs-data", "org": "toyoyamatown"},
+    {"id": "seto", "label": "瀬戸市", "area": "瀬戸市", "source": "gtfs-data", "org": "setocity"},
+    {"id": "tokai", "label": "東海市", "area": "東海市", "source": "gtfs-data", "org": "tokaicity"}
+  ]
+}

@@ -1,14 +1,16 @@
-name: Update Nagoya city bus data
+name: Update bus data
 
+# Downloads every feed in gtfs/feeds.json (名古屋市営バス + nearby operators and
+# community buses), merges them into bus/data, routes new stop-to-stop legs
+# along roads, and commits the result. Runs monthly so ダイヤ改正 are picked up.
 on:
   workflow_dispatch:
-    inputs:
-      gtfs_url:
-        description: "GTFS zip URL (leave empty to use the newest zip in gtfs/)"
-        required: false
+  schedule:
+    - cron: "0 18 1 * *" # 03:00 JST on the 2nd of every month
   push:
     paths:
-      - gtfs/**
+      - gtfs/feeds.json
+      - scripts/fetch_feeds.py
       - scripts/build_nagoya_bus.py
       - scripts/build_shapes.py
       - .github/workflows/nagoya-bus-data.yml
@@ -23,6 +25,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
         with:
@@ -32,21 +35,14 @@ jobs:
         with:
           python-version: "3.11"
 
-      # Uses the newest zip in gtfs/ (upload a new one there after a 市バス ダイヤ改正);
-      # with a gtfs_url input it downloads that instead.
-      - name: Build data
-        env:
-          GTFS_URL: ${{ github.event.inputs.gtfs_url }}
-        run: |
-          zip=$(ls -1 gtfs/*.zip 2>/dev/null | sort | tail -n 1)
-          if [ -n "$GTFS_URL" ] || [ -z "$zip" ]; then
-            python3 -u scripts/build_nagoya_bus.py --download bus/data
-          else
-            echo "building from $zip"
-            python3 -u scripts/build_nagoya_bus.py "$zip" bus/data
-          fi
+      # a feed that fails to download keeps its previous zip in gtfs/feeds/
+      - name: Download feeds
+        run: python3 -u scripts/fetch_feeds.py gtfs/feeds.json
 
-      # Road-following lines between stops (the feed has no shapes.txt).
+      - name: Build data
+        run: python3 -u scripts/build_nagoya_bus.py --feeds gtfs/feeds.json bus/data
+
+      # Road-following lines between stops (the feeds have no shapes.txt).
       # bus/data/legs.json caches earlier results, so only new legs are routed.
       - name: Route stop-to-stop legs along roads
         run: python3 -u scripts/build_shapes.py bus/data
@@ -55,11 +51,11 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add bus/data
+          git add gtfs/feeds bus/data
           if git diff --cached --quiet; then
             echo "data unchanged"
           else
-            git commit -m "Update Nagoya city bus data"
+            git commit -m "Update bus data"
             # the branch may have moved while this ran (routing takes a while)
             git pull --rebase origin claude/zealous-fermi-efwz91
             git push origin HEAD:claude/zealous-fermi-efwz91

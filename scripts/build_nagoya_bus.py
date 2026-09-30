@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Build the bus app's data files from a GTFS(-JP) feed (名古屋市交通局 市バス).
+"""Build the bus app's data files from GTFS(-JP) feeds (名古屋市営バス and neighbours).
 
 Usage:
-  build_nagoya_bus.py FEED.zip OUT_DIR          build from a local zip
-  build_nagoya_bus.py --download OUT_DIR        find + download the feed, then build
+  build_nagoya_bus.py --feeds gtfs/feeds.json OUT_DIR   every feed in gtfs/feeds/ (市バス first)
+  build_nagoya_bus.py FEED.zip OUT_DIR                  build from one local zip
+  build_nagoya_bus.py --download OUT_DIR                find + download the 市バス feed, then build
 
 Output (OUT_DIR):
   index.json      feed info, service calendars, stop names, poles
@@ -15,6 +16,7 @@ Output (OUT_DIR):
 import csv
 import io
 import json
+import math
 import os
 import sys
 import urllib.request
@@ -155,81 +157,145 @@ def export_calendar(zf):
     return calendar, dict(sorted(exceptions.items()))
 
 
-def build(zip_bytes, out_dir, source_url=""):
-    zf = zipfile.ZipFile(io.BytesIO(zip_bytes))
+def dist_m(a, b):
+    la1, lo1, la2, lo2 = map(math.radians, (a[0], a[1], b[0], b[1]))
+    h = math.sin((la2 - la1) / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin((lo2 - lo1) / 2) ** 2
+    return 2 * 6371000 * math.asin(math.sqrt(h))
 
-    stops = {r["stop_id"]: r for r in read_table(zf, "stops.txt")}
-    routes = {r["route_id"]: r for r in read_table(zf, "routes.txt")}
-    trips = {r["trip_id"]: r for r in read_table(zf, "trips.txt")}
-    feed_info = (read_table(zf, "feed_info.txt") or [{}])[0]
 
-    # hiragana readings (GTFS-JP translations.txt, both the old and new layouts)
+SAME_STOP_M = 1000  # same-named stops closer than this are one stop (e.g. 名古屋駅 of two operators)
+
+
+def build(feeds, out_dir, source_url=""):
+    """feeds: [{"id", "label", "area", "data": zip bytes}, …]; the first is the main
+    feed (名古屋市営バス): its service ids and stop names are kept as they are."""
+    parsed = []
     kana = {}
-    for r in read_table(zf, "translations.txt"):
-        if r.get("language") != "ja-Hrkt":
-            continue
-        if "trans_id" in r:
-            kana[r["trans_id"]] = r["translation"]
-        elif r.get("table_name") == "stops" and r.get("field_name") == "stop_name":
-            key = r.get("field_value") or stops.get(r.get("record_id"), {}).get("stop_name")
-            if key:
-                kana[key] = r["translation"]
+    calendar, exceptions = [], defaultdict(lambda: [[], []])
+    publishers = []
+    for fi, feed in enumerate(feeds):
+        zf = zipfile.ZipFile(io.BytesIO(feed["data"]))
+        pre = "" if fi == 0 else feed["id"] + ":"
+        stops = {r["stop_id"]: r for r in read_table(zf, "stops.txt")}
+        routes = {r["route_id"]: r for r in read_table(zf, "routes.txt")}
+        trips = {r["trip_id"]: r for r in read_table(zf, "trips.txt")}
+        info = (read_table(zf, "feed_info.txt") or [{}])[0]
+        if fi == 0:
+            main_info = info
+        publishers.append(info.get("feed_publisher_name") or feed.get("label") or feed["id"])
 
-    calendar, exceptions = export_calendar(zf)
+        # hiragana readings (GTFS-JP translations.txt, both the old and new layouts)
+        for r in read_table(zf, "translations.txt"):
+            if (r.get("language") or r.get("lang")) != "ja-Hrkt":
+                continue
+            if "trans_id" in r:
+                kana.setdefault(r["trans_id"], r["translation"])
+            elif r.get("table_name") == "stops" and r.get("field_name") == "stop_name":
+                key = r.get("field_value") or stops.get(r.get("record_id"), {}).get("stop_name")
+                if key:
+                    kana.setdefault(key.strip(), r["translation"])
 
-    # group stop_times by trip
-    by_trip = defaultdict(list)
-    for r in read_table(zf, "stop_times.txt"):
-        by_trip[r["trip_id"]].append(r)
+        cal, exc = export_calendar(zf)
+        calendar += [[pre + c[0]] + c[1:] for c in cal]
+        for date, (added, removed) in exc.items():
+            exceptions[date][0] += [pre + s for s in added]
+            exceptions[date][1] += [pre + s for s in removed]
+
+        by_trip = defaultdict(list)
+        for r in read_table(zf, "stop_times.txt"):
+            by_trip[r["trip_id"]].append(r)
+        parsed.append((fi, pre, feed, stops, routes, trips, by_trip))
+        print(f"{feed['id']}: {len(stops)} stops, {len(trips)} trips, {len(routes)} routes")
+
+    # ---- stop names across feeds: same name + close together = one stop
+    used = {}  # (feed, stop_id) -> stops.txt row, in first-seen order
+    for fi, _, _, stops, _, _, by_trip in parsed:
+        for rows in by_trip.values():
+            for r in rows:
+                if r["stop_id"] in stops:
+                    used.setdefault((fi, r["stop_id"]), stops[r["stop_id"]])
+    clusters = defaultdict(list)  # name -> [{"pts": [...], "feeds": set()}]
+    cluster_of = {}
+    for key, row in used.items():
+        name = row["stop_name"].strip()
+        pt = (float(row["stop_lat"]), float(row["stop_lon"]))
+        for c in clusters[name]:
+            centre = (sum(q[0] for q in c["pts"]) / len(c["pts"]), sum(q[1] for q in c["pts"]) / len(c["pts"]))
+            if dist_m(pt, centre) < SAME_STOP_M:
+                break
+        else:
+            c = {"pts": [], "feeds": set()}
+            clusters[name].append(c)
+        c["pts"].append(pt)
+        c["feeds"].add(key[0])
+        cluster_of[key] = (name, clusters[name].index(c))
+
+    display = {}
+    taken = set()
+    for name, cs in clusters.items():
+        for ci, c in enumerate(cs):
+            if len(cs) == 1 or 0 in c["feeds"]:
+                label = name
+            else:
+                label = f"{name}（{feeds[min(c['feeds'])]['area']}）"
+            base, n = label, 2
+            while label in taken:  # still ambiguous: number them
+                label = f"{base}・{n}"
+                n += 1
+            taken.add(label)
+            display[(name, ci)] = label
 
     names, name_idx, poles, pole_idx = [], {}, [], {}
 
-    def pole(stop_id):
-        if stop_id not in pole_idx:
-            s = stops[stop_id]
-            name = s["stop_name"].strip()
-            if name not in name_idx:
-                name_idx[name] = len(names)
-                names.append({"n": name, "k": kana.get(name, ""), "lat": [], "lon": []})
-            n = name_idx[name]
-            lat, lon = round(float(s["stop_lat"]), 6), round(float(s["stop_lon"]), 6)
+    def pole(fi, stop_id, row):
+        key = (fi, stop_id)
+        if key not in pole_idx:
+            base = row["stop_name"].strip()
+            label = display[cluster_of[key]]
+            if label not in name_idx:
+                name_idx[label] = len(names)
+                names.append({"n": label, "k": kana.get(base, ""), "lat": [], "lon": []})
+            n = name_idx[label]
+            lat, lon = round(float(row["stop_lat"]), 6), round(float(row["stop_lon"]), 6)
             names[n]["lat"].append(lat)
             names[n]["lon"].append(lon)
-            pole_idx[stop_id] = len(poles)
+            pole_idx[key] = len(poles)
             poles.append([n, lat, lon])
-        return pole_idx[stop_id]
+        return pole_idx[key]
 
     patterns, pattern_idx = [], {}
     boardings = defaultdict(set)      # stop name -> {(pattern, position)}
     pattern_trips = defaultdict(list)  # pattern -> [(service, [minutes at each stop])]
-    for trip_id, rows in by_trip.items():
-        trip = trips.get(trip_id)
-        if not trip:
-            continue
-        rows.sort(key=lambda r: int(r["stop_sequence"]))
-        route = routes.get(trip["route_id"], {})
-        label = (route.get("route_short_name") or route.get("route_long_name") or "").strip()
-        headsign = (trip.get("trip_headsign") or rows[0].get("stop_headsign") or "").strip()
-        if not headsign:
-            headsign = stops[rows[-1]["stop_id"]]["stop_name"].strip() + "ゆき"
-        seq = tuple(pole(r["stop_id"]) for r in rows)
-        key = (label, headsign, seq)
-        if key not in pattern_idx:
-            pattern_idx[key] = len(patterns)
-            patterns.append({"r": label, "h": headsign, "s": list(seq)})
-        p = pattern_idx[key]
-        times = []
-        for k, r in enumerate(rows):
-            # when the bus leaves each stop; at the last stop, when it arrives
-            t = r.get("arrival_time") if k == len(rows) - 1 else r.get("departure_time")
-            t = t or r.get("departure_time") or r.get("arrival_time")
-            times.append(to_minutes(t) if t else None)
-        if None in times:
-            continue
-        pattern_trips[p].append((trip["service_id"], times))
-        for pos, r in enumerate(rows[:-1]):  # nobody boards at the last stop
-            if r.get("pickup_type") != "1":
-                boardings[poles[seq[pos]][0]].add((p, pos))
+    for fi, pre, feed, stops, routes, trips, by_trip in parsed:
+        for trip_id, rows in by_trip.items():
+            trip = trips.get(trip_id)
+            if not trip or any(r["stop_id"] not in stops for r in rows) or len(rows) < 2:
+                continue
+            rows.sort(key=lambda r: int(r["stop_sequence"]))
+            route = routes.get(trip["route_id"], {})
+            label = (route.get("route_short_name") or route.get("route_long_name") or "").strip()
+            label = " ".join(x for x in (feed.get("label", ""), label) if x)
+            headsign = (trip.get("trip_headsign") or rows[0].get("stop_headsign") or "").strip()
+            if not headsign:
+                headsign = stops[rows[-1]["stop_id"]]["stop_name"].strip() + "ゆき"
+            seq = tuple(pole(fi, r["stop_id"], stops[r["stop_id"]]) for r in rows)
+            key = (label, headsign, seq)
+            if key not in pattern_idx:
+                pattern_idx[key] = len(patterns)
+                patterns.append({"r": label, "h": headsign, "s": list(seq)})
+            p = pattern_idx[key]
+            times = []
+            for k, r in enumerate(rows):
+                # when the bus leaves each stop; at the last stop, when it arrives
+                t = r.get("arrival_time") if k == len(rows) - 1 else r.get("departure_time")
+                t = (t or r.get("departure_time") or r.get("arrival_time") or "").strip()
+                times.append(to_minutes(t) if t else None)
+            if None in times:
+                continue
+            pattern_trips[p].append((pre + trip["service_id"], times))
+            for pos, r in enumerate(rows[:-1]):  # nobody boards at the last stop
+                if r.get("pickup_type") != "1":
+                    boardings[poles[seq[pos]][0]].add((p, pos))
 
     for n in names:
         n["lat"] = round(sum(n["lat"]) / len(n["lat"]), 6)
@@ -255,14 +321,15 @@ def build(zip_bytes, out_dir, source_url=""):
             for sid, times in trips_
         ])
     dump("patterns.json", patterns)
+    main_name = " ".join(x for x in (main_info.get("feed_publisher_name", "名古屋市交通局"), "GTFS-JP",
+                                     main_info.get("feed_version", "")) if x)
     dump("index.json", {
-        "generated_from": " ".join(x for x in (feed_info.get("feed_publisher_name", "名古屋市交通局"),
-                                                "GTFS-JP", feed_info.get("feed_version", "")) if x),
+        "generated_from": main_name + (f" ほか（{'・'.join(dict.fromkeys(publishers[1:]))}）" if len(feeds) > 1 else ""),
         "source_url": source_url,
-        "valid": [feed_info.get("feed_start_date", ""), feed_info.get("feed_end_date", "")],
+        "valid": [main_info.get("feed_start_date", ""), main_info.get("feed_end_date", "")],
         "calendar": calendar,
         "services": services,
-        "exceptions": exceptions,
+        "exceptions": dict(sorted(exceptions.items())),
         "names": [[n["n"], n["k"], n["lat"], n["lon"]] for n in names],
         "poles": poles,
     })
@@ -270,14 +337,36 @@ def build(zip_bytes, out_dir, source_url=""):
           f"trips: {sum(map(len, pattern_trips.values()))}")
 
 
+def load_feeds(cfg_path):
+    """feeds from gtfs/feeds.json with their zips in gtfs/feeds/ (<id>.zip, <id>-2.zip, …)"""
+    cfg = json.load(open(cfg_path, encoding="utf-8"))
+    folder = os.path.join(os.path.dirname(cfg_path), "feeds")
+    out = []
+    for feed in cfg["feeds"]:
+        n = 1
+        while True:
+            path = os.path.join(folder, f"{feed['id']}.zip" if n == 1 else f"{feed['id']}-{n}.zip")
+            if not os.path.exists(path):
+                break
+            fid = feed["id"] if n == 1 else f"{feed['id']}-{n}"
+            out.append({**feed, "id": fid, "data": open(path, "rb").read()})
+            n += 1
+        if n == 1:
+            print(f"{feed['id']}: no zip, skipped")
+    return out
+
+
 def main():
     args = sys.argv[1:]
-    if len(args) == 2 and args[0] == "--download":
+    one = {"id": "nagoya", "label": "", "area": "名古屋市"}
+    if len(args) == 3 and args[0] == "--feeds":
+        build(load_feeds(args[1]), args[2])
+    elif len(args) == 2 and args[0] == "--download":
         data, url = download_feed()
-        build(data, args[1], url)
+        build([{**one, "data": data}], args[1], url)
     elif len(args) == 2:
         with open(args[0], "rb") as f:
-            build(f.read(), args[1])
+            build([{**one, "data": f.read()}], args[1])
     else:
         sys.exit(__doc__)
 
