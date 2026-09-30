@@ -814,6 +814,7 @@
     text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff, 0 0 3px #fff;
   }
   .stop-name::before { display: none; }
+  .stop-name.small { font-size: 12px; font-weight: 700; }
   .stop-label {
     border: 2px solid var(--dep);
     border-radius: 10px;
@@ -1138,18 +1139,74 @@ async function findDepartures(dep, dest, services) {
 
 function poleLatLng(pole) { return [IDX.poles[pole][1], IDX.poles[pole][2]]; }
 
+// CARTO Voyager: a clean, Google-Maps-like street map (OpenStreetMap data)
+function baseTiles() {
+  return L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions" target="_blank" rel="noopener">CARTO</a>',
+    subdomains: "abcd",
+    maxNativeZoom: 20,
+    maxZoom: 20,
+    minZoom: 10,
+  });
+}
+
+// road-following geometry per stop-to-stop leg (bus/data/legs.json, built by
+// scripts/build_shapes.py); a missing or empty entry falls back to a straight line
+let LEGS = null;
+let legsPromise = null;
+function loadLegs() {
+  if (!legsPromise) {
+    legsPromise = fetch("data/legs.json", { cache: "no-cache" })
+      .then(r => r.ok ? r.json() : {})
+      .catch(() => ({}))
+      .then(legs => { LEGS = legs; return legs; });
+  }
+  return legsPromise;
+}
+
+function decodePolyline(str) {
+  const out = [];
+  let lat = 0, lon = 0, i = 0;
+  while (i < str.length) {
+    for (const which of [0, 1]) {
+      let shift = 0, result = 0, b;
+      do {
+        b = str.charCodeAt(i++) - 63;
+        result |= (b & 0x1f) << shift;
+        shift += 5;
+      } while (b >= 0x20);
+      const d = result & 1 ? ~(result >> 1) : result >> 1;
+      if (which === 0) lat += d; else lon += d;
+    }
+    out.push([lat / 1e5, lon / 1e5]);
+  }
+  return out;
+}
+
+// points from pole a to pole b along the road when known; null = only a straight line
+function legPath(a, b) {
+  const [, alat, alon] = IDX.poles[a];
+  const [, blat, blon] = IDX.poles[b];
+  const enc = LEGS && LEGS[`${alat},${alon}|${blat},${blon}`];
+  return enc ? decodePolyline(enc) : null;
+}
+
+// the whole path through poles seq[from..to]
+function pathThrough(seq, from, to) {
+  const pts = [poleLatLng(seq[from])];
+  for (let k = from + 1; k <= to; k++) {
+    const leg = legPath(seq[k - 1], seq[k]);
+    if (leg) pts.push(...leg.slice(1)); else pts.push(poleLatLng(seq[k]));
+  }
+  return pts;
+}
+
 function renderMap(dep) {
   if (!map) {
     map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
     L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(map);
     L.control.scale({ position: "bottomleft", imperial: false }).addTo(map);
-    // 国土地理院 淡色地図: plain, Japanese labels, no oversized highway/IC signs
-    L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
-      attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
-      maxNativeZoom: 18,
-      maxZoom: 20,
-      minZoom: 5,
-    }).addTo(map);
+    baseTiles().addTo(map);
   }
   markers.forEach(m => map.removeLayer(m));
   markers = [];
@@ -1167,11 +1224,21 @@ function renderMap(dep) {
   let focus = null; // the stop to center on: destination if there is one, else departure
   if (dep) {
     const seq = PATTERNS[dep.p].s;
-    const latlngs = seq.slice(dep.pos, dep.j + 1).map(poleLatLng);
-    routeLines.push(L.polyline(latlngs, { color: THEME.dest, weight: 4, opacity: 0.85 }).addTo(map));
-    addMarker(latlngs[0], THEME.dep, `出発: ${selectedDeparture}`);
-    addMarker(latlngs[latlngs.length - 1], THEME.dest, `到着: ${selectedDestination}`);
-    focus = latlngs[latlngs.length - 1];
+    const path = pathThrough(seq, dep.pos, dep.j);
+    routeLines.push(L.polyline(path, { color: "#ffffff", weight: 11, opacity: 1, lineJoin: "round" }).addTo(map));
+    routeLines.push(L.polyline(path, { color: ROUTE_BLUE, weight: 6.5, opacity: 1, lineJoin: "round" }).addTo(map));
+    // every stop the bus calls at on the way, with its name and time
+    for (let k = dep.pos + 1; k < dep.j; k++) {
+      const m = L.circleMarker(poleLatLng(seq[k]), {
+        radius: 6, color: "#2d3b6b", weight: 3, fillColor: "#fff", fillOpacity: 1,
+      }).addTo(map);
+      const name = IDX.names[IDX.poles[seq[k]][0]][0];
+      m.bindTooltip(`${name} ${fmt(dep.times[k])}`, { permanent: true, direction: "right", offset: [8, 0], className: "stop-name small" });
+      markers.push(m);
+    }
+    addMarker(poleLatLng(seq[dep.pos]), THEME.dep, `出発: ${selectedDeparture} ${fmt(dep.min)}`);
+    addMarker(poleLatLng(seq[dep.j]), THEME.dest, `到着: ${selectedDestination} ${fmt(dep.arr)}`);
+    focus = poleLatLng(seq[dep.j]);
   } else if (selectedDeparture) {
     const [, , lat, lon] = IDX.names[NAME_TO_IDX.get(selectedDeparture)];
     addMarker([lat, lon], THEME.dep, `出発: ${selectedDeparture}`);
@@ -1739,6 +1806,8 @@ function locateMe(fly) {
   }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
 }
 
+const ROUTE_BLUE = "#1a73e8";
+
 // a steady colour per route family (基幹, 栄, 名駅, …) so lines are easy to tell apart
 const ROUTE_COLORS = ["#3949ab", "#29b6d6", "#8bc34a", "#9c27b0", "#ff9800", "#e91e63", "#00897b", "#5c6bc0", "#43a047", "#f4511e"];
 function routeColor(label) {
@@ -1768,41 +1837,30 @@ function initStopMap() {
   L.control.scale({ position: "bottomleft", imperial: false }).addTo(stopMap);
   document.getElementById("mapZoomIn").onclick = () => stopMap.zoomIn();
   document.getElementById("mapZoomOut").onclick = () => stopMap.zoomOut();
-  L.tileLayer("https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png", {
-    attribution: '<a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>',
-    maxNativeZoom: 18,
-    maxZoom: 20,
-    minZoom: 10,
-  }).addTo(stopMap);
+  baseTiles().addTo(stopMap);
   const renderer = L.canvas({ padding: 0.5, tolerance: 8 }); // 1,500 markers stay fast on canvas
-  // bus routes as coloured lines (stop to stop), each segment drawn once per route
-  // (the feed has no road shapes, so lines run straight from stop to stop)
-  const drawn = new Set();
-  const lines = [];
-  for (const pat of PATTERNS) {
-    const color = routeColor(pat.r);
-    let line = [];
-    const flush = () => {
-      if (line.length > 1) lines.push(L.polyline(line, { renderer, color, weight: 3.5, opacity: 0.75, interactive: false }).addTo(stopMap));
-      line = [];
-    };
-    for (let k = 1; k < pat.s.length; k++) {
-      const a = pat.s[k - 1], b = pat.s[k];
-      const key = `${pat.r}|${Math.min(a, b)}|${Math.max(a, b)}`;
-      // express runs skip stops; their long straight hops would cut across blocks
-      if (drawn.has(key) || L.latLng(poleLatLng(a)).distanceTo(poleLatLng(b)) > 700) { flush(); continue; }
-      drawn.add(key);
-      if (!line.length) line.push(poleLatLng(a));
-      line.push(poleLatLng(b));
+  stopMap.createPane("routes").style.zIndex = 390; // under the stop markers
+  const lineRenderer = L.canvas({ pane: "routes", padding: 0.5 });
+  // bus routes as coloured lines along the roads, each leg drawn once per route
+  loadLegs().then(() => {
+    const drawn = new Set();
+    for (const pat of PATTERNS) {
+      const color = routeColor(pat.r);
+      for (let k = 1; k < pat.s.length; k++) {
+        const a = pat.s[k - 1], b = pat.s[k];
+        const key = `${pat.r}|${Math.min(a, b)}|${Math.max(a, b)}`;
+        if (drawn.has(key)) continue;
+        drawn.add(key);
+        let pts = legPath(a, b);
+        if (!pts) {
+          // no road geometry: straight line, but skip long express hops that cut across blocks
+          if (L.latLng(poleLatLng(a)).distanceTo(poleLatLng(b)) > 700) continue;
+          pts = [poleLatLng(a), poleLatLng(b)];
+        }
+        L.polyline(pts, { renderer: lineRenderer, color, weight: 4, opacity: 0.8, interactive: false }).addTo(stopMap);
+      }
     }
-    flush();
-  }
-  // up close the straight lines visibly cut corners, so fade them there
-  const lineStyle = () => {
-    const close = stopMap.getZoom() >= 16;
-    lines.forEach(l => l.setStyle({ opacity: close ? 0.35 : 0.75, weight: close ? 3 : 3.5 }));
-  };
-  stopMap.on("zoomend", lineStyle);
+  });
   for (const [name, , lat, lon] of IDX.names) {
     L.circleMarker([lat, lon], {
       renderer, radius: 8, color: "#2d3b6b", weight: 3.5, fillColor: "#fff", fillOpacity: 1,
@@ -1811,7 +1869,6 @@ function initStopMap() {
   labelLayer = L.layerGroup().addTo(stopMap);
   stopMap.on("zoomend moveend", updateMapLabels);
   stopMap.setView([35.1682, 136.9086], 15); // 栄 until the location arrives
-  lineStyle();
   locateMe(true);
 }
 
@@ -1882,6 +1939,7 @@ function init([index, patterns]) {
   render();
   setInterval(render, 15000);
   initTabs();
+  loadLegs().then(() => render());
 
   document.getElementById("nextCard").onclick = openDetail;
   document.getElementById("detailBtn").onclick = (e) => { e.stopPropagation(); openDetail(); };
