@@ -324,7 +324,8 @@ def build(feeds, out_dir, source_url=""):
     main_name = " ".join(x for x in (main_info.get("feed_publisher_name", "名古屋市交通局"), "GTFS-JP",
                                      main_info.get("feed_version", "")) if x)
     dump("index.json", {
-        "generated_from": main_name + (f" ほか（{'・'.join(dict.fromkeys(publishers[1:]))}）" if len(feeds) > 1 else ""),
+        "generated_from": main_name + (f" ほか近郊バス{len(set(publishers[1:]))}事業者" if len(feeds) > 1 else ""),
+        "publishers": list(dict.fromkeys(publishers)),
         "source_url": source_url,
         "valid": [main_info.get("feed_start_date", ""), main_info.get("feed_end_date", "")],
         "calendar": calendar,
