@@ -1241,6 +1241,11 @@ function pathThrough(seq, from, to) {
 
 // show each on-the-way stop's time/name unless it would overlap a label already shown
 // (the 発/着 labels win, then stops in route order)
+// Leaflet zooms where the scale bar reads "500 m" in Nagoya
+const START_ZOOM = 14.25;
+const START_ZOOM_MIN = 13.75;
+const START_ZOOM_MAX = 14.5;
+
 function syncMidLabels() {
   const mids = markers.filter(m => m.midStop);
   if (!mids.length || map.getZoom() === undefined) return;
@@ -1322,8 +1327,15 @@ function renderMap(dep) {
   if (viewKey !== lastViewKey) {
     lastViewKey = viewKey;
     if (focus) {
-      // about 100 m around the stop in every direction
-      map.fitBounds(L.latLng(focus).toBounds(200));
+      // start at the "500 m" scale: the whole trip if it fits within that scale's
+      // zoom range, otherwise centred on the destination
+      const trip = routeLines.length ? routeLines[0].getBounds() : null;
+      const fit = trip ? map.getBoundsZoom(trip, false, L.point(40, 70)) : -1;
+      if (fit >= START_ZOOM_MIN) {
+        map.setView(trip.getCenter(), Math.min(fit, START_ZOOM_MAX));
+      } else {
+        map.setView(focus, START_ZOOM);
+      }
     } else {
       map.setView([35.17, 136.91], 13);
     }
