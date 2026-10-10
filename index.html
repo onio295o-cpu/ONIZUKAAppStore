@@ -356,6 +356,8 @@ function answer(el, v, ans){
 
 function finish(){
   $('prog').style.width = '100%';
+  if(score === TOTAL && !finish.played){ finish.played = true; return perfectShow(finish); }
+  finish.played = false;
   show('end');
   const s = '⭐'.repeat(score) || '🌱';
   $('result').innerHTML = `${TOTAL}もん ちゅう ${score}もん いっぱつで せいかい！<br><span style="font-size:2rem">${s}</span>`;
@@ -479,19 +481,33 @@ function sfx(kind){
   }catch(e){}
 }
 
+/* ---------- 全問正解のごほうび（30秒動画） ---------- */
+function perfectShow(after){
+  const id = ++stageId, st = $('stage'), t0 = Date.now();
+  resetStage(); showPow('🏆 ぜんもん せいかい！ 🏆'); sfx('happy');
+  const end = () => { if(id !== stageId) return; stageId++; st.onclick = null; resetStage(); st.classList.add('hide'); after(); };
+  st.onclick = () => { if(Date.now() - t0 > 900) end(); };
+  setTimeout(() => { if(id === stageId) playClip(pick(PERFECT_CLIPS)).then(end); }, 1500);
+}
+
 /* ---------- ごほうびシーン ---------- */
 // 動画クリップ（YouTube の公式チャンネル）。who はそのキャラの変身シーン、kind:'waza' は必殺技
 const CLIPS = [
-  {id:'l-PoXgn2kCk', start:0, end:69, who:'キュアアルカナ'},                       // 名探偵プリキュア！ キュアアルカナ 変身シーン
-  {id:'QwExFKxU5ok', start:0, end:74, who:'キュアエクレール'},                     // キュアエクレール 変身シーン
-  {id:'ANZ2qYtKdMA', start:0, end:60, who:['キュアアンサー','キュアミスティック']}, // キュアアンサー＆キュアミスティック 変身シーン
-  {id:'aLIKtTHpn1c', start:0, end:15, who:'キュアハート'},                         // キュアハート 10周年メッセージ（東映アニメーション公式）
-  {id:'FtyzmWfGhcs', start:0, end:48, kind:'waza'},                                 // プリキュア！アルカナホワイトリリー！
-  {id:'_w_XpbkFhDc', start:0, end:63, kind:'waza'},                                 // プリキュア！フライング・スペクトル！
-  {id:'2pDtyVGAN5c', start:0, end:52, kind:'waza'},                                 // プリキュア！スターディテクティブ！
-  {id:'cg2RJr8eXOk', start:0, end:60, kind:'waza'},                                 // プリキュア！フライング・インフィニティ！
-  {id:'INbco2MQ1dM', start:0, end:72, kind:'waza'},                                 // 映画ドキドキ！プリキュア 予告編
+  {id:'l-PoXgn2kCk', start:57, end:64, who:'キュアアルカナ'},                       // 名探偵プリキュア！ キュアアルカナ 変身シーン（69秒）
+  {id:'QwExFKxU5ok', start:62, end:69, who:'キュアエクレール'},                     // キュアエクレール 変身シーン（75秒）
+  {id:'ANZ2qYtKdMA', start:104, end:111, who:['キュアアンサー','キュアミスティック']}, // キュアアンサー＆キュアミスティック 変身シーン（116秒）
+  {id:'aLIKtTHpn1c', start:4, end:11, who:'キュアハート'},                          // キュアハート 10周年メッセージ（15秒）
+  {id:'FtyzmWfGhcs', start:36, end:43, kind:'waza'},                                // プリキュア！アルカナホワイトリリー！（48秒）
+  {id:'_w_XpbkFhDc', start:51, end:58, kind:'waza'},                                // プリキュア！フライング・スペクトル！（64秒）
+  {id:'2pDtyVGAN5c', start:40, end:47, kind:'waza'},                                // プリキュア！スターディテクティブ！（53秒）
+  {id:'cg2RJr8eXOk', start:56, end:63, kind:'waza'},                                // プリキュア！フライング・インフィニティ！（68秒）
 ];
+// 全問正解のごほうび（30秒）：オープニング主題歌（ノンテロップ）
+const PERFECT_CLIPS = [
+  {id:'gri5qHqXjMg', start:0, end:30},   // 名探偵プリキュア！ オープニング
+  {id:'wfB-OvWKCvc', start:0, end:30},   // わんだふるぷりきゅあ！ オープニング
+];
+const SCENE_MAX = 10000;                  // 1回のごほうびは10秒まで
 const clipFor = name => CLIPS.find(c => [].concat(c.who || []).includes(name));
 const wazaClip = () => pick(CLIPS.filter(c => c.kind === 'waza'));
 
@@ -564,7 +580,7 @@ function playClip(clip = wazaClip()){
   const tok = ++clipTok, box = $('clip');
   box.innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.id}?autoplay=1&start=${clip.start}&end=${clip.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
   box.classList.remove('hide');
-  return sleep((clip.end - clip.start + 1.5) * 1000).then(() => { if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; } });
+  return sleep((clip.end - clip.start + 1) * 1000).then(() => { if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; } });
 }
 
 // 声が終わるまで待つ（声が出せない環境でも止まらないよう保険のタイマー付き）
@@ -733,6 +749,7 @@ async function reaction(done){
   resetStage();
   const t0 = Date.now(), st = $('stage');
   st.onclick = () => { if(alive() && Date.now() - t0 > 900){ stageId++; endStage(done); } };
+  setTimeout(() => { if(alive()){ stageId++; endStage(done); } }, SCENE_MAX);   // 10秒で おわり
   const bub = $('bubble');
   const say = async (t, k) => {
     if(!alive()) return false;
@@ -742,7 +759,7 @@ async function reaction(done){
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name; bub.append(nm);
     bub.append(document.createTextNode(t));
     const [p, r] = c.voice || (c.villain ? VILLAIN_VOICE : DEFAULT_VOICE);
-    await Promise.all([speakDone(t, p, r), sleep(1100)]);
+    await Promise.all([speakDone(t, p, r), sleep(900)]);
     return alive();
   };
   const finish = async () => { await sleep(300); if(alive()) endStage(done); };
@@ -781,10 +798,8 @@ async function spaceScene({alive, say, finish, st}){
   const a = EL.a, v = EL.v, hair = v.querySelector('.hair'), hasB = !!EL.b;
   a.classList.remove('off-r'); a.style.left = '50%'; a.style.zIndex = 3;
   fx('a', 'shake'); emo('a', '💢'); sfx('boing');
-  await sleep(450);
-  if(!await say(pick(GAGS), 'a')) return;
   v.classList.remove('off-r'); v.classList.add('top', 'show');
-  await sleep(600);
+  await sleep(500);
   if(!await say('はなげ こうげきだー！ うちゅうへ いってこーい！', 'v')) return;
 
   const n = CH.v.nose || DEFAULT_NOSE, W = 220, sR = st.getBoundingClientRect(), aR = a.getBoundingClientRect();
@@ -792,12 +807,12 @@ async function spaceScene({alive, say, finish, st}){
   v.style.marginLeft = '0'; v.style.left = (aR.left + aR.width / 2 - sR.left - n.x * W) + 'px';
   hair.style.left = (n.x * W - 20) + 'px'; hair.style.top = noseY + 'px';
   const dist = aR.top + 10 - sR.top - noseY;
-  hair.style.transition = 'height .6s ease-in'; hair.style.height = dist + 'px';
-  await sleep(700);
+  hair.style.transition = 'height .4s ease-in'; hair.style.height = dist + 'px';
+  await sleep(450);
   if(!alive()) return;
   sfx('whoosh'); fx('a', '');
-  hair.style.transition = 'height 1.8s ease-in-out'; hair.style.height = '160px';
-  const b = body('a'); b.classList.add('rise'); b.style.transition = 'transform 1.8s ease-in-out'; b.style.transformOrigin = '50% 0';
+  hair.style.transition = 'height 1.2s ease-in-out'; hair.style.height = '160px';
+  const b = body('a'); b.classList.add('rise'); b.style.transition = 'transform 1.2s ease-in-out'; b.style.transformOrigin = '50% 0';
   b.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
   st.classList.add('space');
   if(!await say('きゃーーー！ たすけてーーー！', 'a')) return;
@@ -814,26 +829,21 @@ async function spaceScene({alive, say, finish, st}){
   }
   if(!await say('ひっひっひ！ おしっこ ジャーーー！', 'v')) return;
   emo('a', '💦');
-  if(!await say('いやーん！ なんか ふってきたー！', 'a')) return;
   st.querySelectorAll('.drop').forEach(e => e.remove());
 
   if(hasB){
     EL.b.classList.remove('off-r'); EL.b.style.left = '78%'; emo('b', '💢');
-    if(!await say('まてー！ {v}！ わたしが やっつけるよ！', 'b')) return;
-    await playClip();
-    if(!alive()) return;
     showPow('ドカーン！✨'); sfx('boom');
+    if(!await say('こらー！ {v}！ えーい！', 'b')) return;
   }else if(!await say('ふははは！ もう あきたぞ！ かえしてやる！', 'v')) return;
   v.classList.remove('show'); v.classList.add('defeated');
   b.style.transition = 'transform .7s cubic-bezier(.3,1.6,.5,1)'; b.style.transform = '';
   hair.style.transition = 'height .8s'; hair.style.height = '0px';
   st.classList.remove('space');
   if(hasB) emo('b', '');
-  if(!await say('おちるーーー！', 'a')) return;
-  fx('a', 'laugh'); emo('a', '');
+  fx('a', 'laugh'); emo('a', ''); sfx('happy');
+  if(hasB){ fx('b', 'dance'); emo('b', '✨'); }
   if(!await say('ただいまー！ たすかったよー！', 'a')) return;
-  sfx('happy');
-  if(hasB){ fx('b', 'dance'); emo('b', '✨'); if(!await say('やっつけたよ！ ハッピー！', 'b')) return; }
   return finish();
 }
 refreshMascots();
