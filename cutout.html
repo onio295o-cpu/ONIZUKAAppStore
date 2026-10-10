@@ -11,216 +11,288 @@
     font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif}
   main{max-width:720px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
   h1{margin:4px 0;font-size:1.8rem;color:var(--pink);text-align:center}
+  h2{margin:0 0 8px;font-size:1.2rem}
   .btn{border:none;border-radius:16px;font:inherit;font-weight:bold;color:#fff;cursor:pointer;padding:12px 14px;
-    box-shadow:0 4px 0 rgba(0,0,0,.18);font-size:1rem}
+    box-shadow:0 4px 0 rgba(0,0,0,.18);font-size:1rem;text-decoration:none;text-align:center}
   .btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
   .btn:disabled{opacity:.45}
   .btn.on{outline:4px solid var(--ink)}
+  .btn.sm{padding:8px 10px;font-size:.9rem;border-radius:12px}
   .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   .row label{font-weight:bold}
   .card{background:#fff;border-radius:20px;padding:12px;box-shadow:0 4px 0 rgba(0,0,0,.08)}
-  .file{display:block;text-align:center;background:var(--purple);font-size:1.2rem;padding:16px}
+  .file{display:block;background:var(--purple);font-size:1.2rem;padding:16px}
   .file input{display:none}
-  #wrap{position:relative;border-radius:14px;overflow:hidden;touch-action:none;
-    background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/20px 20px}
-  #wrap.sky{background:linear-gradient(#6ec9ff,#d9f4ff 62%,#7fdc62 62%)}
+  .checker{background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/20px 20px}
+  .sky{background:linear-gradient(#6ec9ff,#d9f4ff 62%,#7fdc62 62%)!important}
+  #wrap{position:relative;border-radius:14px;overflow:hidden;touch-action:none}
   #view{display:block;width:100%;height:auto;cursor:crosshair}
   #msg{min-height:1.4em;font-weight:bold;text-align:center}
   input[type=range]{flex:1;min-width:120px}
   .hide{display:none!important}
   small{opacity:.75}
+  #list{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .item{background:#fff;border-radius:16px;padding:8px;box-shadow:0 3px 0 rgba(0,0,0,.08);display:flex;flex-direction:column;gap:6px;align-items:center}
+  .item .thumb{width:100%;height:150px;border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .item .thumb canvas,.item .thumb img{max-width:100%;max-height:150px}
+  .item .nm{font-weight:bold;font-size:.9rem;word-break:break-all;text-align:center}
+  .item .st{font-size:.8rem;opacity:.8}
+  .item.sel{outline:4px solid var(--pink)}
 </style>
 </head>
 <body>
 <main>
   <h1>✂️ キャラ きりぬき</h1>
-  <a class="btn" style="background:var(--yellow);color:var(--ink);text-align:center;text-decoration:none" href="index.html">← アプリに もどる</a>
+  <a class="btn" style="background:var(--yellow);color:var(--ink)" href="index.html">← アプリに もどる</a>
 
-  <label class="btn file">🖼 画像を えらぶ<input type="file" id="file" accept="image/*"></label>
+  <label class="btn file">🖼 画像を えらぶ（いくつでも OK）<input type="file" id="file" accept="image/*" multiple></label>
 
-  <section id="editor" class="hide">
-    <div class="card row">
-      <button class="btn" style="background:var(--pink)" id="ai">🤖 AIで 自動きりぬき</button>
-      <button class="btn" style="background:var(--blue)" id="easy">🪄 かんたん 自動きりぬき</button>
+  <section class="card row">
+    <label for="edge">ふちどり</label><input type="range" id="edge" min="0" max="24" value="8">
+    <input type="color" id="edgeColor" value="#ffffff" aria-label="ふちどりの色">
+    <label><input type="checkbox" id="useAI" checked> AIを つかう</label>
+    <button class="btn sm" style="background:#6ec9ff" id="bg">🌤 はいけい</button>
+  </section>
+
+  <div id="msg">画像を えらぶと、じどうで きりぬきます。</div>
+
+  <section id="batch" class="hide">
+    <div id="list"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" style="background:var(--green);flex:1;font-size:1.2rem" id="zip">📦 ぜんぶ まとめて ほぞん（ZIP）</button>
+    </div>
+  </section>
+
+  <section id="editor" class="hide card">
+    <h2 id="edName">なおす</h2>
+    <div id="wrap" class="checker"><canvas id="view"></canvas></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sm on" style="background:#e5534b" id="erase">🧽 けす</button>
+      <button class="btn sm" style="background:var(--green)" id="restore">🖌 もどす</button>
+      <label for="size">ふで</label><input type="range" id="size" min="4" max="80" value="24">
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn sm" style="background:#888" id="undo">↩ ひとつ もどす</button>
+      <button class="btn sm" style="background:var(--pink)" id="redoAI">🤖 AIで やりなおし</button>
+      <button class="btn sm" style="background:var(--blue)" id="easy">🪄 かんたん きりぬき</button>
       <label for="tol">きびしさ</label><input type="range" id="tol" min="5" max="80" value="28">
     </div>
-
-    <div id="msg"></div>
-    <div id="wrap"><canvas id="view"></canvas></div>
-
-    <div class="card row">
-      <button class="btn on" style="background:#e5534b" id="erase">🧽 けす</button>
-      <button class="btn" style="background:var(--green)" id="restore">🖌 もどす</button>
-      <label for="size">ふでの 大きさ</label><input type="range" id="size" min="4" max="80" value="24">
-      <button class="btn" style="background:#888" id="undo">↩ ひとつ もどす</button>
+    <div class="row" style="margin-top:8px">
+      <button class="btn" style="background:var(--green);flex:1" id="save">💾 この画像を ほぞん</button>
     </div>
-
-    <div class="card row">
-      <label for="edge">ふちどり</label><input type="range" id="edge" min="0" max="24" value="8">
-      <input type="color" id="edgeColor" value="#ffffff" aria-label="ふちどりの色">
-      <button class="btn" style="background:#6ec9ff" id="bg">🌤 はいけい きりかえ</button>
-    </div>
-
-    <button class="btn" style="background:var(--green);font-size:1.3rem;padding:16px" id="save">💾 PNGで ほぞん</button>
-    <p class="card"><small>
-      ほぞんした PNG を、GitHub の「キャラクター」フォルダに アップロードしてください。
-      もとの画像と おなじ名前（例：キュアハート.png）なら、アプリが じどうで こちらを つかいます。
-    </small></p>
   </section>
+
+  <p class="card"><small>
+    ほぞんした PNG を、GitHub の「キャラクター」フォルダに アップロードしてください。
+    もとの画像と おなじ名前（例：キュアハート.png）なら、アプリが じどうで こちらを つかいます。
+    AIは はじめて つかうとき、データの よみこみに 1ぷんくらい かかります。
+  </small></p>
 </main>
 
 <script>
 const $ = id => document.getElementById(id);
-const MAX = 900;                       // 作業サイズの上限（長い辺）
-let src = null, W = 0, H = 0, base = 'character';
-let pix = null;                        // 元画像の画素（RGBA）
-let alpha = null;                      // 残す=255 / 消す=0
-let undoStack = [], tool = 'erase', drawing = false, pad = 0;
+const MAX = 900;                                   // 作業サイズの上限（長い辺）
+const AI_URL = 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.5.8/+esm';
+const AI_DATA = 'https://staticimgly.com/@imgly/background-removal-data/1.5.8/dist/';
 const msg = t => { $('msg').textContent = t; };
+const items = [];                                  // {base, W, H, src, pix, alpha, el, done}
+let cur = null, undoStack = [], tool = 'erase', drawing = false, pad = 0, aiMod = null;
 
-$('file').onchange = e => {
-  const f = e.target.files[0]; if(!f) return;
-  base = f.name.replace(/\.[^.]+$/, '') || 'character';
-  const img = new Image();
-  img.onload = () => {
-    const k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
-    W = Math.round(img.naturalWidth * k); H = Math.round(img.naturalHeight * k);
-    const c = document.createElement('canvas'); c.width = W; c.height = H;
-    const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
-    src = c; pix = x.getImageData(0, 0, W, H).data;
-    alpha = new Uint8ClampedArray(W * H).fill(255);
-    undoStack = [];
-    $('editor').classList.remove('hide');
-    msg('「自動きりぬき」を おしてね。のこりは ふでで なおせるよ。');
-    render();
-  };
-  img.src = URL.createObjectURL(f);
-};
+/* ---------- 画像の読み込み ---------- */
+function loadFile(f){
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const W = Math.round(img.naturalWidth * k), H = Math.round(img.naturalHeight * k);
+      const c = document.createElement('canvas'); c.width = W; c.height = H;
+      const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
+      res({base: f.name.replace(/\.[^.]+$/, '') || 'character', W, H, src: c, pix: x.getImageData(0, 0, W, H).data,
+           alpha: new Uint8ClampedArray(W * H).fill(255)});
+    };
+    img.onerror = rej;
+    img.src = URL.createObjectURL(f);
+  });
+}
 
-function pushUndo(){ undoStack.push(alpha.slice()); if(undoStack.length > 15) undoStack.shift(); }
-$('undo').onclick = () => { if(undoStack.length){ alpha = undoStack.pop(); render(); } };
+/* ---------- AIで背景を消す ---------- */
+async function aiAlpha(it, onProgress){
+  aiMod = aiMod || await import(AI_URL);
+  const blob = await new Promise(r => it.src.toBlob(r, 'image/png'));
+  const out = await aiMod.removeBackground(blob, {
+    publicPath: AI_DATA,
+    progress: (key, c, t) => onProgress && onProgress(t ? Math.round(c / t * 100) : 0)
+  });
+  const bmp = await createImageBitmap(out);
+  const c = document.createElement('canvas'); c.width = it.W; c.height = it.H;
+  const x = c.getContext('2d'); x.drawImage(bmp, 0, 0, it.W, it.H);
+  const d = x.getImageData(0, 0, it.W, it.H).data, a = new Uint8ClampedArray(it.W * it.H);
+  for(let i = 0; i < a.length; i++) a[i] = d[i * 4 + 3];
+  return a;
+}
 
-/* ---- かんたん自動きりぬき：画像のふちから、にた色を たどって 消す ---- */
-$('easy').onclick = () => {
-  if(!src) return;
-  pushUndo();
-  const tol = +$('tol').value, n = W * H;
-  const seen = new Uint8Array(n), seed = new Int32Array(n);
-  const q = new Int32Array(n); let qh = 0, qt = 0;
+/* ---------- かんたん自動きりぬき：画像のふちから、にた色を たどって 消す ---------- */
+function easyAlpha(it, tol){
+  const {W, H, pix} = it, n = W * H;
+  const seen = new Uint8Array(n), seed = new Int32Array(n), q = new Int32Array(n), bg = new Uint8Array(n);
+  let qh = 0, qt = 0;
   const d = (i, j) => { const a = i * 4, b = j * 4; return Math.abs(pix[a] - pix[b]) + Math.abs(pix[a + 1] - pix[b + 1]) + Math.abs(pix[a + 2] - pix[b + 2]); };
   const push = (i, s) => { if(!seen[i]){ seen[i] = 1; seed[i] = s; q[qt++] = i; } };
   for(let x = 0; x < W; x++){ push(x, x); push((H - 1) * W + x, (H - 1) * W + x); }
   for(let y = 0; y < H; y++){ push(y * W, y * W); push(y * W + W - 1, y * W + W - 1); }
-  const bg = new Uint8Array(n);
   while(qh < qt){
     const i = q[qh++]; bg[i] = 1;
     const x = i % W, y = (i / W) | 0, s = seed[i];
-    const nb = [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < H - 1 ? i + W : -1];
-    for(const j of nb){
-      if(j < 0 || seen[j]) continue;
-      if(d(i, j) < tol && d(s, j) < tol * 3) push(j, s);
-    }
+    for(const j of [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < H - 1 ? i + W : -1])
+      if(j >= 0 && !seen[j] && d(i, j) < tol && d(s, j) < tol * 3) push(j, s);
   }
-  for(let i = 0; i < n; i++) alpha[i] = bg[i] ? 0 : 255;
-  smooth();
-  msg('けしきれない ところは 🧽で、けしすぎた ところは 🖌で なおしてね。');
-  render();
-};
-
-// ふちを なめらかに（ぎざぎざ を へらす）
-function smooth(){
-  const a = alpha.slice();
+  const a = new Uint8ClampedArray(n);
+  for(let i = 0; i < n; i++) a[i] = bg[i] ? 0 : 255;
+  const b = a.slice();                              // ふちを なめらかに
   for(let y = 1; y < H - 1; y++) for(let x = 1; x < W - 1; x++){
     const i = y * W + x;
-    const s = a[i - W - 1] + a[i - W] + a[i - W + 1] + a[i - 1] + a[i] + a[i + 1] + a[i + W - 1] + a[i + W] + a[i + W + 1];
-    alpha[i] = s / 9;
+    a[i] = (b[i - W - 1] + b[i - W] + b[i - W + 1] + b[i - 1] + b[i] + b[i + 1] + b[i + W - 1] + b[i + W] + b[i + W + 1]) / 9;
   }
+  return a;
 }
 
-/* ---- AIで自動きりぬき（はじめての時は データを よみこむので 少し 時間がかかります） ---- */
-$('ai').onclick = async () => {
-  if(!src) return;
-  $('ai').disabled = true;
-  msg('AIを じゅんびちゅう…（はじめては 1ぷんくらい かかるよ）');
-  try{
-    const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
-    const blob = await new Promise(r => src.toBlob(r, 'image/png'));
-    const out = await mod.removeBackground(blob, {
-      progress: (key, cur, total) => msg(`AIが よみこみちゅう… ${total ? Math.round(cur / total * 100) : 0}%`)
-    });
-    const img = await createImageBitmap(out);
-    const c = document.createElement('canvas'); c.width = W; c.height = H;
-    const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
-    const d = x.getImageData(0, 0, W, H).data;
-    pushUndo();
-    for(let i = 0; i < W * H; i++) alpha[i] = d[i * 4 + 3];
-    msg('できた！ のこりは ふでで なおしてね。');
-    render();
-  }catch(e){
-    msg('AIが つかえなかったよ（ネットに つながっているか かくにんしてね）。「かんたん自動きりぬき」を ためしてね。');
-  }
-  $('ai').disabled = false;
-};
-
-/* ---- 表示（ふちどり つき） ---- */
-let finalCanvas = null;
-function render(){
-  if(!src) return;
+/* ---------- ふちどり つきで 1まいに する ---------- */
+function compose(it){
+  const {W, H, pix, alpha} = it;
   const cut = document.createElement('canvas'); cut.width = W; cut.height = H;
-  const cx = cut.getContext('2d'); const id = cx.createImageData(W, H);
+  const cx = cut.getContext('2d'), id = cx.createImageData(W, H);
   for(let i = 0; i < W * H; i++){
     id.data[i * 4] = pix[i * 4]; id.data[i * 4 + 1] = pix[i * 4 + 1]; id.data[i * 4 + 2] = pix[i * 4 + 2]; id.data[i * 4 + 3] = alpha[i];
   }
   cx.putImageData(id, 0, 0);
-  const t = +$('edge').value; pad = t;
+  const t = +$('edge').value;
   const out = document.createElement('canvas'); out.width = W + t * 2; out.height = H + t * 2;
   const ox = out.getContext('2d');
   if(t > 0){
     const sh = document.createElement('canvas'); sh.width = out.width; sh.height = out.height;
     const sx = sh.getContext('2d');
-    for(let a = 0; a < 360; a += 15){
-      const r = a * Math.PI / 180;
-      sx.drawImage(cut, t + Math.cos(r) * t, t + Math.sin(r) * t);
-    }
-    sx.globalCompositeOperation = 'source-in';
-    sx.fillStyle = $('edgeColor').value; sx.fillRect(0, 0, sh.width, sh.height);
+    for(let a = 0; a < 360; a += 15){ const r = a * Math.PI / 180; sx.drawImage(cut, t + Math.cos(r) * t, t + Math.sin(r) * t); }
+    sx.globalCompositeOperation = 'source-in'; sx.fillStyle = $('edgeColor').value; sx.fillRect(0, 0, sh.width, sh.height);
     ox.drawImage(sh, 0, 0);
   }
   ox.drawImage(cut, t, t);
-  finalCanvas = out;
-  const v = $('view'); v.width = out.width; v.height = out.height;
-  v.getContext('2d').drawImage(out, 0, 0);
+  return {canvas: out, pad: t};
 }
-['edge', 'edgeColor'].forEach(k => $(k).oninput = render);
-$('bg').onclick = () => $('wrap').classList.toggle('sky');
 
-/* ---- ふで（けす／もどす） ---- */
+/* ---------- 一覧 ---------- */
+function drawThumb(it){
+  const th = it.el.querySelector('.thumb'); th.innerHTML = '';
+  th.append(compose(it).canvas);
+}
+function addItem(it){
+  const el = document.createElement('div'); el.className = 'item';
+  el.innerHTML = '<div class="thumb checker"></div><div class="nm"></div><div class="st">まちちゅう…</div>' +
+    '<div class="row"><button class="btn sm" style="background:var(--purple)">✏️ なおす</button><button class="btn sm" style="background:var(--green)">💾</button></div>';
+  el.querySelector('.nm').textContent = it.base + '.png';
+  const [fix, sv] = el.querySelectorAll('button');
+  fix.onclick = () => openEditor(it);
+  sv.onclick = () => saveOne(it);
+  $('list').append(el); it.el = el;
+  const im = document.createElement('img'); im.src = it.src.toDataURL(); el.querySelector('.thumb').append(im);
+}
+const status = (it, t) => { it.el.querySelector('.st').textContent = t; };
+
+$('file').onchange = async e => {
+  const files = [...e.target.files]; e.target.value = '';
+  if(!files.length) return;
+  $('batch').classList.remove('hide');
+  const news = [];
+  for(const f of files){ try{ const it = await loadFile(f); items.push(it); news.push(it); addItem(it); }catch(err){} }
+  for(let i = 0; i < news.length; i++){
+    const it = news[i];
+    msg(`きりぬき ちゅう… ${i + 1} / ${news.length}`);
+    await cutAuto(it);
+  }
+  msg(`できた！ ${news.length}まい きりぬいたよ。なおしたい 画像は「✏️ なおす」を おしてね。`);
+};
+
+async function cutAuto(it){
+  if($('useAI').checked){
+    try{
+      status(it, 'AIで きりぬき ちゅう…');
+      it.alpha = await aiAlpha(it, p => { if(!it.done) status(it, `AI じゅんび ${p}%`); });
+      it.done = true; status(it, '✅ AIで きりぬき'); drawThumb(it); return;
+    }catch(err){ console.error(err); }
+  }
+  it.alpha = easyAlpha(it, +$('tol').value);
+  it.done = true; status(it, $('useAI').checked ? '⚠️ AIが つかえず かんたん きりぬき' : '✅ かんたん きりぬき'); drawThumb(it);
+}
+
+/* ---------- なおす（ふで） ---------- */
+function openEditor(it){
+  cur = it; undoStack = [];
+  items.forEach(x => x.el.classList.toggle('sel', x === it));
+  $('edName').textContent = '✏️ ' + it.base + ' を なおす';
+  $('editor').classList.remove('hide');
+  render();
+  $('editor').scrollIntoView({behavior: 'smooth'});
+}
+function render(){
+  if(!cur) return;
+  const r = compose(cur); pad = r.pad;
+  const v = $('view'); v.width = r.canvas.width; v.height = r.canvas.height;
+  v.getContext('2d').drawImage(r.canvas, 0, 0);
+}
+function pushUndo(){ undoStack.push(cur.alpha.slice()); if(undoStack.length > 15) undoStack.shift(); }
+$('undo').onclick = () => { if(cur && undoStack.length){ cur.alpha = undoStack.pop(); render(); drawThumb(cur); } };
+$('easy').onclick = () => { if(!cur) return; pushUndo(); cur.alpha = easyAlpha(cur, +$('tol').value); render(); drawThumb(cur); };
+$('redoAI').onclick = async () => {
+  if(!cur) return; const it = cur; pushUndo();
+  $('redoAI').disabled = true;
+  try{ it.alpha = await aiAlpha(it, p => msg(`AI じゅんび ${p}%`)); msg('できた！'); status(it, '✅ AIで きりぬき'); }
+  catch(err){ msg('AIが つかえなかったよ。ネットに つながっているか かくにんしてね。'); }
+  $('redoAI').disabled = false; render(); drawThumb(it);
+};
 $('erase').onclick = () => { tool = 'erase'; $('erase').classList.add('on'); $('restore').classList.remove('on'); };
 $('restore').onclick = () => { tool = 'restore'; $('restore').classList.add('on'); $('erase').classList.remove('on'); };
 function paint(e){
-  const v = $('view'), r = v.getBoundingClientRect();
+  const v = $('view'), r = v.getBoundingClientRect(), {W, H} = cur;
   const x = (e.clientX - r.left) * v.width / r.width - pad, y = (e.clientY - r.top) * v.height / r.height - pad;
   const rad = +$('size').value * v.width / r.width / 2, val = tool === 'erase' ? 0 : 255;
   const x0 = Math.max(0, Math.floor(x - rad)), x1 = Math.min(W - 1, Math.ceil(x + rad));
   const y0 = Math.max(0, Math.floor(y - rad)), y1 = Math.min(H - 1, Math.ceil(y + rad));
   for(let yy = y0; yy <= y1; yy++) for(let xx = x0; xx <= x1; xx++)
-    if((xx - x) ** 2 + (yy - y) ** 2 <= rad * rad) alpha[yy * W + xx] = val;
+    if((xx - x) ** 2 + (yy - y) ** 2 <= rad * rad) cur.alpha[yy * W + xx] = val;
   render();
 }
 const view = $('view');
-view.addEventListener('pointerdown', e => { if(!src) return; drawing = true; pushUndo(); view.setPointerCapture(e.pointerId); paint(e); });
+view.addEventListener('pointerdown', e => { if(!cur) return; drawing = true; pushUndo(); view.setPointerCapture(e.pointerId); paint(e); });
 view.addEventListener('pointermove', e => { if(drawing) paint(e); });
-['pointerup', 'pointercancel'].forEach(t => view.addEventListener(t, () => { drawing = false; }));
+['pointerup', 'pointercancel'].forEach(t => view.addEventListener(t, () => { if(drawing && cur) drawThumb(cur); drawing = false; }));
 
-/* ---- ほぞん ---- */
-$('save').onclick = () => {
-  if(!finalCanvas) return;
-  finalCanvas.toBlob(b => {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(b); a.download = base + '.png';
-    document.body.append(a); a.click(); a.remove();
-    msg(`「${base}.png」を ほぞんしたよ！`);
-  }, 'image/png');
+['edge', 'edgeColor'].forEach(k => $(k).oninput = () => { render(); items.forEach(it => it.done && drawThumb(it)); });
+$('bg').onclick = () => document.querySelectorAll('.checker').forEach(e => e.classList.toggle('sky'));
+
+/* ---------- ほぞん ---------- */
+const pngBlob = it => new Promise(r => compose(it).canvas.toBlob(r, 'image/png'));
+function download(blob, name){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+}
+async function saveOne(it){ download(await pngBlob(it), it.base + '.png'); msg(`「${it.base}.png」を ほぞんしたよ！`); }
+$('save').onclick = () => cur && saveOne(cur);
+$('zip').onclick = async () => {
+  const done = items.filter(it => it.done);
+  if(!done.length) return;
+  msg('ZIPを つくっているよ…');
+  try{
+    if(!window.JSZip) await new Promise((res, rej) => {
+      const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload = res; s.onerror = rej; document.head.append(s);
+    });
+    const zip = new JSZip();
+    for(const it of done) zip.file(it.base + '.png', await pngBlob(it));
+    download(await zip.generateAsync({type: 'blob'}), 'kirinuki.zip');
+    msg(`${done.length}まいを「kirinuki.zip」に まとめて ほぞんしたよ！ ひらくと 画像が でてくるよ。`);
+  }catch(err){
+    msg('ZIPが つくれなかったので、1まいずつ ほぞんするね。');
+    for(const it of done){ await saveOne(it); await new Promise(r => setTimeout(r, 400)); }
+  }
 };
 </script>
 </body>
