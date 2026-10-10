@@ -7,16 +7,16 @@
 <style>
   :root{--bg:#fff7d6;--ink:#4a3b2a;--pink:#ff7aa8;--blue:#4cb8ff;--green:#5fd068;--yellow:#ffc933}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+  body{margin:0;min-height:100vh;background:linear-gradient(#fff7d6,#ffe6f1) fixed;color:var(--ink);
     font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
     display:flex;justify-content:center}
   #app{width:100%;max-width:640px;padding:16px;display:flex;flex-direction:column;gap:14px;text-align:center}
-  h1{margin:8px 0 0;font-size:2.2rem;color:var(--pink)}
+  h1{margin:8px 0 0;font-size:clamp(1.6rem,7vw,2.2rem);color:var(--pink);white-space:nowrap}
   .sub{margin:0;font-size:1.2rem}
   .btn{border:none;border-radius:24px;font:inherit;font-weight:bold;color:#fff;cursor:pointer;
     box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .08s}
   .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
-  .age{font-size:2rem;padding:22px;margin:6px 0}
+  .age{display:block;width:100%;font-size:2rem;padding:20px;margin:10px 0}
   .age small{display:block;font-size:1rem;font-weight:normal}
   .a4{background:var(--green)}.a5{background:var(--blue)}.a6{background:var(--pink)}
   .top{display:flex;justify-content:space-between;align-items:center;font-size:1.3rem}
@@ -37,40 +37,87 @@
   #msg{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
   .big{font-size:5rem}
   .hide{display:none!important}
-  #stage{position:fixed;inset:0;z-index:50;overflow:hidden;background:linear-gradient(#7fd3ff,#d9f4ff 60%)}
+  .mascot .brow{opacity:0}
+  .mascot{display:flex;justify-content:center;align-items:flex-end;gap:8px;margin-top:6px}
+  .mascot svg{width:110px;height:auto;animation:bounce .6s infinite alternate;filter:drop-shadow(0 5px 3px rgba(0,0,0,.2))}
+  .mascot .say{background:#fff;border:3px solid var(--ink);border-radius:18px;padding:6px 12px;font-weight:bold;font-size:1.1rem;margin-bottom:60px}
+  #stage{position:fixed;inset:0;z-index:50;overflow:hidden;background:linear-gradient(#6ec9ff,#d9f4ff 62%)}
+  #sky span{position:absolute;transition:opacity 1s}
+  #sky .sun{right:6%;top:6%;font-size:3.6rem;animation:spin 20s linear infinite}
+  #sky .cloud{font-size:3.4rem;opacity:.9;animation:drift 18s linear infinite}
+  #sky .c1{top:30%;left:-15%}#sky .c2{top:44%;left:-15%;font-size:2.4rem;animation-duration:26s;animation-delay:-10s}
+  #sky .c3{top:52%;left:-15%;font-size:2.8rem;animation-duration:22s;animation-delay:-4s}
+  @keyframes drift{to{transform:translateX(120vw)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #stage.space #sky span{opacity:0}
   #spacebg{position:absolute;inset:0;opacity:0;transition:opacity 1s;
     background:radial-gradient(#fff 1px,transparent 2px) 0 0/38px 38px,radial-gradient(#ffe 1.5px,transparent 2px) 19px 19px/53px 53px,#0b0b30}
   #stage.space #spacebg{opacity:1}
-  #park{position:absolute;left:0;right:0;bottom:0;height:30%;background:#6fcf5a;transition:opacity 1s;font-size:4.5rem}
+  #park{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(#7fdc62,#4fb847);transition:opacity 1s;font-size:4.5rem;
+    border-top:6px solid #5ccd4a}
   #stage.space #park{opacity:0}
-  #park span{position:absolute;bottom:55%}
-  .t1{left:4%}.t2{right:5%}.t3{left:28%;bottom:70%!important;font-size:2rem}.t4{right:30%;bottom:60%!important;font-size:2rem}
+  #park span{position:absolute;bottom:55%;transform-origin:50% 100%;animation:sway 3s ease-in-out infinite alternate}
+  #park .path{position:absolute;left:30%;right:30%;bottom:0;height:34%;background:#e9d29a;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.8}
+  @keyframes sway{to{transform:rotate(4deg)}}
+  .t1{left:4%}.t2{right:5%}.t5{left:20%;font-size:3rem!important;bottom:62%!important}
+  .t3{left:30%;bottom:70%!important;font-size:2rem}.t4{right:28%;bottom:62%!important;font-size:2.2rem}.t6{left:8%;bottom:20%!important;font-size:1.8rem}
   #planets span{position:absolute;font-size:3.2rem;opacity:0;transition:opacity 1s;animation:float 3s ease-in-out infinite}
   #stage.space #planets span{opacity:1}
   @keyframes float{50%{transform:translateY(-14px) rotate(8deg)}}
-  #nobi{position:absolute;left:50%;bottom:20%;width:170px;margin-left:-85px;transition:transform 1.8s ease-in-out}
-  #bubble.bobo{background:#fff6a8}
+  #nobi{position:absolute;left:50%;bottom:20%;width:160px;margin-left:-80px;z-index:2;transform-origin:50% 0;
+    transition:transform 1.8s ease-in-out,margin-left .4s}
+  #nobi.away{display:none}
+  #nobi.side{margin-left:-125px}
   #nobi.fall{transition:transform .7s cubic-bezier(.3,1.6,.5,1)}
-  #nobi.shake svg{animation:shake .25s infinite}
+  #nobi .boy{display:block;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
+  #nobi .kid{display:none;position:absolute;left:-78px;bottom:0;z-index:-1;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
+  #nobi.withkid .kid{display:block}
+  #nobi.shake .boy{animation:shake .25s infinite}
   #nobi.shake .arm{animation:wave .2s infinite alternate}
-  .arm{transform-box:fill-box;transform-origin:50% 0}
-  .arm.l{transform-origin:100% 0}
+  #nobi.withkid .kid{animation:shake .3s infinite}
+  .arm{transform-box:fill-box;transform-origin:100% 0}
   @keyframes wave{from{transform:rotate(-35deg)}to{transform:rotate(35deg)}}
-  #nobi.shake .mouth{animation:yell .25s infinite alternate}
   .mouth{transform-box:fill-box;transform-origin:center}
+  #nobi.shake .mouth{animation:yell .25s infinite alternate}
   @keyframes yell{from{transform:scaleY(.5)}to{transform:scale(1.2,1.4)}}
   #mark{position:absolute;top:-6px;right:-6px;font-size:3rem;opacity:0}
   #nobi.shake #mark{opacity:1;animation:pop .3s infinite alternate}
-  #bubble{position:absolute;bottom:3%;left:50%;z-index:3;transform:translateX(-50%);width:max-content;max-width:88vw;
-    background:#fff;border:4px solid var(--ink);border-radius:22px;padding:8px 16px;font-size:1.7rem;font-weight:bold;text-align:center}
-  #nobi{transform-origin:50% 0;z-index:2}
+  #nobi.hit .boy{transform:rotate(-22deg) translateX(-24px);transition:transform .08s}
+  #cry{position:absolute;top:-4px;left:-6px;font-size:2.4rem;opacity:0}
+  #nobi.hit #cry{opacity:1}
+  #hero{position:absolute;bottom:20%;left:50%;margin-left:380px;width:140px;z-index:3;opacity:0;
+    transition:margin-left .5s ease-out,opacity .3s,transform .12s}
+  #hero.show{margin-left:40px;opacity:1}
+  #hero.show svg{animation:bounce .5s infinite alternate;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
+  #hero.slap{margin-left:-6px;transform:rotate(-6deg)}
+  #hero.slap svg{animation:none}
+  #hero .harm{transform-box:fill-box;transform-origin:100% 0}
+  #hero.slap .harm{animation:slapArm .22s ease-out forwards}
+  @keyframes slapArm{from{transform:rotate(70deg)}to{transform:rotate(-70deg)}}
+  #hero .brow{opacity:0}#hero.angry .brow{opacity:1}
+  #hero.angry .hsmile{d:path("M52 90 Q60 82 68 90")}
+  @keyframes bounce{to{transform:translateY(-12px)}}
+  #pow{position:absolute;top:32%;left:50%;transform:translateX(-50%);font-size:2.6rem;font-weight:900;color:#ff3b3b;
+    -webkit-text-stroke:2px #fff;paint-order:stroke fill;z-index:4;opacity:0;white-space:nowrap}
+  #pow.on{animation:powpop .9s forwards}
+  @keyframes powpop{0%{opacity:0;transform:translateX(-50%) scale(.3)}25%{opacity:1;transform:translateX(-50%) scale(1.3)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
   #bobo{position:absolute;top:0;left:50%;width:220px;margin-left:-110px;z-index:1;
     transform:translateY(-110%);transition:transform .6s ease-out}
   #bobo.show{transform:none}
+  #bobo.defeated{transform:translateY(-130%) rotate(40deg);transition:transform .9s ease-in}
   #bobo img,#bobo svg#bobosvg{display:block;width:220px;height:auto}
   #bobo img{border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
-  #hair{position:absolute;left:50%;margin-left:-20px;width:40px;height:0;overflow:hidden;
-    transition:height .6s ease-in}
+  #hair{position:absolute;left:50%;margin-left:-20px;width:40px;height:0;overflow:hidden;transition:height .6s ease-in}
+  #bubble{position:absolute;bottom:3%;left:50%;z-index:3;transform:translateX(-50%);width:max-content;max-width:88vw;
+    background:#fff;border:4px solid var(--ink);border-radius:22px;padding:6px 18px 8px;font-size:1.7rem;font-weight:bold;text-align:center;
+    box-shadow:0 6px 0 rgba(0,0,0,.15)}
+  #bubble .nm{display:block;font-size:1rem;color:#8a5a00;letter-spacing:.05em}
+  #bubble.hero{background:#ffe3f1}#bubble.hero .nm{color:#d6307f}
+  #bubble.bobo{background:#fff6a8}#bubble.boy .nm{color:#2d8b38}
+  #bubble.kid{background:#efe4ff}#bubble.kid .nm{color:#6a3fb8}
+  #clip{position:absolute;inset:0;z-index:5;background:#000;display:flex;align-items:center;justify-content:center}
+  #clip iframe{width:100%;aspect-ratio:16/9;border:0}
+  #skip{position:absolute;top:10px;right:10px;z-index:6;font-size:.9rem;padding:6px 12px;background:rgba(0,0,0,.45);box-shadow:none}
   .hs{display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:4px 6px;
     font-size:3rem;font-weight:bold;font-variant-numeric:tabular-nums}
   .hs div{height:64px;display:flex;align-items:center;justify-content:center}
@@ -89,6 +136,12 @@
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+        <radialGradient id="hSkin" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fff0e3"/><stop offset="1" stop-color="#f6c9a8"/></radialGradient>
+        <linearGradient id="hHair" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffa6d6"/><stop offset="1" stop-color="#f26fb6"/></linearGradient>
+        <linearGradient id="hDress" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff86c0"/><stop offset="1" stop-color="#ee4c9b"/></linearGradient>
+        <radialGradient id="hEye" cx="50%" cy="30%" r="70%"><stop offset="0" stop-color="#b79bff"/><stop offset="1" stop-color="#5b2fd8"/></radialGradient>
+      </defs></svg>
 <div id="app">
 
   <section id="home">
@@ -98,6 +151,7 @@
     <button class="btn age a5" data-lv="5">5さい<small>10 までの たしざん</small></button>
     <button class="btn age a6" data-lv="6">6さい<small>200 までの たしざん・くく・わりざん</small></button>
     <button class="btn age" style="background:#9b6bff" id="toH">✏️ ひっさん<small>2けた・3けた の たしざん</small></button>
+    <div class="mascot"><span class="say">いっしょに<br>がんばろー！<br>ハッピー！</span></div>
   </section>
 
   <section id="hmode" class="hide">
@@ -144,6 +198,7 @@
     </div>
     <div id="msg"></div>
     <div class="choices" id="choices"></div>
+    <div class="mascot"><span class="say">せいかいすると<br>いいこと あるよ♪</span></div>
   </section>
 
   <section id="end" class="hide">
@@ -156,57 +211,129 @@
 </div>
 
 <div id="stage" class="hide">
+  <div id="sky"><span class="sun">☀️</span><span class="cloud c1">☁️</span><span class="cloud c2">☁️</span><span class="cloud c3">☁️</span></div>
   <div id="spacebg"></div>
-  <div id="park"><span class="t1">🌳</span><span class="t2">🌳</span><span class="t3">🌷</span><span class="t4">🌷</span></div>
+  <div id="park">
+    <span class="t1">🌳</span><span class="t2">🌳</span><span class="t5">🌲</span><span class="t3">🌷</span><span class="t4">🌻</span><span class="t6">🌼</span>
+    <i class="path"></i>
+  </div>
   <div id="planets"><span style="left:12%;top:18%">🪐</span><span style="left:76%;top:30%">🌙</span><span style="left:30%;top:55%">☄️</span><span style="left:70%;top:60%">👽</span><span style="left:50%;top:10%">⭐</span></div>
   <div id="bobo">
     <img id="bobopic" src="bobobo.png" alt="" onload="document.getElementById('bobosvg').style.display='none'" onerror="this.remove()">
     <svg id="bobosvg" viewBox="0 0 240 260" width="220">
       <defs>
-        <radialGradient id="afro" cx="38%" cy="30%" r="75%"><stop offset="0" stop-color="#fff56a"/><stop offset=".6" stop-color="#ffd800"/><stop offset="1" stop-color="#d49b00"/></radialGradient>
-        <linearGradient id="skin" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ad6d38"/><stop offset=".5" stop-color="#dc9a5c"/><stop offset="1" stop-color="#ad6d38"/></linearGradient>
+        <radialGradient id="mon" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#b58cff"/><stop offset=".6" stop-color="#7a45d6"/><stop offset="1" stop-color="#4a238f"/></radialGradient>
       </defs>
-      <path d="M0 260 L8 208 Q40 186 85 178 L155 178 Q200 186 232 208 L240 260Z" fill="#1d9bf0"/>
-      <path d="M85 178 L112 258 L70 258 L28 200Z M155 178 L128 258 L170 258 L212 200Z" fill="#1478c4"/>
-      <path d="M85 178 L120 258 L155 178Z" fill="url(#skin)"/>
-      <path d="M120 212 L120 258 M96 204 Q108 226 120 220 M144 204 Q132 226 120 220 M104 236 Q120 244 136 236" stroke="#7a4a22" fill="none" stroke-width="2.5" stroke-linecap="round"/>
-      <rect x="94" y="160" width="52" height="30" fill="#b97b44"/>
-      <circle cx="120" cy="92" r="88" fill="url(#afro)"/>
-      <ellipse cx="84" cy="42" rx="30" ry="12" fill="#fffbb8" opacity=".65" transform="rotate(-25 84 42)"/>
-      <path d="M68 104 Q68 94 120 94 Q172 94 172 104 L170 150 Q165 196 120 202 Q75 196 70 150Z" fill="url(#skin)"/>
-      <path d="M88 108 Q120 101 152 108 M94 116 Q120 110 146 116" stroke="#8d5628" stroke-width="2" fill="none"/>
-      <path d="M70 122 Q120 111 170 122 L166 145 Q145 152 126 143 L114 143 Q95 152 74 145Z" fill="#f2f2f2" stroke="#333" stroke-width="3"/>
-      <path d="M82 131 L108 137 M132 137 L158 131" stroke="#222" stroke-width="5" stroke-linecap="round"/>
-      <path d="M112 148 Q107 165 113 169 Q120 174 127 169 Q133 165 128 148" fill="#c68646" stroke="#8d5628" stroke-width="2"/>
-      <path d="M116 170 q-4 6 -10 4 M124 170 q4 6 10 4" stroke="#111" stroke-width="2" fill="none"/>
-      <path d="M82 180 Q100 169 120 177 Q140 169 158 180 Q140 186 120 182 Q100 186 82 180Z" fill="#5f4026"/>
-      <path d="M92 187 Q120 180 148 187 Q140 211 120 213 Q100 211 92 187Z" fill="#8c1c1c"/>
-      <path d="M96 189 Q120 183 144 189 L142 196 Q120 191 98 196Z" fill="#fff"/>
-      <ellipse cx="120" cy="205" rx="14" ry="6" fill="#e8626a"/>
-      <path d="M80 192 Q120 228 160 192 Q152 214 120 216 Q88 214 80 192Z" fill="#5f4026" opacity=".3"/>
+      <g stroke="#2b1058" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M40 60 L22 8 L78 38Z M200 60 L218 8 L162 38Z" fill="#ffe27a"/>
+        <circle cx="120" cy="130" r="100" fill="url(#mon)"/>
+        <ellipse cx="82" cy="108" rx="24" ry="22" fill="#fff"/><ellipse cx="158" cy="108" rx="24" ry="22" fill="#fff"/>
+        <circle cx="88" cy="112" r="10" fill="#d81b3a" stroke="none"/><circle cx="152" cy="112" r="10" fill="#d81b3a" stroke="none"/>
+        <path d="M54 78 L106 98 M186 78 L134 98" fill="none" stroke-width="9"/>
+        <ellipse cx="120" cy="160" rx="20" ry="17" fill="#9a63ea"/>
+        <ellipse cx="112" cy="166" rx="5" ry="6" fill="#2b1058"/><ellipse cx="128" cy="166" rx="5" ry="6" fill="#2b1058"/>
+        <path d="M62 196 Q120 178 178 196 Q168 244 120 248 Q72 244 62 196Z" fill="#5a0f2b"/>
+        <path d="M74 198 l10 20 10 -18 M146 200 l10 18 10 -20" fill="#fff"/>
+        <ellipse cx="120" cy="232" rx="22" ry="10" fill="#ff6f8f" stroke="none"/>
+      </g>
     </svg>
     <div id="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>
   </div>
   <div id="bubble" class="hide"></div>
-  <div id="nobi">
-    <div id="mark">💢</div>
-    <svg viewBox="0 0 120 170" width="170">
-      <g class="arm l"><path d="M32 100 L14 128" stroke="#ffd7b0" stroke-width="11" stroke-linecap="round"/></g>
-      <g class="arm r"><path d="M88 100 L106 128" stroke="#ffd7b0" stroke-width="11" stroke-linecap="round"/></g>
-      <rect x="30" y="90" width="60" height="42" rx="10" fill="#ffd23f"/>
-      <rect x="34" y="126" width="52" height="24" rx="6" fill="#3b5bdb"/>
-      <rect x="42" y="148" width="12" height="16" fill="#ffd7b0"/><rect x="66" y="148" width="12" height="16" fill="#ffd7b0"/>
-      <rect x="38" y="162" width="18" height="7" rx="3" fill="#fff"/><rect x="64" y="162" width="18" height="7" rx="3" fill="#fff"/>
-      <circle cx="60" cy="56" r="38" fill="#ffd7b0"/>
-      <path d="M22 54 Q20 12 60 12 Q100 12 98 54 Q80 30 60 34 Q40 30 22 54Z" fill="#222"/>
-      <circle cx="44" cy="60" r="12" fill="#fff" stroke="#222" stroke-width="3"/><circle cx="76" cy="60" r="12" fill="#fff" stroke="#222" stroke-width="3"/>
-      <line x1="56" y1="60" x2="64" y2="60" stroke="#222" stroke-width="3"/>
-      <circle cx="46" cy="62" r="3.5" fill="#222"/><circle cx="74" cy="62" r="3.5" fill="#222"/>
-      <path d="M32 44 L54 52 M88 44 L66 52" stroke="#222" stroke-width="4" stroke-linecap="round"/>
-      <ellipse class="mouth" cx="60" cy="86" rx="13" ry="9" fill="#b3202a"/>
-      <ellipse cx="60" cy="91" rx="6" ry="3" fill="#ff8a8a"/>
+
+  <!-- めがねくん（オリジナル） -->
+  <div id="nobi" class="away">
+    <div id="mark">💢</div><div id="cry">💫</div>
+    <svg class="kid" viewBox="0 0 150 176" width="140">
+      <defs>
+        <radialGradient id="kSkin" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffdcb8"/><stop offset="1" stop-color="#e9a56f"/></radialGradient>
+        <linearGradient id="kSweat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e5fd1"/><stop offset="1" stop-color="#5b36a0"/></linearGradient>
+      </defs>
+      <g stroke="#3d2a1c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M20 112 L2 150" stroke-width="18" stroke="#3d2a1c"/><path d="M20 112 L2 150" stroke-width="14" stroke="#8e5fd1"/>
+        <path d="M130 112 L148 150" stroke-width="18" stroke="#3d2a1c"/><path d="M130 112 L148 150" stroke-width="14" stroke="#8e5fd1"/>
+        <ellipse cx="75" cy="130" rx="55" ry="42" fill="url(#kSweat)"/>
+        <path d="M30 122 Q75 136 120 122 M26 138 Q75 152 124 138" fill="none" stroke="#c7a8f0" stroke-width="5" opacity=".7"/>
+        <rect x="42" y="160" width="26" height="14" rx="6" fill="#4b3a2a"/><rect x="82" y="160" width="26" height="14" rx="6" fill="#4b3a2a"/>
+        <ellipse cx="75" cy="68" rx="46" ry="44" fill="url(#kSkin)"/>
+        <ellipse cx="30" cy="72" rx="7" ry="10" fill="#f1b88a"/><ellipse cx="120" cy="72" rx="7" ry="10" fill="#f1b88a"/>
+        <path d="M30 56 Q30 12 75 10 Q120 12 120 56 Q112 44 98 42 Q75 30 52 42 Q38 44 30 56Z" fill="#d6342f"/>
+        <path d="M28 52 Q75 66 122 52 L122 58 Q75 74 28 58Z" fill="#b82823"/>
+        <path d="M20 60 Q75 78 130 60 Q132 70 120 70 Q75 82 30 70 Q18 70 20 60Z" fill="#b82823"/>
+        <path d="M68 26 l3 7 7 .5 -5.5 4.5 2 7 -6.5 -4 -6.5 4 2 -7 -5.5 -4.5 7 -.5z" fill="#ffd23f" stroke="#a87a00" stroke-width="1.5"/>
+        <path d="M44 74 Q50 70 58 76 M92 76 Q100 70 106 74" fill="none" stroke-width="4"/>
+        <circle cx="54" cy="84" r="4" fill="#222" stroke="none"/><circle cx="96" cy="84" r="4" fill="#222" stroke="none"/>
+        <path d="M70 98 Q75 104 80 98" fill="none" stroke="#b5764a" stroke-width="2.5"/>
+        <ellipse class="mouth" cx="75" cy="112" rx="15" ry="10" fill="#8c1c24"/>
+        <path d="M62 105 Q75 108 88 105" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="butt"/>
+        <circle cx="42" cy="98" r="6" fill="#ff9aa5" opacity=".55" stroke="none"/><circle cx="108" cy="98" r="6" fill="#ff9aa5" opacity=".55" stroke="none"/>
+      </g>
+    </svg>
+    <svg class="boy" viewBox="0 0 120 176" width="160">
+      <defs>
+        <radialGradient id="bSkin" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffe3c4"/><stop offset="1" stop-color="#eaa877"/></radialGradient>
+        <linearGradient id="bShirt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63cc67"/><stop offset="1" stop-color="#2d8b38"/></linearGradient>
+        <radialGradient id="bHair" cx="35%" cy="25%" r="80%"><stop offset="0" stop-color="#94613a"/><stop offset="1" stop-color="#45280f"/></radialGradient>
+      </defs>
+      <g stroke="#3d2a1c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+        <g class="arm l"><path d="M32 100 L12 130" stroke-width="15"/><path d="M32 100 L12 130" stroke="#f1c08f" stroke-width="10.5"/></g>
+        <g class="arm r"><path d="M88 100 L108 130" stroke-width="15"/><path d="M88 100 L108 130" stroke="#f1c08f" stroke-width="10.5"/></g>
+        <rect x="42" y="146" width="12" height="18" fill="#fff"/><rect x="66" y="146" width="12" height="18" fill="#fff"/>
+        <rect x="38" y="160" width="20" height="9" rx="4" fill="#e53935"/><rect x="62" y="160" width="20" height="9" rx="4" fill="#e53935"/>
+        <rect x="34" y="124" width="52" height="28" rx="7" fill="#7a5238"/>
+        <rect x="28" y="86" width="64" height="46" rx="13" fill="url(#bShirt)"/>
+        <path d="M46 88 Q60 108 74 88Z" fill="#2a7a34"/>
+        <path d="M60 112 l3 7 7.5.6 -5.700 4.800 1.800 7.300 -6.600 -4 -6.600 4 1.800 -7.300 -5.700 -4.800 7.500 -.6z" fill="#fff" stroke="none"/>
+        <ellipse cx="24" cy="62" rx="6.500" ry="9" fill="#f1b88a"/><ellipse cx="96" cy="62" rx="6.500" ry="9" fill="#f1b88a"/>
+        <circle cx="60" cy="58" r="37" fill="url(#bSkin)"/>
+        <path d="M22 58 Q16 16 60 12 Q104 16 98 58 Q92 36 76 33 Q62 41 46 33 Q28 38 22 58Z" fill="url(#bHair)"/>
+        <circle cx="34" cy="22" r="10" fill="url(#bHair)"/><circle cx="54" cy="13" r="11" fill="url(#bHair)"/><circle cx="76" cy="15" r="11" fill="url(#bHair)"/><circle cx="92" cy="30" r="8.500" fill="url(#bHair)"/>
+        <ellipse cx="46" cy="20" rx="9" ry="3.500" fill="#fff" opacity=".28" stroke="none" transform="rotate(-20 46 20)"/>
+        <circle cx="44" cy="62" r="12.500" fill="#fff" fill-opacity=".92" stroke="#3a2a1d" stroke-width="3.500"/><circle cx="76" cy="62" r="12.500" fill="#fff" fill-opacity=".92" stroke="#3a2a1d" stroke-width="3.500"/>
+        <path d="M56.500 60 Q60 57 63.500 60" fill="none" stroke-width="3"/>
+        <circle cx="46" cy="64" r="4.500" fill="#222" stroke="none"/><circle cx="74" cy="64" r="4.500" fill="#222" stroke="none"/>
+        <circle cx="47.500" cy="62" r="1.600" fill="#fff" stroke="none"/><circle cx="75.500" cy="62" r="1.600" fill="#fff" stroke="none"/>
+        <path d="M36 52 Q44 48 53 54 M84 52 Q76 48 67 54" fill="none" stroke="#45280f" stroke-width="4.500"/>
+        <path d="M57 76 Q60 80 63 76" fill="none" stroke="#c07e4f" stroke-width="2.500"/>
+        <circle cx="34" cy="76" r="5.500" fill="#ff9aa5" opacity=".5" stroke="none"/><circle cx="86" cy="76" r="5.500" fill="#ff9aa5" opacity=".5" stroke="none"/>
+        <ellipse class="mouth" cx="60" cy="90" rx="12" ry="8.500" fill="#8c1c24"/>
+        <path d="M50 85 Q60 88 70 85" fill="none" stroke="#fff" stroke-width="4.500" stroke-linecap="butt"/>
+      </g>
     </svg>
   </div>
+
+  <!-- ハピハピちゃん（オリジナル） -->
+  <div id="hero">
+    <svg viewBox="0 0 120 190" width="140">
+      <g stroke="#7a2c58" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M30 40 Q0 64 8 128 Q24 104 33 72Z" fill="url(#hHair)"/><path d="M90 40 Q120 64 112 128 Q96 104 87 72Z" fill="url(#hHair)"/>
+        <path d="M78 100 L98 128" stroke-width="13"/><path d="M78 100 L98 128" stroke="#ffe2cc" stroke-width="9"/>
+        <rect x="46" y="148" width="10" height="30" fill="#ffe2cc"/><rect x="64" y="148" width="10" height="30" fill="#ffe2cc"/>
+        <rect x="40" y="168" width="20" height="9" rx="3" fill="#fff"/><rect x="60" y="168" width="20" height="9" rx="3" fill="#fff"/>
+        <path d="M40 176 h20 v8 q0 3 -3 3 h-14 q-3 0 -3 -3z M60 176 h20 v8 q0 3 -3 3 h-14 q-3 0 -3 -3z" fill="#ff5fa8"/>
+        <path d="M40 98 L80 98 L100 154 L20 154Z" fill="url(#hDress)"/>
+        <path d="M20 154 Q60 166 100 154 L100 150 Q60 162 20 150Z" fill="#fff"/>
+        <rect x="42" y="90" width="36" height="26" rx="8" fill="#ff9acb"/>
+        <path d="M60 114 l-9 -9 a5.500 5.500 0 0 1 9 -5 a5.500 5.500 0 0 1 9 5z" fill="#fff" stroke="none"/>
+        <g class="harm"><path d="M42 100 L22 128" stroke-width="13"/><path d="M42 100 L22 128" stroke="#ffe2cc" stroke-width="9"/><circle cx="21" cy="130" r="7.500" fill="#ffe2cc"/></g>
+        <circle cx="60" cy="58" r="35" fill="url(#hSkin)"/>
+        <path d="M23 58 Q20 12 60 12 Q100 12 97 58 Q88 34 60 36 Q32 34 23 58Z" fill="url(#hHair)"/>
+        <path d="M40 38 Q44 52 36 60 M80 38 Q76 52 84 60" fill="none" stroke="#f26fb6" stroke-width="3"/>
+        <circle cx="29" cy="28" r="10" fill="#e5322d"/><circle cx="91" cy="28" r="10" fill="#e5322d"/>
+        <circle cx="26" cy="25" r="3" fill="#fff" stroke="none" opacity=".7"/><circle cx="88" cy="25" r="3" fill="#fff" stroke="none" opacity=".7"/>
+        <ellipse cx="46" cy="64" rx="9" ry="12" fill="url(#hEye)" stroke="#2a1280"/><ellipse cx="74" cy="64" rx="9" ry="12" fill="url(#hEye)" stroke="#2a1280"/>
+        <circle cx="43" cy="58" r="4" fill="#fff" stroke="none"/><circle cx="71" cy="58" r="4" fill="#fff" stroke="none"/>
+        <circle cx="49" cy="70" r="2" fill="#fff" stroke="none"/><circle cx="77" cy="70" r="2" fill="#fff" stroke="none"/>
+        <path class="brow" d="M33 47 L55 54 M87 47 L65 54" stroke="#5b2fd8" stroke-width="4.500" fill="none"/>
+        <circle cx="35" cy="79" r="6" fill="#ff9bb8" opacity=".75" stroke="none"/><circle cx="85" cy="79" r="6" fill="#ff9bb8" opacity=".75" stroke="none"/>
+        <path class="hsmile" d="M52 82 Q60 92 68 82" stroke="#c2185b" stroke-width="3" fill="none"/>
+      </g>
+    </svg>
+  </div>
+  <div id="pow"></div>
+  <div id="clip" class="hide"></div>
+  <button id="skip" class="btn">スキップ ▶▶</button>
+</div>
 </div>
 
 <script>
@@ -296,13 +423,13 @@ function answer(el, v, ans){
     $('msg').textContent = '🎉 ' + p;
     $('eq').innerHTML = `${cur.a} ${SYM[cur.kind]} ${cur.b} ＝ <span class="q">${ans}</span>`;
     $('stars').textContent = '⭐ ' + score;
-    n++;
+    n++; sfx('ding');
     setTimeout(() => reaction(next), 700);
   }else{
     miss++;
     el.classList.add('ng','shake');
     el.disabled = true;
-    $('msg').textContent = 'おしい！ もういちど！';
+    $('msg').textContent = 'おしい！ もういちど！'; sfx('miss');
     speak('おしい、もういちど');
   }
 }
@@ -383,13 +510,13 @@ function hPress(d){
       const p = PRAISE[rnd(0, PRAISE.length - 1)];
       $('hmsg').textContent = '🎉 ' + p;
       $('hstars').textContent = '⭐ ' + score;
-      n++;
+      n++; sfx('ding');
       setTimeout(() => reaction(hNext), 700);
     }else hMark();
   }else{
     hMiss++;
     box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
-    $('hmsg').textContent = 'おしい！ もういちど！';
+    $('hmsg').textContent = 'おしい！ もういちど！'; sfx('miss');
     speak('おしい、もういちど');
   }
 }
@@ -401,13 +528,51 @@ $('hmodeBack').onclick = () => show('home');
 $('hback').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
 document.querySelectorAll('.age[data-h]').forEach(btn => btn.onclick = () => hStart(btn.dataset.h));
 
-/* ---------- のびたくん ---------- */
-let okCount = 0, stageId = 0;
+/* ---------- 効果音（WebAudio・ファイル不要） ---------- */
+let AC;
+function sfx(kind){
+  try{
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if(AC.state === 'suspended') AC.resume();
+    const t = AC.currentTime;
+    const tone = (f, d, type = 'sine', v = .25, t0 = 0, f2) => {
+      const o = AC.createOscillator(), g = AC.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t + t0);
+      if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + t0 + d);
+      g.gain.setValueAtTime(v, t + t0); g.gain.exponentialRampToValueAtTime(.001, t + t0 + d);
+      o.connect(g).connect(AC.destination); o.start(t + t0); o.stop(t + t0 + d + .02);
+    };
+    const noise = (d, fq, v = .4, t0 = 0, type = 'bandpass') => {
+      const n = AC.sampleRate * d, buf = AC.createBuffer(1, n, AC.sampleRate), c = buf.getChannelData(0);
+      for(let i = 0; i < n; i++) c[i] = (Math.random() * 2 - 1) * (1 - i / n);
+      const s = AC.createBufferSource(), f = AC.createBiquadFilter(), g = AC.createGain();
+      s.buffer = buf; f.type = type; f.frequency.value = fq; g.gain.value = v;
+      s.connect(f).connect(g).connect(AC.destination); s.start(t + t0);
+    };
+    if(kind === 'ding'){ tone(880, .25, 'sine', .22); tone(1320, .35, 'sine', .2, .12); }
+    else if(kind === 'miss'){ tone(220, .25, 'triangle', .2, 0, 140); }
+    else if(kind === 'slap'){ noise(.12, 2500, .8, 0, 'highpass'); tone(160, .15, 'square', .25, 0, 60); }
+    else if(kind === 'whoosh'){ noise(.8, 900, .5); }
+    else if(kind === 'boom'){ tone(140, .5, 'sawtooth', .35, 0, 35); noise(.4, 400, .6); }
+    else if(kind === 'boing'){ tone(300, .35, 'sine', .3, 0, 700); }
+    else if(kind === 'happy'){ [660, 880, 1100, 1320].forEach((f, i) => tone(f, .2, 'triangle', .18, i * .09)); }
+  }catch(e){}
+}
+
+/* ---------- ごほうびシーン ---------- */
+// 動画クリップ：YouTube の ID と、再生する区間（秒）。ここを書きかえれば好きな場面に変えられます
+const CLIP = {id:'INbco2MQ1dM', start:0, end:8};
+const BOY_RATE = window.BOY_RATE ?? .5;        // めがねくんが出る確率（出ない回はヒロインがほめるだけ）
+let okCount = 0, stageId = 0, clipTok = 0;
 const GAGS = ['だめーーー！','なんでよーーー！','あーーー！','ひどいよー！','うえーん！','ぼくの せいじゃないよー！','せいかいって なにさー！','やめてよーーー！'];
+const CHEERS = ['ハッピー！ せいかい！','やったね！ ハッピー！','すごーい！ ハッピー！','ハッピー ハッピー！ だいせいかい！'];
+const WHO = {boy:'めがねくん', hero:'ハピハピちゃん', kid:'どっしーくん', bobo:'ハナゲまじん'};
+const VOICE = {boy:[1.6,.95], hero:[2,1.15], kid:[.7,.85], bobo:[.6,.9]};   // [pitch, rate]
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const pick = a => a[rnd(0, a.length - 1)];
 
 // 声が終わるまで待つ（声が出せない環境でも止まらないよう保険のタイマー付き）
-function speakDone(t, pitch){
+function speakDone(t, pitch, rate){
   return new Promise(res => {
     let fin = false; const end = () => { if(!fin){ fin = true; res(); } };
     setTimeout(end, 1500 + t.length * 400);
@@ -415,18 +580,35 @@ function speakDone(t, pitch){
       if(!('speechSynthesis' in window)) return;
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(t);
-      u.lang = 'ja-JP'; u.rate = .9; u.pitch = pitch;
+      u.lang = 'ja-JP'; u.rate = rate; u.pitch = pitch;
       u.onend = u.onerror = end;
       speechSynthesis.speak(u);
     }catch(e){}
   });
 }
 
+function playClip(){
+  const tok = ++clipTok, box = $('clip');
+  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${CLIP.id}?autoplay=1&start=${CLIP.start}&end=${CLIP.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+  box.classList.remove('hide');
+  return sleep((CLIP.end - CLIP.start + 1.5) * 1000).then(() => {
+    if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; }
+  });
+}
+
+function showPow(t){
+  const p = $('pow'); p.textContent = t;
+  p.classList.remove('on'); void p.offsetWidth; p.classList.add('on');
+}
+
 function resetStage(){
-  const st = $('stage');
-  st.className = '';
-  $('nobi').className = ''; $('nobi').style.transform = '';
+  clipTok++;
+  $('stage').className = '';
+  $('nobi').className = 'away'; $('nobi').style.transform = '';
   $('bobo').className = ''; $('bobo').style.marginLeft = '-110px';
+  $('hero').className = '';
+  $('pow').className = ''; $('pow').textContent = '';
+  $('clip').classList.add('hide'); $('clip').innerHTML = '';
   const h = $('hair'); h.style.transition = 'none'; h.style.height = '0px';
   $('bubble').classList.add('hide');
 }
@@ -442,46 +624,90 @@ async function reaction(done){
   resetStage();
   const t0 = Date.now(), st = $('stage');
   st.onclick = () => { if(alive() && Date.now() - t0 > 900){ stageId++; endStage(done); } };
-  const nobi = $('nobi'), hair = $('hair'), bobo = $('bobo'), bub = $('bubble');
+  const nobi = $('nobi'), hair = $('hair'), bobo = $('bobo'), hero = $('hero'), bub = $('bubble');
+  const hasPic = $('bobosvg').style.display === 'none';
   const say = async (t, who) => {
     if(!alive()) return false;
-    bub.textContent = who ? `${who}：${t}` : t;
-    bub.classList.remove('hide'); bub.classList.toggle('bobo', !!who);
-    await Promise.all([speakDone(t, who ? .6 : 1.7), sleep(1100)]);
+    bub.textContent = '';
+    if(who){ const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (who === 'bobo' && hasPic) ? 'ボーボボ' : WHO[who]; bub.append(nm); }
+    bub.append(document.createTextNode(t));
+    bub.className = who || '';
+    const [p, r] = VOICE[who] || [1.2, .9];
+    await Promise.all([speakDone(t, p, r), sleep(1100)]);
     return alive();
   };
-  nobi.classList.add('shake');
-  if(!await say(GAGS[rnd(0, GAGS.length - 1)])) return;
-  if(okCount % 3 !== 0){ await sleep(300); if(alive()) endStage(done); return; }
+  const finish = async () => { await sleep(300); if(alive()) endStage(done); };
+  const space = okCount % 3 === 0;
 
-  // 3回に1回：ボーボボの鼻毛で宇宙へ
+  // めがねくんが出ない回：ヒロインがほめるだけ
+  if(!space && Math.random() >= BOY_RATE){
+    hero.classList.add('show');
+    sfx('happy'); showPow('ハッピー！✨');
+    await sleep(500);
+    if(!await say(pick(CHEERS), 'hero')) return;
+    return finish();
+  }
+
+  // めがねくん登場（すねて大さわぎ）
+  nobi.classList.remove('away'); nobi.classList.add('shake');
+  if(!space) nobi.classList.add('side');
+  sfx('boing');
+  if(!await say(pick(GAGS), 'boy')) return;
+
+  if(!space){
+    // ヒロインがおこってビンタ
+    hero.classList.add('show', 'angry');
+    await sleep(600);
+    if(!await say('もう！ ずるいことしちゃ だめでしょー！ ぷんぷん！', 'hero')) return;
+    nobi.classList.remove('shake');
+    hero.classList.add('slap');
+    await sleep(200);
+    nobi.classList.add('hit'); showPow('パチーン！💥'); sfx('slap');
+    if(!await say('えいっ！ ビンタ！', 'hero')) return;
+    hero.classList.remove('slap', 'angry');
+    if(!await say('いたいよー！ ごめんなさーい！', 'boy')) return;
+    nobi.classList.remove('hit');
+    sfx('happy');
+    if(!await say('よくできました！ ハッピー！', 'hero')) return;
+    return finish();
+  }
+
+  // 3回に1回：ハナゲの鼻毛で宇宙へ（どっしーくんも道づれ）→ ヒロインがやっつける
+  nobi.classList.add('withkid');
   bobo.classList.add('show');
   await sleep(600);
-  if(!await say('ハナゲしんけん！ いってこーい！', 'ボーボボ')) return;
-  const img = $('bobosvg').style.display === 'none';
-  const nx = img ? .57 : .5, noseY = bobo.offsetHeight * (img ? .76 : .654);
-  bobo.style.marginLeft = -(nx * 220) + 'px';          // 鼻をのびたくんの真上にそろえる
+  if(!await say('ハナゲしんけん！ いってこーい！', 'bobo')) return;
+  const nx = hasPic ? .57 : .5, noseY = bobo.offsetHeight * (hasPic ? .76 : .654);
+  bobo.style.marginLeft = -(nx * 220) + 'px';          // 鼻をめがねくんの真上にそろえる
   hair.style.left = (nx * 220 - 20) + 'px'; hair.style.marginLeft = '0';
   const dist = nobi.getBoundingClientRect().top + 10 - noseY;
   hair.style.top = noseY + 'px';
   hair.style.transition = 'height .6s ease-in'; hair.style.height = dist + 'px';
   await sleep(700);
   if(!alive()) return;
+  sfx('whoosh');
   hair.style.transition = 'height 1.8s ease-in-out'; hair.style.height = '160px';
   nobi.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
   st.classList.add('space');
-  if(!await say('うわーーー！ たすけてーーー！')) return;
-  await sleep(400);
-  if(!await say('うちゅうだーーー！')) return;
+  if(!await say('うわーーー！ たすけてーーー！', 'boy')) return;
+  if(!await say('ぼくまで つれていかれるのー！？ ぎゃー！', 'kid')) return;
+  hero.classList.add('show', 'angry');
+  if(!await say('まてー！ ハナゲまじん！ わたしが やっつけるよ！', 'hero')) return;
+  await playClip();
+  if(!alive()) return;
+  bobo.classList.remove('show'); bobo.classList.add('defeated'); showPow('ドカーン！✨'); sfx('boom');
   nobi.classList.add('fall'); nobi.style.transform = '';
   hair.style.transition = 'height .8s'; hair.style.height = '0px';
-  st.classList.remove('space'); bobo.classList.remove('show');
-  if(!await say('おちるーーー！')) return;
-  nobi.classList.remove('fall'); nobi.classList.remove('shake');
-  if(!await say('ただいまー！ こうえんに もどったよ')) return;
-  await sleep(300);
-  if(alive()) endStage(done);
+  st.classList.remove('space');
+  if(!await say('おちるーーー！', 'boy')) return;
+  nobi.classList.remove('fall', 'shake');
+  hero.classList.remove('angry');
+  if(!await say('ただいまー！ たすかったよー！', 'boy')) return;
+  sfx('happy');
+  if(!await say('やっつけたよ！ ハッピー！', 'hero')) return;
+  return finish();
 }
+document.querySelectorAll('.mascot').forEach(m => m.insertAdjacentHTML('afterbegin', $('hero').querySelector('svg').outerHTML));
 </script>
 </body>
 </html>
