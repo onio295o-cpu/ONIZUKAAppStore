@@ -64,57 +64,56 @@
   #planets span{position:absolute;font-size:3.2rem;opacity:0;transition:opacity 1s;animation:float 3s ease-in-out infinite}
   #stage.space #planets span{opacity:1}
   @keyframes float{50%{transform:translateY(-14px) rotate(8deg)}}
-  #nobi{position:absolute;left:50%;bottom:20%;width:160px;margin-left:-80px;z-index:2;transform-origin:50% 0;
-    transition:transform 1.8s ease-in-out,margin-left .4s}
-  #nobi.away{display:none}
-  #nobi.side{margin-left:-125px}
-  #nobi.fall{transition:transform .7s cubic-bezier(.3,1.6,.5,1)}
-  #nobi .boy{display:block;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
-  #nobi .kid{display:none;position:absolute;left:-78px;bottom:0;z-index:-1;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
-  #nobi.withkid .kid{display:block}
-  #nobi.shake .boy{animation:shake .25s infinite}
-  #nobi.shake .arm{animation:wave .2s infinite alternate}
-  #nobi.withkid .kid{animation:shake .3s infinite}
-  .arm{transform-box:fill-box;transform-origin:100% 0}
-  @keyframes wave{from{transform:rotate(-35deg)}to{transform:rotate(35deg)}}
+
+  /* ---- キャスト ---- */
+  #cast{position:absolute;inset:0;pointer-events:none}
+  .actor{position:absolute;bottom:20%;left:50%;width:180px;margin-left:-90px;z-index:2;
+    transition:left .5s ease-out,opacity .3s}
+  .actor.off-l{left:-30%!important;opacity:0}
+  .actor.off-r{left:130%!important;opacity:0}
+  .actor .body{position:relative;display:block;transform-origin:50% 100%}
+  .actor .fb{display:block;margin:0 auto;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
+  .actor img.pic{display:none;margin:0 auto;height:190px;width:auto;max-width:190px;filter:drop-shadow(0 6px 4px rgba(0,0,0,.3))}
+  .actor.haspic img.pic{display:block}
+  .actor.haspic .fb{display:none}
+  .actor.top{top:0;bottom:auto;width:220px;margin-left:-110px;left:50%;z-index:1;
+    transform:translateY(-110%);transition:transform .6s ease-out}
+  .actor.top.show{transform:none}
+  .actor.top.defeated{transform:translateY(-130%) rotate(40deg);transition:transform .9s ease-in}
+  .actor.top .fb{width:220px;height:auto}
+  .actor.top.haspic img.pic{height:auto;width:220px;max-width:none;border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+  .actor .hair{position:absolute;left:50%;width:40px;height:0;overflow:hidden;transition:height .6s ease-in}
+  .emo{position:absolute;top:-8px;right:-4px;font-size:2.6rem;opacity:0;z-index:3}
+  .emo.on{opacity:1;animation:pop .35s infinite alternate}
+  .actor .brow{opacity:0}.actor.angry .brow{opacity:1}
   .mouth{transform-box:fill-box;transform-origin:center}
-  #nobi.shake .mouth{animation:yell .25s infinite alternate}
+  .fx-shake{animation:shake .25s infinite}
+  .fx-shake .mouth{animation:yell .25s infinite alternate}
   @keyframes yell{from{transform:scaleY(.5)}to{transform:scale(1.2,1.4)}}
-  #mark{position:absolute;top:-6px;right:-6px;font-size:3rem;opacity:0}
-  #nobi.shake #mark{opacity:1;animation:pop .3s infinite alternate}
-  #nobi.hit .boy{transform:rotate(-22deg) translateX(-24px);transition:transform .08s}
-  #cry{position:absolute;top:-4px;left:-6px;font-size:2.4rem;opacity:0}
-  #nobi.hit #cry{opacity:1}
-  #hero{position:absolute;bottom:20%;left:50%;margin-left:380px;width:140px;z-index:3;opacity:0;
-    transition:margin-left .5s ease-out,opacity .3s,transform .12s}
-  #hero.show{margin-left:40px;opacity:1}
-  #hero.show svg{animation:bounce .5s infinite alternate;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
-  #hero.slap{margin-left:-6px;transform:rotate(-6deg)}
-  #hero.slap svg{animation:none}
-  #hero .harm{transform-box:fill-box;transform-origin:100% 0}
-  #hero.slap .harm{animation:slapArm .22s ease-out forwards}
-  @keyframes slapArm{from{transform:rotate(70deg)}to{transform:rotate(-70deg)}}
-  #hero .brow{opacity:0}#hero.angry .brow{opacity:1}
-  #hero.angry .hsmile{d:path("M52 90 Q60 82 68 90")}
-  @keyframes bounce{to{transform:translateY(-12px)}}
+  .fx-jump{animation:jump .45s infinite}
+  @keyframes jump{50%{transform:translateY(-34px)}}
+  .fx-laugh{animation:laugh .3s infinite alternate}
+  @keyframes laugh{from{transform:rotate(-7deg) scale(1)}to{transform:rotate(7deg) scale(1.07)}}
+  .fx-cry{animation:cry .5s infinite alternate;transform-origin:50% 100%}
+  @keyframes cry{from{transform:rotate(-4deg) translateY(0)}to{transform:rotate(4deg) translateY(6px)}}
+  .fx-hit{transform:rotate(-22deg) translateX(-24px);transition:transform .08s}
+  .fx-dance{animation:dance .5s infinite alternate}
+  @keyframes dance{from{transform:rotate(-9deg) translateY(0)}to{transform:rotate(9deg) translateY(-18px)}}
+  .fx-run{animation:runbob .22s infinite alternate}
+  @keyframes runbob{to{transform:translateY(-10px) rotate(4deg)}}
+  .fx-zap{animation:zap .12s infinite alternate}
+  @keyframes zap{from{filter:brightness(1)}to{filter:brightness(2.4) saturate(.3);transform:translateX(5px)}}
+  .fx-grow{transform:scale(1.25)}
+  .fx-spin{animation:spinb .7s linear infinite}
+  @keyframes spinb{to{transform:rotate(360deg)}}
   #pow{position:absolute;top:32%;left:50%;transform:translateX(-50%);font-size:2.6rem;font-weight:900;color:#ff3b3b;
     -webkit-text-stroke:2px #fff;paint-order:stroke fill;z-index:4;opacity:0;white-space:nowrap}
   #pow.on{animation:powpop .9s forwards}
   @keyframes powpop{0%{opacity:0;transform:translateX(-50%) scale(.3)}25%{opacity:1;transform:translateX(-50%) scale(1.3)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
-  #bobo{position:absolute;top:0;left:50%;width:220px;margin-left:-110px;z-index:1;
-    transform:translateY(-110%);transition:transform .6s ease-out}
-  #bobo.show{transform:none}
-  #bobo.defeated{transform:translateY(-130%) rotate(40deg);transition:transform .9s ease-in}
-  #bobo img,#bobo svg#bobosvg{display:block;width:220px;height:auto}
-  #bobo img{border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
-  #hair{position:absolute;left:50%;margin-left:-20px;width:40px;height:0;overflow:hidden;transition:height .6s ease-in}
   #bubble{position:absolute;bottom:3%;left:50%;z-index:3;transform:translateX(-50%);width:max-content;max-width:88vw;
     background:#fff;border:4px solid var(--ink);border-radius:22px;padding:6px 18px 8px;font-size:1.7rem;font-weight:bold;text-align:center;
     box-shadow:0 6px 0 rgba(0,0,0,.15)}
   #bubble .nm{display:block;font-size:1rem;color:#8a5a00;letter-spacing:.05em}
-  #bubble.hero{background:#ffe3f1}#bubble.hero .nm{color:#d6307f}
-  #bubble.bobo{background:#fff6a8}#bubble.boy .nm{color:#2d8b38}
-  #bubble.kid{background:#efe4ff}#bubble.kid .nm{color:#6a3fb8}
   #clip{position:absolute;inset:0;z-index:5;background:#000;display:flex;align-items:center;justify-content:center}
   #clip iframe{width:100%;aspect-ratio:16/9;border:0}
   #skip{position:absolute;top:10px;right:10px;z-index:6;font-size:.9rem;padding:6px 12px;background:rgba(0,0,0,.45);box-shadow:none}
@@ -218,58 +217,15 @@
     <i class="path"></i>
   </div>
   <div id="planets"><span style="left:12%;top:18%">🪐</span><span style="left:76%;top:30%">🌙</span><span style="left:30%;top:55%">☄️</span><span style="left:70%;top:60%">👽</span><span style="left:50%;top:10%">⭐</span></div>
-  <div id="bobo">
-    <img id="bobopic" src="bobobo.png" alt="" onload="document.getElementById('bobosvg').style.display='none'" onerror="this.remove()">
-    <svg id="bobosvg" viewBox="0 0 240 260" width="220">
-      <defs>
-        <radialGradient id="mon" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#b58cff"/><stop offset=".6" stop-color="#7a45d6"/><stop offset="1" stop-color="#4a238f"/></radialGradient>
-      </defs>
-      <g stroke="#2b1058" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-        <path d="M40 60 L22 8 L78 38Z M200 60 L218 8 L162 38Z" fill="#ffe27a"/>
-        <circle cx="120" cy="130" r="100" fill="url(#mon)"/>
-        <ellipse cx="82" cy="108" rx="24" ry="22" fill="#fff"/><ellipse cx="158" cy="108" rx="24" ry="22" fill="#fff"/>
-        <circle cx="88" cy="112" r="10" fill="#d81b3a" stroke="none"/><circle cx="152" cy="112" r="10" fill="#d81b3a" stroke="none"/>
-        <path d="M54 78 L106 98 M186 78 L134 98" fill="none" stroke-width="9"/>
-        <ellipse cx="120" cy="160" rx="20" ry="17" fill="#9a63ea"/>
-        <ellipse cx="112" cy="166" rx="5" ry="6" fill="#2b1058"/><ellipse cx="128" cy="166" rx="5" ry="6" fill="#2b1058"/>
-        <path d="M62 196 Q120 178 178 196 Q168 244 120 248 Q72 244 62 196Z" fill="#5a0f2b"/>
-        <path d="M74 198 l10 20 10 -18 M146 200 l10 18 10 -20" fill="#fff"/>
-        <ellipse cx="120" cy="232" rx="22" ry="10" fill="#ff6f8f" stroke="none"/>
-      </g>
-    </svg>
-    <div id="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>
-  </div>
+  <div id="cast"></div>
   <div id="bubble" class="hide"></div>
+  <div id="pow"></div>
+  <div id="clip" class="hide"></div>
+  <button id="skip" class="btn">スキップ ▶▶</button>
+</div>
 
-  <!-- めがねくん（オリジナル） -->
-  <div id="nobi" class="away">
-    <div id="mark">💢</div><div id="cry">💫</div>
-    <svg class="kid" viewBox="0 0 150 176" width="140">
-      <defs>
-        <radialGradient id="kSkin" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffdcb8"/><stop offset="1" stop-color="#e9a56f"/></radialGradient>
-        <linearGradient id="kSweat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e5fd1"/><stop offset="1" stop-color="#5b36a0"/></linearGradient>
-      </defs>
-      <g stroke="#3d2a1c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
-        <path d="M20 112 L2 150" stroke-width="18" stroke="#3d2a1c"/><path d="M20 112 L2 150" stroke-width="14" stroke="#8e5fd1"/>
-        <path d="M130 112 L148 150" stroke-width="18" stroke="#3d2a1c"/><path d="M130 112 L148 150" stroke-width="14" stroke="#8e5fd1"/>
-        <ellipse cx="75" cy="130" rx="55" ry="42" fill="url(#kSweat)"/>
-        <path d="M30 122 Q75 136 120 122 M26 138 Q75 152 124 138" fill="none" stroke="#c7a8f0" stroke-width="5" opacity=".7"/>
-        <rect x="42" y="160" width="26" height="14" rx="6" fill="#4b3a2a"/><rect x="82" y="160" width="26" height="14" rx="6" fill="#4b3a2a"/>
-        <ellipse cx="75" cy="68" rx="46" ry="44" fill="url(#kSkin)"/>
-        <ellipse cx="30" cy="72" rx="7" ry="10" fill="#f1b88a"/><ellipse cx="120" cy="72" rx="7" ry="10" fill="#f1b88a"/>
-        <path d="M30 56 Q30 12 75 10 Q120 12 120 56 Q112 44 98 42 Q75 30 52 42 Q38 44 30 56Z" fill="#d6342f"/>
-        <path d="M28 52 Q75 66 122 52 L122 58 Q75 74 28 58Z" fill="#b82823"/>
-        <path d="M20 60 Q75 78 130 60 Q132 70 120 70 Q75 82 30 70 Q18 70 20 60Z" fill="#b82823"/>
-        <path d="M68 26 l3 7 7 .5 -5.5 4.5 2 7 -6.5 -4 -6.5 4 2 -7 -5.5 -4.5 7 -.5z" fill="#ffd23f" stroke="#a87a00" stroke-width="1.5"/>
-        <path d="M44 74 Q50 70 58 76 M92 76 Q100 70 106 74" fill="none" stroke-width="4"/>
-        <circle cx="54" cy="84" r="4" fill="#222" stroke="none"/><circle cx="96" cy="84" r="4" fill="#222" stroke="none"/>
-        <path d="M70 98 Q75 104 80 98" fill="none" stroke="#b5764a" stroke-width="2.5"/>
-        <ellipse class="mouth" cx="75" cy="112" rx="15" ry="10" fill="#8c1c24"/>
-        <path d="M62 105 Q75 108 88 105" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="butt"/>
-        <circle cx="42" cy="98" r="6" fill="#ff9aa5" opacity=".55" stroke="none"/><circle cx="108" cy="98" r="6" fill="#ff9aa5" opacity=".55" stroke="none"/>
-      </g>
-    </svg>
-    <svg class="boy" viewBox="0 0 120 176" width="160">
+<!-- 画像（characters/*.png）が無いときの仮の絵 -->
+<template id="fb-boy"><svg viewBox="0 0 120 176" width="160">
       <defs>
         <radialGradient id="bSkin" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffe3c4"/><stop offset="1" stop-color="#eaa877"/></radialGradient>
         <linearGradient id="bShirt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#63cc67"/><stop offset="1" stop-color="#2d8b38"/></linearGradient>
@@ -299,12 +255,33 @@
         <ellipse class="mouth" cx="60" cy="90" rx="12" ry="8.500" fill="#8c1c24"/>
         <path d="M50 85 Q60 88 70 85" fill="none" stroke="#fff" stroke-width="4.500" stroke-linecap="butt"/>
       </g>
-    </svg>
-  </div>
-
-  <!-- ハピハピちゃん（オリジナル） -->
-  <div id="hero">
-    <svg viewBox="0 0 120 190" width="140">
+    </svg></template>
+<template id="fb-bully"><svg viewBox="0 0 150 176" width="140">
+      <defs>
+        <radialGradient id="kSkin" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#ffdcb8"/><stop offset="1" stop-color="#e9a56f"/></radialGradient>
+        <linearGradient id="kSweat" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8e5fd1"/><stop offset="1" stop-color="#5b36a0"/></linearGradient>
+      </defs>
+      <g stroke="#3d2a1c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M20 112 L2 150" stroke-width="18" stroke="#3d2a1c"/><path d="M20 112 L2 150" stroke-width="14" stroke="#8e5fd1"/>
+        <path d="M130 112 L148 150" stroke-width="18" stroke="#3d2a1c"/><path d="M130 112 L148 150" stroke-width="14" stroke="#8e5fd1"/>
+        <ellipse cx="75" cy="130" rx="55" ry="42" fill="url(#kSweat)"/>
+        <path d="M30 122 Q75 136 120 122 M26 138 Q75 152 124 138" fill="none" stroke="#c7a8f0" stroke-width="5" opacity=".7"/>
+        <rect x="42" y="160" width="26" height="14" rx="6" fill="#4b3a2a"/><rect x="82" y="160" width="26" height="14" rx="6" fill="#4b3a2a"/>
+        <ellipse cx="75" cy="68" rx="46" ry="44" fill="url(#kSkin)"/>
+        <ellipse cx="30" cy="72" rx="7" ry="10" fill="#f1b88a"/><ellipse cx="120" cy="72" rx="7" ry="10" fill="#f1b88a"/>
+        <path d="M30 56 Q30 12 75 10 Q120 12 120 56 Q112 44 98 42 Q75 30 52 42 Q38 44 30 56Z" fill="#d6342f"/>
+        <path d="M28 52 Q75 66 122 52 L122 58 Q75 74 28 58Z" fill="#b82823"/>
+        <path d="M20 60 Q75 78 130 60 Q132 70 120 70 Q75 82 30 70 Q18 70 20 60Z" fill="#b82823"/>
+        <path d="M68 26 l3 7 7 .5 -5.5 4.5 2 7 -6.5 -4 -6.5 4 2 -7 -5.5 -4.5 7 -.5z" fill="#ffd23f" stroke="#a87a00" stroke-width="1.5"/>
+        <path d="M44 74 Q50 70 58 76 M92 76 Q100 70 106 74" fill="none" stroke-width="4"/>
+        <circle cx="54" cy="84" r="4" fill="#222" stroke="none"/><circle cx="96" cy="84" r="4" fill="#222" stroke="none"/>
+        <path d="M70 98 Q75 104 80 98" fill="none" stroke="#b5764a" stroke-width="2.5"/>
+        <ellipse class="mouth" cx="75" cy="112" rx="15" ry="10" fill="#8c1c24"/>
+        <path d="M62 105 Q75 108 88 105" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="butt"/>
+        <circle cx="42" cy="98" r="6" fill="#ff9aa5" opacity=".55" stroke="none"/><circle cx="108" cy="98" r="6" fill="#ff9aa5" opacity=".55" stroke="none"/>
+      </g>
+    </svg></template>
+<template id="fb-hero"><svg viewBox="0 0 120 190" width="140">
       <g stroke="#7a2c58" stroke-width="2" stroke-linejoin="round" stroke-linecap="round">
         <path d="M30 40 Q0 64 8 128 Q24 104 33 72Z" fill="url(#hHair)"/><path d="M90 40 Q120 64 112 128 Q96 104 87 72Z" fill="url(#hHair)"/>
         <path d="M78 100 L98 128" stroke-width="13"/><path d="M78 100 L98 128" stroke="#ffe2cc" stroke-width="9"/>
@@ -328,12 +305,24 @@
         <circle cx="35" cy="79" r="6" fill="#ff9bb8" opacity=".75" stroke="none"/><circle cx="85" cy="79" r="6" fill="#ff9bb8" opacity=".75" stroke="none"/>
         <path class="hsmile" d="M52 82 Q60 92 68 82" stroke="#c2185b" stroke-width="3" fill="none"/>
       </g>
-    </svg>
-  </div>
-  <div id="pow"></div>
-  <div id="clip" class="hide"></div>
-  <button id="skip" class="btn">スキップ ▶▶</button>
-</div>
+    </svg></template>
+<template id="fb-villain"><svg viewBox="0 0 240 260" width="220">
+      <defs>
+        <radialGradient id="mon" cx="38%" cy="30%" r="80%"><stop offset="0" stop-color="#b58cff"/><stop offset=".6" stop-color="#7a45d6"/><stop offset="1" stop-color="#4a238f"/></radialGradient>
+      </defs>
+      <g stroke="#2b1058" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M40 60 L22 8 L78 38Z M200 60 L218 8 L162 38Z" fill="#ffe27a"/>
+        <circle cx="120" cy="130" r="100" fill="url(#mon)"/>
+        <ellipse cx="82" cy="108" rx="24" ry="22" fill="#fff"/><ellipse cx="158" cy="108" rx="24" ry="22" fill="#fff"/>
+        <circle cx="88" cy="112" r="10" fill="#d81b3a" stroke="none"/><circle cx="152" cy="112" r="10" fill="#d81b3a" stroke="none"/>
+        <path d="M54 78 L106 98 M186 78 L134 98" fill="none" stroke-width="9"/>
+        <ellipse cx="120" cy="160" rx="20" ry="17" fill="#9a63ea"/>
+        <ellipse cx="112" cy="166" rx="5" ry="6" fill="#2b1058"/><ellipse cx="128" cy="166" rx="5" ry="6" fill="#2b1058"/>
+        <path d="M62 196 Q120 178 178 196 Q168 244 120 248 Q72 244 62 196Z" fill="#5a0f2b"/>
+        <path d="M74 198 l10 20 10 -18 M146 200 l10 18 10 -20" fill="#fff"/>
+        <ellipse cx="120" cy="232" rx="22" ry="10" fill="#ff6f8f" stroke="none"/>
+      </g>
+    </svg></template>
 </div>
 
 <script>
@@ -562,14 +551,74 @@ function sfx(kind){
 /* ---------- ごほうびシーン ---------- */
 // 動画クリップ：YouTube の ID と、再生する区間（秒）。ここを書きかえれば好きな場面に変えられます
 const CLIP = {id:'INbco2MQ1dM', start:0, end:8};
-const BOY_RATE = window.BOY_RATE ?? .5;        // めがねくんが出る確率（出ない回はヒロインがほめるだけ）
-let okCount = 0, stageId = 0, clipTok = 0;
+
+// キャスト：characters/ フォルダに画像（PNG）を置くと自動で使われます。無いキャラは仮の絵（ゲストは出ません）。
+// 名前・声（[高さ, はやさ]）はここで変えられます。nose は「悪役の画像の鼻の位置」（画像の幅・高さに対する割合）。
+const CAST = {
+  boy:    {name:'のび太',           img:'characters/boy.png',    voice:[1.6,.95], fb:'fb-boy'},
+  bully:  {name:'ジャイアン',       img:'characters/bully.png',  voice:[.7,.85],  fb:'fb-bully'},
+  villain:{name:'ボーボボ',         img:'characters/villain.png',voice:[.6,.9],   fb:'fb-villain', nose:{x:.57,y:.76}, fbNose:{x:.5,y:.654}},
+  hero:   {name:'プリキュア',       img:'characters/hero.png',   voice:[2,1.15],  fb:'fb-hero'},
+  g1:     {name:'ピカチュウ',       img:'characters/guest1.png', voice:[2,1.3]},
+  g2:     {name:'パウ・パトロール', img:'characters/guest2.png', voice:[1.5,1.1]},
+  g3:     {name:'ビッピー',         img:'characters/guest3.png', voice:[1.8,1.2]},
+};
+const MAIN = ['boy','bully','villain','hero'];
+const SLOT = {L:22, A:38, C:50, B:62, R:78};          // 画面の左右の立ち位置（％）
+const ACT = {};
+let okCount = 0, stageId = 0, clipTok = 0, lastScene = '';
+
 const GAGS = ['だめーーー！','なんでよーーー！','あーーー！','ひどいよー！','うえーん！','ぼくの せいじゃないよー！','せいかいって なにさー！','やめてよーーー！'];
 const CHEERS = ['ハッピー！ せいかい！','やったね！ ハッピー！','すごーい！ ハッピー！','ハッピー ハッピー！ だいせいかい！'];
-const WHO = {boy:'めがねくん', hero:'ハピハピちゃん', kid:'どっしーくん', bobo:'ハナゲまじん'};
-const VOICE = {boy:[1.6,.95], hero:[2,1.15], kid:[.7,.85], bobo:[.6,.9]};   // [pitch, rate]
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pick = a => a[rnd(0, a.length - 1)];
+
+function buildCast(){
+  const box = $('cast');
+  for(const k in CAST){
+    const c = CAST[k], el = document.createElement('div');
+    el.className = 'actor off-r'; el.id = 'act-' + k;
+    const body = document.createElement('div'); body.className = 'body';
+    const emo = document.createElement('span'); emo.className = 'emo'; body.append(emo);
+    if(c.fb){
+      body.append($(c.fb).content.cloneNode(true));
+      body.querySelector('svg').classList.add('fb');
+    }
+    const img = new Image(); img.className = 'pic'; img.alt = '';
+    img.onload = () => { c.ok = true; el.classList.add('haspic'); refreshMascots(); };
+    img.onerror = () => { c.ok = false; };
+    img.src = c.img;
+    body.prepend(img);
+    el.append(body);
+    if(k === 'villain') el.insertAdjacentHTML('beforeend',
+      '<div class="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>');
+    box.append(el); ACT[k] = el;
+  }
+}
+// ホーム／ゲーム画面の応援キャラ（ヒロインの画像があればそれを使う）
+function refreshMascots(){
+  document.querySelectorAll('.mascot').forEach(m => {
+    m.querySelectorAll('.mc').forEach(e => e.remove());
+    const node = CAST.hero.ok ? Object.assign(new Image(), {src: CAST.hero.img}) : $('fb-hero').content.firstElementChild.cloneNode(true);
+    node.classList.add('mc'); m.prepend(node);
+  });
+}
+
+const body = k => ACT[k].querySelector('.body');
+function fx(k, name){ const b = body(k); b.className = 'body' + (name ? ' fx-' + name : ''); void b.offsetWidth; }
+function emo(k, t){ const e = body(k).querySelector('.emo'); e.textContent = t || ''; e.classList.toggle('on', !!t); ACT[k].classList.toggle('angry', t === '💢'); }
+function showPow(t){
+  const p = $('pow'); p.textContent = t;
+  p.classList.remove('on'); void p.offsetWidth; p.classList.add('on');
+}
+function playClip(){
+  const tok = ++clipTok, box = $('clip');
+  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${CLIP.id}?autoplay=1&start=${CLIP.start}&end=${CLIP.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+  box.classList.remove('hide');
+  return sleep((CLIP.end - CLIP.start + 1.5) * 1000).then(() => {
+    if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; }
+  });
+}
 
 // 声が終わるまで待つ（声が出せない環境でも止まらないよう保険のタイマー付き）
 function speakDone(t, pitch, rate){
@@ -587,29 +636,17 @@ function speakDone(t, pitch, rate){
   });
 }
 
-function playClip(){
-  const tok = ++clipTok, box = $('clip');
-  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${CLIP.id}?autoplay=1&start=${CLIP.start}&end=${CLIP.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
-  box.classList.remove('hide');
-  return sleep((CLIP.end - CLIP.start + 1.5) * 1000).then(() => {
-    if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; }
-  });
-}
-
-function showPow(t){
-  const p = $('pow'); p.textContent = t;
-  p.classList.remove('on'); void p.offsetWidth; p.classList.add('on');
-}
-
 function resetStage(){
   clipTok++;
   $('stage').className = '';
-  $('nobi').className = 'away'; $('nobi').style.transform = '';
-  $('bobo').className = ''; $('bobo').style.marginLeft = '-110px';
-  $('hero').className = '';
+  for(const k in ACT){
+    const el = ACT[k];
+    el.className = 'actor off-r' + (CAST[k].ok ? ' haspic' : ''); el.style.left = ''; el.style.marginLeft = ''; el.style.zIndex = '';
+    fx(k, ''); emo(k, ''); body(k).style.transform = '';
+    const h = el.querySelector('.hair'); if(h){ h.style.transition = 'none'; h.style.height = '0px'; }
+  }
   $('pow').className = ''; $('pow').textContent = '';
   $('clip').classList.add('hide'); $('clip').innerHTML = '';
-  const h = $('hair'); h.style.transition = 'none'; h.style.height = '0px';
   $('bubble').classList.add('hide');
 }
 function endStage(done){
@@ -618,96 +655,211 @@ function endStage(done){
   done();
 }
 
+/* ---- シーン（20種類）：cast は立ち位置、steps は順番の演技 ----
+   w:しゃべる人  t:セリフ  fx:動き  emo:顔の横の絵文字  pow:大きな文字  sfx:効果音  mv:移動  o:[[相手,動き,絵文字]] */
+const SCENES = [
+  {id:'slap', cast:{boy:'L', hero:'R'}, steps:[
+    {w:'boy', t:() => pick(GAGS), fx:'shake', emo:'💢', sfx:'boing'},
+    {w:'hero', t:'もう！ ずるいことしちゃ だめでしょー！ ぷんぷん！', fx:'shake', emo:'💢', o:[['boy','','']]},
+    {w:'hero', mv:'A', fx:'run', ms:450},
+    {w:'hero', t:'えいっ！ ビンタ！', fx:'jump', emo:'', pow:'パチーン！💥', sfx:'slap', o:[['boy','hit','💫']]},
+    {w:'boy', t:'いたいよー！ ごめんなさーい！', fx:'cry', emo:'💦'},
+    {w:'hero', t:'よくできました！ ハッピー！', mv:'R', fx:'dance', emo:'✨', sfx:'happy', o:[['boy','laugh','']]}]},
+  {id:'cheer', cast:{hero:'C'}, steps:[
+    {w:'hero', t:() => pick(CHEERS), fx:'dance', emo:'✨', pow:'ハッピー！✨', sfx:'happy'}]},
+  {id:'comfort', cast:{boy:'C', hero:'R'}, steps:[
+    {w:'boy', t:'うえーん！ もんだいが むずかしいよー！', fx:'cry', emo:'💦'},
+    {w:'hero', t:'だいじょうぶ！ いっしょに がんばろう！', mv:'B', fx:'jump'},
+    {w:'boy', t:'ぐすん… うん！ ありがとう！', fx:'laugh', emo:'', sfx:'happy'},
+    {w:'hero', t:'ハッピー！ えがおが いちばん！', fx:'dance', emo:'✨'}]},
+  {id:'zap', need:['g1'], cast:{boy:'L', g1:'R'}, steps:[
+    {w:'boy', t:'さわったら おこるよー！', fx:'shake', emo:'💢'},
+    {w:'g1', t:'ピカピカ！ いくよー！', mv:'B', fx:'run'},
+    {w:'g1', t:'ピーカーチュー！', fx:'zap', pow:'ビリビリ！⚡', sfx:'boom', o:[['boy','zap','💫']]},
+    {w:'boy', t:'あばばばば！ しびれるー！', fx:'shake'},
+    {w:'g1', t:'ピカ ピカ！ ごめんね！', fx:'jump'},
+    {w:'boy', t:'あははは！ びっくりしたー！', fx:'laugh', sfx:'happy'}]},
+  {id:'pika_vs_villain', need:['g1'], cast:{g1:'L', villain:'R'}, steps:[
+    {w:'villain', t:'ハナゲしんけん！ はなげビーム！', fx:'shake', emo:'💢', pow:'ハナゲビーム！', sfx:'whoosh'},
+    {w:'g1', t:'ピカ！ でんこうせっか！', mv:'B', fx:'run', sfx:'whoosh'},
+    {w:'g1', t:'ピカー！', fx:'zap', pow:'ドカーン！💥', sfx:'boom', o:[['villain','hit','💫']]},
+    {w:'villain', t:'ひえーーー！ おぼえてろよー！', fx:'spin', mv:'R'},
+    {w:'g1', t:'ピカピカ！ ピッカー！', fx:'dance', emo:'✨', sfx:'happy'}]},
+  {id:'recital', cast:{boy:'L', bully:'C', hero:'R'}, steps:[
+    {w:'bully', t:'おれさまの リサイタルだー！ ボエ〜〜！', fx:'shake', emo:'🎵', sfx:'boing'},
+    {w:'boy', t:'み、みみがー！ うるさーい！', fx:'shake', emo:'💦'},
+    {w:'hero', t:'ぷっ… ちょっと おもしろいかも！', fx:'laugh'},
+    {w:'bully', t:'わっはっは！ もっと うたってやるぜー！', fx:'dance', emo:'🎵', o:[['boy','laugh',''],['hero','laugh','']], sfx:'happy'}]},
+  {id:'fight_friends', cast:{boy:'L', bully:'R'}, steps:[
+    {w:'bully', t:'おい！ その けしゴム よこせー！', mv:'A', fx:'run', emo:'💢'},
+    {w:'boy', t:'やだよー！ ぼくのだよー！', fx:'shake', emo:'💦'},
+    {w:'bully', t:'こうしてやるー！', fx:'jump', pow:'ポカッ！', sfx:'slap', o:[['boy','hit','💫']]},
+    {w:'boy', t:'いたたた… ひどいよー！', fx:'cry', emo:'💦'},
+    {w:'bully', t:'わ、わるかったよ。いっしょに あそぼうぜ！', fx:'bow', emo:'', o:[['boy','','']]},
+    {w:'boy', t:'うん！ なかなおり！ あはは！', fx:'laugh', emo:'✨', sfx:'happy', o:[['bully','laugh','']]}]},
+  {id:'paw_rescue', need:['g2'], cast:{boy:'L', g2:'R'}, steps:[
+    {w:'boy', t:'たすけてー！ おとしあなに おちたー！', fx:'cry', emo:'💦'},
+    {w:'g2', t:'ワン！ まかせて！ しゅつどう！', mv:'A', fx:'run', sfx:'whoosh'},
+    {w:'g2', t:'ロープで ひきあげるよー！ せーの！', fx:'jump', pow:'よいしょ！', sfx:'boing', o:[['boy','jump','']]},
+    {w:'boy', t:'ありがとう！ たすかったよー！', fx:'laugh', emo:'✨', sfx:'happy'},
+    {w:'g2', t:'ワンワン！ もんだいなし！', fx:'dance'}]},
+  {id:'bippy_dance', need:['g3'], cast:{g3:'L', hero:'R'}, steps:[
+    {w:'g3', t:'ルンルン！ いっしょに おどろうよー！', fx:'dance', emo:'🎵', sfx:'happy'},
+    {w:'hero', t:'いいね！ ハッピー ダンス！', mv:'B', fx:'dance', emo:'✨', pow:'♪ルンルン♪', o:[['g3','dance','🎵']]},
+    {w:'g3', t:'くるくる まわるよー！', fx:'spin'},
+    {w:'hero', t:'あははは！ たのしー！', fx:'laugh', o:[['g3','laugh','']]}]},
+  {id:'party', cast:{hero:'L', boy:'C', bully:'R'}, steps:[
+    {w:'hero', t:'せいかい おめでとう！ ハッピー！', fx:'jump', emo:'✨', pow:'🎉おめでとう🎉', sfx:'happy', o:[['boy','jump',''],['bully','jump','']]},
+    {w:'boy', t:'やったー！ ぱんぱかぱーん！', fx:'dance', emo:'🎊'},
+    {w:'bully', t:'おれも いわって やるぜー！', fx:'dance', emo:'🎊', o:[['boy','dance',''],['hero','dance','']]}]},
+  {id:'hero_vs_villain', cast:{hero:'L', villain:'R'}, steps:[
+    {w:'villain', t:'ハナゲ ビーーーム！', fx:'shake', emo:'💢', pow:'ハナゲビーム！', sfx:'whoosh'},
+    {w:'hero', t:'はね返すよ！ えいっ！', mv:'A', fx:'jump', pow:'キラキラ！✨', sfx:'boom', o:[['villain','hit','💫']]},
+    {w:'villain', t:'ひえーーー！ ボーボボ しんけんが やぶれたー！', fx:'spin', mv:'R'},
+    {w:'hero', t:'やっつけたよ！ ハッピー！', fx:'dance', emo:'✨', sfx:'happy'}]},
+  {id:'tickle', cast:{villain:'R', boy:'L'}, steps:[
+    {w:'villain', t:'こちょこちょ！ はなげで くすぐるぞー！', mv:'B', fx:'run', emo:'💢'},
+    {w:'boy', t:'あははは！ くすぐったーい！ やめてー！', fx:'laugh', emo:'', sfx:'boing'},
+    {w:'villain', t:'ふははは！ はなげは ふしぎだろー！', fx:'dance'},
+    {w:'boy', t:'へんなのー！ あははは！ おなかいたーい！', fx:'laugh', emo:'✨', sfx:'happy'}]},
+  {id:'chase', cast:{bully:'L', boy:'A'}, steps:[
+    {w:'boy', t:'わーっ！ おいかけてくるー！ にげろー！', mv:'R', fx:'run', emo:'💦'},
+    {w:'bully', t:'まてまてー！ つかまえるぞー！', mv:'B', fx:'run', emo:'💢'},
+    {w:'boy', t:'あっ！ ゴツン！', mv:'B', fx:'hit', pow:'ゴツン！💥', sfx:'slap', o:[['bully','hit','💫']]},
+    {w:'bully', t:'いてて… あははは！ おまえ おもしろいなー！', fx:'laugh', sfx:'happy', o:[['boy','laugh','']]}]},
+  {id:'gift', cast:{boy:'L', bully:'R'}, steps:[
+    {w:'bully', t:'ほらよ！ ごほうびに これ やるよ！', mv:'A', fx:'jump', emo:'🎁'},
+    {w:'boy', t:'ええっ！？ ほんとうに！？ ありがとう！', fx:'jump', emo:'✨', sfx:'happy'},
+    {w:'bully', t:'へへっ！ ともだちだろ！', fx:'laugh', emo:'❤️', o:[['boy','laugh','❤️']]}]},
+  {id:'laughall', cast:{boy:'L', bully:'C', hero:'R'}, steps:[
+    {w:'bully', t:'わっはっはっは！', fx:'laugh', sfx:'boing'},
+    {w:'boy', t:'あははは！ おなかいたーい！', fx:'laugh'},
+    {w:'hero', t:'うふふ！ ハッピー！', fx:'laugh', emo:'✨', pow:'😂😂😂', sfx:'happy', o:[['boy','laugh',''],['bully','laugh','']]}]},
+  {id:'villain_dance', cast:{villain:'C', hero:'L', boy:'R'}, steps:[
+    {w:'villain', t:'はなげ ふりふり ダンスだー！', fx:'dance', emo:'🎵', sfx:'boing'},
+    {w:'boy', t:'へんなダンス！ あははは！', fx:'laugh', o:[['hero','laugh','']]},
+    {w:'villain', t:'もっと へんに なるぞー！ くるくるー！', fx:'spin'},
+    {w:'hero', t:'おなか いたーい！ ハッピー！', fx:'laugh', emo:'✨', sfx:'happy', o:[['villain','dance','']]}]},
+  {id:'harisen', cast:{hero:'L', bully:'R'}, steps:[
+    {w:'bully', t:'おまえの かお、おもしろいなー！', fx:'laugh', emo:''},
+    {w:'hero', t:'しつれいな！ えいっ！', mv:'A', fx:'run', emo:'💢'},
+    {w:'hero', t:'おしおき ハリセン！', fx:'jump', emo:'', pow:'ぱこーん！💥', sfx:'slap', o:[['bully','hit','💫']]},
+    {w:'bully', t:'いてて… まいった まいった！', fx:'cry', emo:'💦'},
+    {w:'hero', t:'もう わらわない？ ハッピー！', fx:'dance', emo:'✨', sfx:'happy', o:[['bully','laugh','']]}]},
+  {id:'paw_vs_villain', need:['g2'], cast:{g2:'L', villain:'R'}, steps:[
+    {w:'villain', t:'はなげで パトロールを じゃまするぞー！', fx:'shake', emo:'💢'},
+    {w:'g2', t:'パトロール しゅつどう！ ワンワン！', mv:'A', fx:'run', sfx:'whoosh'},
+    {w:'g2', t:'ワン！ ロープ ぐるぐる！', fx:'jump', pow:'ぐるぐる！', sfx:'boom', o:[['villain','hit','💫']]},
+    {w:'villain', t:'ひえー！ つかまったー！', fx:'spin'},
+    {w:'g2', t:'ワンワン！ かいけつ！', fx:'dance', emo:'✨', sfx:'happy'}]},
+  {id:'pika_hero', need:['g1'], cast:{g1:'L', hero:'R'}, steps:[
+    {w:'g1', t:'ピカピカ！ ともだちに なろう！', mv:'A', fx:'jump', emo:'❤️'},
+    {w:'hero', t:'うん！ なかよし！ ハッピー！', mv:'B', fx:'jump', emo:'❤️', sfx:'happy'},
+    {w:'g1', t:'ピッカー！', fx:'dance', emo:'✨', o:[['hero','dance','']]}]},
+];
+const SPACE_ID = 'space';
+
+function chooseScene(){
+  if(window.FORCE_SCENE) return window.FORCE_SCENE;
+  if(okCount % 3 === 0) return SPACE_ID;
+  const pool = SCENES.filter(s => (s.need || []).every(k => CAST[k].ok) && s.id !== lastScene);
+  return pick(pool).id;
+}
+
 async function reaction(done){
   okCount++;
   const id = ++stageId, alive = () => id === stageId;
   resetStage();
   const t0 = Date.now(), st = $('stage');
   st.onclick = () => { if(alive() && Date.now() - t0 > 900){ stageId++; endStage(done); } };
-  const nobi = $('nobi'), hair = $('hair'), bobo = $('bobo'), hero = $('hero'), bub = $('bubble');
-  const hasPic = $('bobosvg').style.display === 'none';
+  const bub = $('bubble');
   const say = async (t, who) => {
     if(!alive()) return false;
+    const c = CAST[who];
     bub.textContent = '';
-    if(who){ const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = (who === 'bobo' && hasPic) ? 'ボーボボ' : WHO[who]; bub.append(nm); }
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name; bub.append(nm);
     bub.append(document.createTextNode(t));
-    bub.className = who || '';
-    const [p, r] = VOICE[who] || [1.2, .9];
-    await Promise.all([speakDone(t, p, r), sleep(1100)]);
+    bub.className = '';
+    await Promise.all([speakDone(t, c.voice[0], c.voice[1]), sleep(1100)]);
     return alive();
   };
   const finish = async () => { await sleep(300); if(alive()) endStage(done); };
-  const space = okCount % 3 === 0;
+  const sid = chooseScene(); lastScene = sid;
+  await sleep(60);
+  if(!alive()) return;
 
-  // めがねくんが出ない回：ヒロインがほめるだけ
-  if(!space && Math.random() >= BOY_RATE){
-    hero.classList.add('show');
-    sfx('happy'); showPow('ハッピー！✨');
-    await sleep(500);
-    if(!await say(pick(CHEERS), 'hero')) return;
-    return finish();
+  if(sid === SPACE_ID) return spaceScene({alive, say, finish, st});
+
+  const sc = SCENES.find(s => s.id === sid);
+  for(const k in sc.cast){ ACT[k].classList.remove('off-l', 'off-r'); ACT[k].style.left = SLOT[sc.cast[k]] + '%'; }
+  await sleep(450);
+  for(const step of sc.steps){
+    if(!alive()) return;
+    const k = step.w;
+    if(step.mv){ ACT[k].style.left = SLOT[step.mv] + '%'; if(step.mv === 'R' && step.fx === 'spin') ACT[k].classList.add('off-r'); }
+    if(step.fx !== undefined) fx(k, step.fx);
+    if(step.emo !== undefined) emo(k, step.emo);
+    for(const [who, f, e] of step.o || []){ fx(who, f); emo(who, e); }
+    if(step.pow) showPow(step.pow);
+    if(step.sfx) sfx(step.sfx);
+    if(step.t){ if(!await say(typeof step.t === 'function' ? step.t() : step.t, k)) return; }
+    else await sleep(step.ms || 700);
   }
+  return finish();
+}
 
-  // めがねくん登場（すねて大さわぎ）
-  nobi.classList.remove('away'); nobi.classList.add('shake');
-  if(!space) nobi.classList.add('side');
-  sfx('boing');
+// 3回に1回：鼻毛で宇宙へ（ジャイアンも道づれ）→ ヒロインがやっつける
+async function spaceScene({alive, say, finish, st}){
+  const boy = ACT.boy, bully = ACT.bully, vil = ACT.villain, hero = ACT.hero, hair = vil.querySelector('.hair');
+  boy.classList.remove('off-r'); boy.style.left = '50%'; boy.style.zIndex = 3;
+  bully.classList.remove('off-r'); bully.style.left = '35%'; bully.style.zIndex = 2;
+  fx('boy', 'shake'); emo('boy', '💢'); sfx('boing');
+  await sleep(450);
   if(!await say(pick(GAGS), 'boy')) return;
-
-  if(!space){
-    // ヒロインがおこってビンタ
-    hero.classList.add('show', 'angry');
-    await sleep(600);
-    if(!await say('もう！ ずるいことしちゃ だめでしょー！ ぷんぷん！', 'hero')) return;
-    nobi.classList.remove('shake');
-    hero.classList.add('slap');
-    await sleep(200);
-    nobi.classList.add('hit'); showPow('パチーン！💥'); sfx('slap');
-    if(!await say('えいっ！ ビンタ！', 'hero')) return;
-    hero.classList.remove('slap', 'angry');
-    if(!await say('いたいよー！ ごめんなさーい！', 'boy')) return;
-    nobi.classList.remove('hit');
-    sfx('happy');
-    if(!await say('よくできました！ ハッピー！', 'hero')) return;
-    return finish();
-  }
-
-  // 3回に1回：ハナゲの鼻毛で宇宙へ（どっしーくんも道づれ）→ ヒロインがやっつける
-  nobi.classList.add('withkid');
-  bobo.classList.add('show');
+  vil.classList.remove('off-r'); vil.classList.add('top', 'show');
   await sleep(600);
-  if(!await say('ハナゲしんけん！ いってこーい！', 'bobo')) return;
-  const nx = hasPic ? .57 : .5, noseY = bobo.offsetHeight * (hasPic ? .76 : .654);
-  bobo.style.marginLeft = -(nx * 220) + 'px';          // 鼻をめがねくんの真上にそろえる
-  hair.style.left = (nx * 220 - 20) + 'px'; hair.style.marginLeft = '0';
-  const dist = nobi.getBoundingClientRect().top + 10 - noseY;
-  hair.style.top = noseY + 'px';
+  fx('boy', 'shake');
+  if(!await say('ハナゲしんけん！ いってこーい！', 'villain')) return;
+
+  const n = (CAST.villain.ok ? CAST.villain.nose : CAST.villain.fbNose);
+  const W = 220, bR = boy.getBoundingClientRect(), sR = st.getBoundingClientRect();
+  const noseY = vil.offsetHeight * n.y;
+  vil.style.marginLeft = '0'; vil.style.left = (bR.left + bR.width / 2 - sR.left - n.x * W) + 'px';
+  hair.style.left = (n.x * W - 20) + 'px'; hair.style.top = noseY + 'px';
+  const dist = bR.top + 10 - sR.top - noseY;
   hair.style.transition = 'height .6s ease-in'; hair.style.height = dist + 'px';
   await sleep(700);
   if(!alive()) return;
   sfx('whoosh');
   hair.style.transition = 'height 1.8s ease-in-out'; hair.style.height = '160px';
-  nobi.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
+  for(const k of ['boy', 'bully']){
+    const b = body(k); b.style.transition = 'transform 1.8s ease-in-out'; b.style.transformOrigin = '50% 0';
+    b.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
+  }
+  fx('boy', ''); emo('boy', '💢'); fx('bully', 'shake'); emo('bully', '💦');
+  body('boy').style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
   st.classList.add('space');
   if(!await say('うわーーー！ たすけてーーー！', 'boy')) return;
-  if(!await say('ぼくまで つれていかれるのー！？ ぎゃー！', 'kid')) return;
-  hero.classList.add('show', 'angry');
-  if(!await say('まてー！ ハナゲまじん！ わたしが やっつけるよ！', 'hero')) return;
+  if(!await say('おれまで つれていかれるのかよー！ ぎゃー！', 'bully')) return;
+  hero.classList.remove('off-r'); hero.style.left = '78%'; emo('hero', '💢');
+  if(!await say('まてー！ ボーボボ！ わたしが やっつけるよ！', 'hero')) return;
   await playClip();
   if(!alive()) return;
-  bobo.classList.remove('show'); bobo.classList.add('defeated'); showPow('ドカーン！✨'); sfx('boom');
-  nobi.classList.add('fall'); nobi.style.transform = '';
+  vil.classList.remove('show'); vil.classList.add('defeated'); showPow('ドカーン！✨'); sfx('boom');
+  for(const k of ['boy', 'bully']){
+    const b = body(k); b.style.transition = 'transform .7s cubic-bezier(.3,1.6,.5,1)'; b.style.transform = '';
+  }
   hair.style.transition = 'height .8s'; hair.style.height = '0px';
   st.classList.remove('space');
+  emo('hero', '');
   if(!await say('おちるーーー！', 'boy')) return;
-  nobi.classList.remove('fall', 'shake');
-  hero.classList.remove('angry');
+  fx('boy', 'laugh'); fx('bully', 'laugh'); emo('boy', ''); emo('bully', '');
   if(!await say('ただいまー！ たすかったよー！', 'boy')) return;
-  sfx('happy');
+  sfx('happy'); fx('hero', 'dance'); emo('hero', '✨');
   if(!await say('やっつけたよ！ ハッピー！', 'hero')) return;
   return finish();
 }
-document.querySelectorAll('.mascot').forEach(m => m.insertAdjacentHTML('afterbegin', $('hero').querySelector('svg').outerHTML));
+buildCast(); refreshMascots();
 </script>
 </body>
 </html>
