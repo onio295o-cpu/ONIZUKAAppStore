@@ -37,6 +37,17 @@
   #msg{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
   .big{font-size:5rem}
   .hide{display:none}
+  .hs{display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:4px 6px;
+    font-size:3rem;font-weight:bold;font-variant-numeric:tabular-nums}
+  .hs div{height:64px;display:flex;align-items:center;justify-content:center}
+  .hs .cy{height:30px;font-size:1.5rem;color:var(--pink)}
+  .hs .ln{height:6px;background:var(--ink);border-radius:3px;grid-column:1 / -1}
+  .hs .bx{border:4px dashed #bbb;border-radius:14px;color:var(--green)}
+  .hs .bx.on{border-color:var(--pink);background:#fff0f5}
+  .hs .bx.off{border:none}
+  .msgbox{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
+  .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+  .pad .btn{font-size:2.2rem;padding:16px 0;background:var(--blue)}
   @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
   .pop{animation:pop .4s}
   @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
@@ -51,12 +62,35 @@
     <p class="sub">いくつ かな？ えらんでね！</p>
     <button class="btn age a4" data-lv="4">4さい<small>1〜5 の たしざん</small></button>
     <button class="btn age a5" data-lv="5">5さい<small>10 までの たしざん</small></button>
-    <button class="btn age a6" data-lv="6">6さい<small>たしざん・くく・わりざん</small></button>
+    <button class="btn age a6" data-lv="6">6さい<small>200 までの たしざん・くく・わりざん</small></button>
+    <button class="btn age" style="background:#9b6bff" id="toH">✏️ ひっさん<small>2けた・3けた の たしざん</small></button>
+  </section>
+
+  <section id="hmode" class="hide">
+    <h1>✏️ ひっさん</h1>
+    <p class="sub">どれを やる？</p>
+    <button class="btn age a4" data-h="22">2けた ＋ 2けた</button>
+    <button class="btn age a5" data-h="32">3けた ＋ 2けた</button>
+    <button class="btn age a6" data-h="mix">🌈 まぜまぜ</button>
+    <button class="btn home" id="hmodeBack">← もどる</button>
+  </section>
+
+  <section id="hgame" class="hide">
+    <div class="top">
+      <button class="btn home" id="hback">← もどる</button>
+      <span class="stars" id="hstars">⭐ 0</span>
+    </div>
+    <div class="bar"><i id="hprog"></i></div>
+    <div class="card" style="margin-top:14px">
+      <div class="hs" id="hs"></div>
+    </div>
+    <div id="hmsg" class="msgbox"></div>
+    <div class="pad" id="pad"></div>
   </section>
 
   <section id="mode" class="hide">
     <h1>6さい</h1>
-    <p class="sub">なにを やる？</p>
+    <p class="sub">なにを やる？（たしざんは 200 まで）</p>
     <button class="btn age a4" data-op="add">➕ たしざん</button>
     <button class="btn age a5" data-op="mul">✖️ かけざん（くく）</button>
     <button class="btn age a6" data-op="div">➗ わりざん</button>
@@ -92,16 +126,16 @@ const TOTAL = 10;
 const LEVELS = {
   4: {max:5,  sum:5,  pics:true},
   5: {max:9,  sum:10, pics:true},
-  6: {max:12, sum:20, pics:false}
+  6: {max:150, sum:200, pics:false}
 };
 const ITEMS = ['🍎','🍌','🍓','🐶','🐱','🚗','🌸','🐟','🍪','⚽'];
 const PRAISE = ['すごい！','せいかい！','てんさい！','やったね！','かしこい！'];
 
 const $ = id => document.getElementById(id);
-const show = id => ['home','mode','game','end'].forEach(s => $(s).classList.toggle('hide', s !== id));
+const show = id => ['home','mode','game','hgame','hmode','end'].forEach(s => $(s).classList.toggle('hide', s !== id));
 const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 
-let lv, op, n, score, cur, locked, miss;
+let lastRun, lv, op, n, score, cur, locked, miss;
 const SYM = {add:'＋', mul:'×', div:'÷'};
 const WORD = {add:'たす', mul:'かける', div:'わる'};
 
@@ -116,7 +150,7 @@ function speak(t){
 }
 
 function start(level, o){
-  lv = level; op = o || 'add'; n = 0; score = 0;
+  lv = level; op = o || 'add'; lastRun = () => start(level, o); n = 0; score = 0;
   show('game'); next();
 }
 
@@ -127,8 +161,8 @@ function next(){
   let a, b, ans, max = L.sum;
   if(kind === 'add'){
     do{
-      a = rnd(1, L.max); b = rnd(1, L.max);
-    }while(a + b > L.sum || (lv === 6 && a + b < 6));
+      a = rnd(lv === 6 ? 11 : 1, L.max); b = rnd(lv === 6 ? 11 : 1, lv === 6 ? 100 : L.max);
+    }while(a + b > L.sum);
     ans = a + b;
   }else if(kind === 'mul'){
     a = rnd(1, 9); b = rnd(1, 9); ans = a * b; max = 81;
@@ -149,9 +183,9 @@ function next(){
   speak(`${a} ${WORD[kind]} ${b} は？`);
 
   const set = new Set([ans]);
-  const near = kind === 'mul' ? [a*(b+1), a*(b-1), (a+1)*b, (a-1)*b] : [];
+  const near = (kind === 'add' && lv === 6) ? [ans-10, ans+10, ans-1, ans+1, ans-2, ans+2] : kind === 'mul' ? [a*(b+1), a*(b-1), (a+1)*b, (a-1)*b] : [];
   while(set.size < 3){
-    let w = near.length && Math.random() < .6 ? near[rnd(0, near.length - 1)] : ans + rnd(-3, 3);
+    let w = near.length && Math.random() < .8 ? near[rnd(0, near.length - 1)] : ans + rnd(-3, 3);
     if(w >= 0 && w <= max && w !== ans) set.add(w);
     else if(set.size < 3 && Math.random() < .2) set.add(rnd(0, max));
   }
@@ -202,8 +236,84 @@ document.querySelectorAll('.age[data-op]').forEach(btn => {
 });
 $('modeBack').onclick = () => show('home');
 $('back').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
-$('again').onclick = () => start(lv, op);
+$('again').onclick = () => lastRun();
 $('toHome').onclick = () => show('home');
+
+/* ---------- ひっ算 ---------- */
+let hType, hA, hB, hAns, hDig, hCarry, hPos, hMiss, hLocked;
+const dg = (x, p) => Math.floor(x / 10 ** p) % 10;
+
+function hStart(t){
+  hType = t; n = 0; score = 0; lastRun = () => hStart(t);
+  show('hgame'); hNext();
+}
+
+function hNext(){
+  if(n >= TOTAL) return finish();
+  const kind = hType === 'mix' ? (rnd(0, 1) ? '22' : '32') : hType;
+  if(kind === '22'){ hA = rnd(10, 99); hB = rnd(10, 99); }
+  else { hA = rnd(100, 899); hB = rnd(10, 99); }
+  hAns = hA + hB;
+  hDig = String(hAns).length;
+  hCarry = [0];
+  for(let p = 0; p < 3; p++) hCarry[p + 1] = Math.floor((dg(hA, p) + dg(hB, p) + hCarry[p]) / 10);
+  hPos = 0; hMiss = 0; hLocked = false;
+  $('hprog').style.width = (n / TOTAL * 100) + '%';
+  $('hstars').textContent = '⭐ ' + score;
+  $('hmsg').textContent = 'いちの くらいから！';
+
+  // 列 i: 0=百 1=十 2=一（左から）
+  let h = '<div class="cy"></div>';
+  for(let i = 0; i < 3; i++) h += `<div class="cy" id="cy${i}"></div>`;
+  h += '<div></div>' + [0,1,2].map(i => `<div>${hA >= 10 ** (2 - i) ? dg(hA, 2 - i) : ''}</div>`).join('');
+  h += '<div>＋</div>' + [0,1,2].map(i => `<div>${hB >= 10 ** (2 - i) ? dg(hB, 2 - i) : ''}</div>`).join('');
+  h += '<div class="ln"></div><div></div>';
+  for(let i = 0; i < 3; i++) h += `<div class="bx ${2 - i >= hDig ? 'off' : ''}" id="bx${i}"></div>`;
+  $('hs').innerHTML = h;
+  hMark();
+  speak(`${hA} たす ${hB}。 いちのくらいから たしてね`);
+}
+
+function hMark(){
+  for(let i = 0; i < 3; i++) $('bx' + i).classList.toggle('on', 2 - i === hPos && hPos < hDig);
+}
+
+function hPress(d){
+  if(hLocked) return;
+  const box = $('bx' + (2 - hPos));
+  if(d === dg(hAns, hPos)){
+    box.textContent = d;
+    const c = hCarry[hPos + 1];
+    if(c && hPos + 1 < hDig){
+      $('cy' + (2 - hPos - 1)).textContent = c;
+      $('hmsg').textContent = `くりあがり ${c}！`;
+    }else $('hmsg').textContent = 'そのちょうし！';
+    hPos++;
+    if(hPos >= hDig){
+      hLocked = true;
+      document.querySelectorAll('.bx.on').forEach(e => e.classList.remove('on'));
+      if(hMiss === 0) score++;
+      const p = PRAISE[rnd(0, PRAISE.length - 1)];
+      $('hmsg').textContent = '🎉 ' + p;
+      $('hstars').textContent = '⭐ ' + score;
+      speak(`${hAns}！ ${p}`);
+      n++;
+      setTimeout(hNext, 1800);
+    }else hMark();
+  }else{
+    hMiss++;
+    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    $('hmsg').textContent = 'おしい！ もういちど！';
+    speak('おしい、もういちど');
+  }
+}
+
+$('pad').innerHTML = [1,2,3,4,5,6,7,8,9,0].map(d => `<button class="btn" data-d="${d}">${d}</button>`).join('');
+$('pad').onclick = e => { const b = e.target.closest('[data-d]'); if(b) hPress(+b.dataset.d); };
+$('toH').onclick = () => show('hmode');
+$('hmodeBack').onclick = () => show('home');
+$('hback').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
+document.querySelectorAll('.age[data-h]').forEach(btn => btn.onclick = () => hStart(btn.dataset.h));
 </script>
 </body>
 </html>
