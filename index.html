@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>たしざんあそび</title>
+<style>
+  :root{--bg:#fff7d6;--ink:#4a3b2a;--pink:#ff7aa8;--blue:#4cb8ff;--green:#5fd068;--yellow:#ffc933}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+  body{margin:0;min-height:100vh;background:var(--bg);color:var(--ink);
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    display:flex;justify-content:center}
+  #app{width:100%;max-width:640px;padding:16px;display:flex;flex-direction:column;gap:14px;text-align:center}
+  h1{margin:8px 0 0;font-size:2.2rem;color:var(--pink)}
+  .sub{margin:0;font-size:1.2rem}
+  .btn{border:none;border-radius:24px;font:inherit;font-weight:bold;color:#fff;cursor:pointer;
+    box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .08s}
+  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
+  .age{font-size:2rem;padding:22px;margin:6px 0}
+  .age small{display:block;font-size:1rem;font-weight:normal}
+  .a4{background:var(--green)}.a5{background:var(--blue)}.a6{background:var(--pink)}
+  .top{display:flex;justify-content:space-between;align-items:center;font-size:1.3rem}
+  .home{background:var(--yellow);font-size:1.1rem;padding:10px 16px;color:var(--ink)}
+  .stars{font-size:1.4rem}
+  .bar{height:14px;background:#fff;border-radius:7px;overflow:hidden;border:2px solid var(--ink)}
+  .bar i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}
+  .card{background:#fff;border-radius:28px;padding:18px 10px;box-shadow:0 6px 0 rgba(0,0,0,.1)}
+  .eq{font-size:3.4rem;font-weight:bold;letter-spacing:.05em}
+  .eq .q{color:var(--pink)}
+  .pics{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;font-size:2.2rem;min-height:60px}
+  .grp{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:42%}
+  .plus{font-size:2.6rem;font-weight:bold}
+  .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .choice{font-size:3rem;padding:18px 0;background:var(--blue)}
+  .choice.ng{background:#bbb;transform:scale(.92)}
+  .choice.ok{background:var(--green)}
+  #msg{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
+  .big{font-size:5rem}
+  .hide{display:none}
+  @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
+  .pop{animation:pop .4s}
+  @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+  .shake{animation:shake .3s}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <section id="home">
+    <h1>🍎 たしざんあそび 🍌</h1>
+    <p class="sub">いくつ かな？ えらんでね！</p>
+    <button class="btn age a4" data-lv="4">4さい<small>1〜5 の たしざん</small></button>
+    <button class="btn age a5" data-lv="5">5さい<small>10 までの たしざん</small></button>
+    <button class="btn age a6" data-lv="6">6さい<small>20 までの たしざん</small></button>
+  </section>
+
+  <section id="game" class="hide">
+    <div class="top">
+      <button class="btn home" id="back">← もどる</button>
+      <span class="stars" id="stars">⭐ 0</span>
+    </div>
+    <div class="bar"><i id="prog"></i></div>
+    <div class="card" style="margin-top:14px">
+      <div class="pics" id="pics"></div>
+      <div class="eq" id="eq"></div>
+    </div>
+    <div id="msg"></div>
+    <div class="choices" id="choices"></div>
+  </section>
+
+  <section id="end" class="hide">
+    <div class="big">🎉</div>
+    <h1>よくできました！</h1>
+    <p class="sub" id="result"></p>
+    <button class="btn age a4" id="again">もういっかい</button>
+    <button class="btn age a5" id="toHome">さいしょへ</button>
+  </section>
+</div>
+
+<script>
+const TOTAL = 10;
+const LEVELS = {
+  4: {max:5,  sum:5,  pics:true},
+  5: {max:9,  sum:10, pics:true},
+  6: {max:12, sum:20, pics:false}
+};
+const ITEMS = ['🍎','🍌','🍓','🐶','🐱','🚗','🌸','🐟','🍪','⚽'];
+const PRAISE = ['すごい！','せいかい！','てんさい！','やったね！','かしこい！'];
+
+const $ = id => document.getElementById(id);
+const show = id => ['home','game','end'].forEach(s => $(s).classList.toggle('hide', s !== id));
+const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+
+let lv, n, score, a, b, locked, miss;
+
+function speak(t){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = 'ja-JP'; u.rate = .9; u.pitch = 1.2;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+function start(level){
+  lv = level; n = 0; score = 0;
+  show('game'); next();
+}
+
+function next(){
+  if(n >= TOTAL) return finish();
+  const L = LEVELS[lv];
+  do{
+    a = rnd(1, L.max); b = rnd(1, L.max);
+  }while(a + b > L.sum || (lv === 6 && a + b < 6));
+  locked = false; miss = 0;
+  $('msg').textContent = '';
+  $('prog').style.width = (n / TOTAL * 100) + '%';
+  $('stars').textContent = '⭐ ' + score;
+
+  const item = ITEMS[rnd(0, ITEMS.length - 1)];
+  $('pics').innerHTML = L.pics
+    ? `<div class="grp">${item.repeat(a)}</div><span class="plus">＋</span><div class="grp">${item.repeat(b)}</div>`
+    : '';
+  $('eq').innerHTML = `${a} ＋ ${b} ＝ <span class="q">？</span>`;
+  speak(`${a} たす ${b} は？`);
+
+  const ans = a + b, set = new Set([ans]);
+  while(set.size < 3){
+    const w = ans + rnd(-3, 3);
+    if(w >= 0 && w <= L.sum) set.add(w);
+  }
+  const box = $('choices'); box.innerHTML = '';
+  [...set].sort(() => Math.random() - .5).forEach(v => {
+    const el = document.createElement('button');
+    el.className = 'btn choice'; el.textContent = v;
+    el.onclick = () => answer(el, v, ans);
+    box.appendChild(el);
+  });
+}
+
+function answer(el, v, ans){
+  if(locked) return;
+  if(v === ans){
+    locked = true;
+    el.classList.add('ok','pop');
+    if(miss === 0) score++;
+    const p = PRAISE[rnd(0, PRAISE.length - 1)];
+    $('msg').textContent = '🎉 ' + p;
+    $('eq').innerHTML = `${a} ＋ ${b} ＝ <span class="q">${ans}</span>`;
+    $('stars').textContent = '⭐ ' + score;
+    speak(`${ans}！ ${p}`);
+    n++;
+    setTimeout(next, 1600);
+  }else{
+    miss++;
+    el.classList.add('ng','shake');
+    el.disabled = true;
+    $('msg').textContent = 'おしい！ もういちど！';
+    speak('おしい、もういちど');
+  }
+}
+
+function finish(){
+  $('prog').style.width = '100%';
+  show('end');
+  const s = '⭐'.repeat(score) || '🌱';
+  $('result').innerHTML = `${TOTAL}もん ちゅう ${score}もん いっぱつで せいかい！<br><span style="font-size:2rem">${s}</span>`;
+  speak('よくできました！');
+}
+
+document.querySelectorAll('.age').forEach(btn => {
+  if(btn.dataset.lv) btn.onclick = () => start(+btn.dataset.lv);
+});
+$('back').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
+$('again').onclick = () => start(lv);
+$('toHome').onclick = () => show('home');
+</script>
+</body>
+</html>
