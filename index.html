@@ -74,15 +74,14 @@
   .actor.off-r{left:130%!important;opacity:0}
   .actor .body{position:relative;display:block;transform-origin:50% 100%}
   .actor .fb{display:block;margin:0 auto;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
-  .actor img.pic{display:none;margin:0 auto;height:190px;width:auto;max-width:190px;filter:drop-shadow(0 6px 4px rgba(0,0,0,.3))}
-  .actor.haspic img.pic{display:block}
-  .actor.haspic .fb{display:none}
+  .actor img.pic{display:block;margin:0 auto;height:200px;width:auto;max-width:180px;object-fit:contain;filter:drop-shadow(0 6px 4px rgba(0,0,0,.3))}
+  img.card{border:5px solid #fff;border-radius:18px;object-fit:cover!important;background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.18)}
   .actor.top{top:0;bottom:auto;width:220px;margin-left:-110px;left:50%;z-index:1;
     transform:translateY(-110%);transition:transform .6s ease-out}
   .actor.top.show{transform:none}
   .actor.top.defeated{transform:translateY(-130%) rotate(40deg);transition:transform .9s ease-in}
   .actor.top .fb{width:220px;height:auto}
-  .actor.top.haspic img.pic{height:auto;width:220px;max-width:none;border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
+  .actor.top img.pic{height:auto;width:220px;max-height:280px;object-fit:cover;max-width:none;border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
   .actor .hair{position:absolute;left:50%;width:40px;height:0;overflow:hidden;transition:height .6s ease-in}
   .emo{position:absolute;top:-8px;right:-4px;font-size:2.6rem;opacity:0;z-index:3}
   .emo.on{opacity:1;animation:pop .35s infinite alternate}
@@ -221,20 +220,7 @@
   <button id="skip" class="btn">スキップ ▶▶</button>
 </div>
 
-<!-- うんちぼうぼう（このアプリだけのキャラ） -->
-<template id="fb-poop"><svg viewBox="0 0 140 132" width="150">
-  <g stroke="#4a2c12" stroke-width="3" stroke-linejoin="round" stroke-linecap="round">
-    <path d="M50 30 L40 6 M62 24 L58 0 M76 24 L84 2 M88 32 L104 12 M44 40 L24 26" fill="none" stroke="#3a2210" stroke-width="5"/>
-    <ellipse cx="70" cy="106" rx="56" ry="22" fill="#9c6330"/>
-    <ellipse cx="70" cy="76" rx="44" ry="22" fill="#a96d36"/>
-    <path d="M40 54 Q38 30 70 24 Q76 12 68 4 Q96 12 96 40 Q102 52 100 58 Q70 70 40 58Z" fill="#b6783c"/>
-    <ellipse cx="54" cy="80" rx="9" ry="11" fill="#fff"/><ellipse cx="86" cy="80" rx="9" ry="11" fill="#fff"/>
-    <circle cx="56" cy="83" r="4.5" fill="#222" stroke="none"/><circle cx="84" cy="83" r="4.5" fill="#222" stroke="none"/>
-    <circle cx="57.5" cy="81" r="1.6" fill="#fff" stroke="none"/><circle cx="85.5" cy="81" r="1.6" fill="#fff" stroke="none"/>
-    <path class="mouth" d="M56 98 Q70 114 84 98Z" fill="#7a1c1c"/>
-    <circle cx="40" cy="94" r="6" fill="#ff9aa5" opacity=".6" stroke="none"/><circle cx="100" cy="94" r="6" fill="#ff9aa5" opacity=".6" stroke="none"/>
-  </g>
-</svg></template>
+
 </div>
 
 <script>
@@ -461,78 +447,69 @@ function sfx(kind){
 }
 
 /* ---------- ごほうびシーン ---------- */
-// 動画クリップ：YouTube の ID と、再生する区間（秒）。ここを書きかえれば好きな場面に変えられます
+// 動画クリップ：YouTube の ID と、再生する区間（秒）
 const CLIP = {id:'INbco2MQ1dM', start:0, end:8};
 
-// キャスト：characters/ フォルダに置いた画像（PNG）だけが登場します。画像が無いキャラは出ません。
-// 名前・声（[高さ, はやさ]）はここで変えられます。nose は「悪役の画像の鼻の位置」（画像の幅・高さに対する割合）。
-// うんちぼうぼうだけは画像なしで必ず出ます。
-const CAST = {
-  boy:    {name:'のび太',           img:'characters/boy.png',    voice:[1.6,.95]},
-  bully:  {name:'ジャイアン',       img:'characters/bully.png',  voice:[.7,.85]},
-  villain:{name:'ボーボボ',         img:'characters/villain.png',voice:[.6,.9], nose:{x:.57,y:.76}},
-  hero:   {name:'プリキュア',       img:'characters/hero.png',   voice:[2,1.15]},
-  g1:     {name:'ピカチュウ',       img:'characters/guest1.png', voice:[2,1.3]},
-  g2:     {name:'パウ・パトロール', img:'characters/guest2.png', voice:[1.5,1.1]},
-  g3:     {name:'ビッピー',         img:'characters/guest3.png', voice:[1.8,1.2]},
-  poop:   {name:'うんちぼうぼう',   voice:[1.9,1.0], fb:'fb-poop', ok:true},
-};
-const SLOT = {L:22, A:38, C:50, B:62, R:78};          // 画面の左右の立ち位置（％）
-const ACT = {};
+// 登場キャラ一覧（「キャラクター」フォルダの画像）。わるもの は villain:true（宇宙・対決シーンに出ます）
+// nose は わるもの の鼻の位置（画像の幅・高さに対する割合）
+const ROSTER = [
+  {name:'キュアハート',       img:'キャラクター/キュアハート.jpeg'},
+  {name:'キュアダイヤモンド', img:'キャラクター/キュアダイヤモンド.jpeg'},
+  {name:'キュアロゼッタ',     img:'キャラクター/キュアロゼった.jpeg'},
+  {name:'キュアエース',       img:'キャラクター/キュアエース.jpeg'},
+  {name:'キュアエース',       img:'キャラクター/image_main05.png'},
+  {name:'キュアアルカナ',     img:'キャラクター/キュアあるかな.jpeg'},
+  {name:'キュアアンサー',     img:'キャラクター/キュアアンサー.jpeg'},
+  {name:'キュアエクレール',   img:'キャラクター/キュアエクレール.jpeg'},
+  {name:'キュアフローラ',     img:'キャラクター/キュアフローラ.jpeg'},
+  {name:'キュアマーメイド',   img:'キャラクター/キュアマーメイド.jpeg'},
+  {name:'キュアミスティック', img:'キャラクター/キュアミススティック.jpeg'},
+];
+const DEFAULT_VOICE = [2, 1.15], VILLAIN_VOICE = [.6, .9], DEFAULT_NOSE = {x:.5, y:.6};
+const SLOT = {L:22, A:38, C:50, B:62, R:78};          // 立ち位置（％）
 let okCount = 0, stageId = 0, clipTok = 0, lastScene = '';
+let EL = {}, CH = {};                                  // いまのシーンの役（a,b,c,v）→ 要素／キャラ
 
-const GAGS = ['だめーーー！','なんでよーーー！','あーーー！','ひどいよー！','うえーん！','ぼくの せいじゃないよー！','せいかいって なにさー！','やめてよーーー！'];
-const CHEERS = ['ハッピー！ せいかい！','やったね！ ハッピー！','すごーい！ ハッピー！','ハッピー ハッピー！ だいせいかい！'];
+const GAGS = ['だめーーー！','なんでよーーー！','あーーー！','ひどいよー！','うえーん！','わたしの せいじゃないよー！','せいかいって なにさー！','やめてよーーー！'];
+const CHEERS = ['せいかい！ すごーい！','やったね！ だいせいかい！','すごいすごい！ ハッピー！','てんさいだね！ キラキラ！'];
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pick = a => a[rnd(0, a.length - 1)];
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
 
-function buildCast(){
-  const box = $('cast');
-  for(const k in CAST){
-    const c = CAST[k], el = document.createElement('div');
-    el.className = 'actor off-r'; el.id = 'act-' + k;
-    const body = document.createElement('div'); body.className = 'body';
-    const emo = document.createElement('span'); emo.className = 'emo'; body.append(emo);
-    if(c.fb){
-      body.append($(c.fb).content.cloneNode(true));
-      body.querySelector('svg').classList.add('fb');
-    }
-    if(c.img){
-      const img = new Image(); img.className = 'pic'; img.alt = '';
-      img.onload = () => { c.ok = c.pic = true; el.classList.add('haspic'); refreshMascots(); };
-      img.onerror = () => { c.ok = false; };
-      img.src = c.img;
-      body.prepend(img);
-    }
-    el.append(body);
-    if(k === 'villain') el.insertAdjacentHTML('beforeend',
-      '<div class="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>');
-    box.append(el); ACT[k] = el;
-  }
-}
-// ホーム／ゲーム画面の応援キャラ（ヒロインの画像があるときだけ表示）
+// 画像が読み込めたキャラだけ使う
+ROSTER.forEach(c => { const i = new Image(); i.onload = () => { c.ok = true; refreshMascots(); }; i.src = c.img; });
+const ready = () => ROSTER.filter(c => c.ok);
+
+// ホーム／ゲーム画面の応援キャラ（ランダム）
 function refreshMascots(){
+  const hs = ready().filter(c => !c.villain);
   document.querySelectorAll('.mascot').forEach(m => {
-    m.querySelectorAll('.mc').forEach(e => e.remove());
-    m.classList.toggle('on', !!CAST.hero.pic);
-    if(CAST.hero.pic){ const i = Object.assign(new Image(), {src: CAST.hero.img}); i.className = 'mc'; m.prepend(i); }
+    m.classList.toggle('on', hs.length > 0);
+    if(!hs.length || m.querySelector('.mc')) return;
+    const c = pick(hs), i = new Image(); i.src = c.img; i.className = 'mc' + (/\.png$/i.test(c.img) ? '' : ' card'); m.prepend(i);
   });
 }
 
-const body = k => ACT[k].querySelector('.body');
-function fx(k, name){ const b = body(k); b.className = 'body' + (name ? ' fx-' + name : ''); void b.offsetWidth; }
-function emo(k, t){ const e = body(k).querySelector('.emo'); e.textContent = t || ''; e.classList.toggle('on', !!t); ACT[k].classList.toggle('angry', t === '💢'); }
-function showPow(t){
-  const p = $('pow'); p.textContent = t;
-  p.classList.remove('on'); void p.offsetWidth; p.classList.add('on');
+function mkActor(k, c){
+  const el = document.createElement('div');
+  el.className = 'actor off-r' + (k === 'v' ? ' villain' : '');
+  const b = document.createElement('div'); b.className = 'body';
+  const emo = document.createElement('span'); emo.className = 'emo'; b.append(emo);
+  const img = new Image(); img.className = 'pic' + (/\.png$/i.test(c.img) ? '' : ' card'); img.src = c.img; b.prepend(img);
+  el.append(b);
+  if(k === 'v') el.insertAdjacentHTML('beforeend',
+    '<div class="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>');
+  $('cast').append(el); EL[k] = el; CH[k] = c;
 }
+const body = k => EL[k].querySelector('.body');
+function fx(k, name){ const b = body(k); b.className = 'body' + (name ? ' fx-' + name : ''); void b.offsetWidth; }
+function emo(k, t){ const e = body(k).querySelector('.emo'); e.textContent = t || ''; e.classList.toggle('on', !!t); }
+function showPow(t){ const p = $('pow'); p.textContent = t; p.classList.remove('on'); void p.offsetWidth; p.classList.add('on'); }
 function playClip(){
   const tok = ++clipTok, box = $('clip');
   box.innerHTML = `<iframe src="https://www.youtube.com/embed/${CLIP.id}?autoplay=1&start=${CLIP.start}&end=${CLIP.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
   box.classList.remove('hide');
-  return sleep((CLIP.end - CLIP.start + 1.5) * 1000).then(() => {
-    if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; }
-  });
+  return sleep((CLIP.end - CLIP.start + 1.5) * 1000).then(() => { if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; } });
 }
 
 // 声が終わるまで待つ（声が出せない環境でも止まらないよう保険のタイマー付き）
@@ -554,14 +531,9 @@ function speakDone(t, pitch, rate){
 function resetStage(){
   clipTok++;
   $('stage').className = '';
-  for(const k in ACT){
-    const el = ACT[k];
-    el.className = 'actor off-r' + (CAST[k].pic ? ' haspic' : ''); el.style.left = ''; el.style.marginLeft = ''; el.style.zIndex = '';
-    fx(k, ''); emo(k, ''); body(k).style.transform = '';
-    const h = el.querySelector('.hair'); if(h){ h.style.transition = 'none'; h.style.height = '0px'; }
-  }
-  $('pow').className = ''; $('pow').textContent = '';
+  $('cast').innerHTML = ''; EL = {}; CH = {};
   $('stage').querySelectorAll('.drop').forEach(e => e.remove());
+  $('pow').className = ''; $('pow').textContent = '';
   $('clip').classList.add('hide'); $('clip').innerHTML = '';
   $('bubble').classList.add('hide');
 }
@@ -571,134 +543,128 @@ function endStage(done){
   done();
 }
 
-/* ---- シーン（20種類）：cast は立ち位置、steps は順番の演技 ----
-   w:しゃべる人  t:セリフ  fx:動き  emo:顔の横の絵文字  pow:大きな文字  sfx:効果音  mv:移動  o:[[相手,動き,絵文字]] */
+/* ---- シーン：cast は役（a,b,c=なかま  v=わるもの）と立ち位置、steps は順番の演技 ----
+   w:しゃべる役  t:セリフ（{a}{b}{c}{v} は名前）  fx:動き  emo:絵文字  pow:大きな文字  sfx:効果音  mv:移動  o:[[役,動き,絵文字]] */
 const SCENES = [
-  {id:'slap', cast:{boy:'L', hero:'R'}, steps:[
-    {w:'boy', t:() => pick(GAGS), fx:'shake', emo:'💢', sfx:'boing'},
-    {w:'hero', t:'もう！ ずるいことしちゃ だめでしょー！ ぷんぷん！', fx:'shake', emo:'💢', o:[['boy','','']]},
-    {w:'hero', mv:'A', fx:'run', ms:450},
-    {w:'hero', t:'えいっ！ ビンタ！', fx:'jump', emo:'', pow:'パチーン！💥', sfx:'slap', o:[['boy','hit','💫']]},
-    {w:'boy', t:'いたいよー！ ごめんなさーい！', fx:'cry', emo:'💦'},
-    {w:'hero', t:'よくできました！ ハッピー！', mv:'R', fx:'dance', emo:'✨', sfx:'happy', o:[['boy','laugh','']]}]},
-  {id:'cheer', cast:{hero:'C'}, steps:[
-    {w:'hero', t:() => pick(CHEERS), fx:'dance', emo:'✨', pow:'ハッピー！✨', sfx:'happy'}]},
-  {id:'comfort', cast:{boy:'C', hero:'R'}, steps:[
-    {w:'boy', t:'うえーん！ もんだいが むずかしいよー！', fx:'cry', emo:'💦'},
-    {w:'hero', t:'だいじょうぶ！ いっしょに がんばろう！', mv:'B', fx:'jump'},
-    {w:'boy', t:'ぐすん… うん！ ありがとう！', fx:'laugh', emo:'', sfx:'happy'},
-    {w:'hero', t:'ハッピー！ えがおが いちばん！', fx:'dance', emo:'✨'}]},
-  {id:'zap', need:['g1'], cast:{boy:'L', g1:'R'}, steps:[
-    {w:'boy', t:'さわったら おこるよー！', fx:'shake', emo:'💢'},
-    {w:'g1', t:'ピカピカ！ いくよー！', mv:'B', fx:'run'},
-    {w:'g1', t:'ピーカーチュー！', fx:'zap', pow:'ビリビリ！⚡', sfx:'boom', o:[['boy','zap','💫']]},
-    {w:'boy', t:'あばばばば！ しびれるー！', fx:'shake'},
-    {w:'g1', t:'ピカ ピカ！ ごめんね！', fx:'jump'},
-    {w:'boy', t:'あははは！ びっくりしたー！', fx:'laugh', sfx:'happy'}]},
-  {id:'pika_vs_villain', need:['g1'], cast:{g1:'L', villain:'R'}, steps:[
-    {w:'villain', t:'ハナゲしんけん！ はなげビーム！', fx:'shake', emo:'💢', pow:'ハナゲビーム！', sfx:'whoosh'},
-    {w:'g1', t:'ピカ！ でんこうせっか！', mv:'B', fx:'run', sfx:'whoosh'},
-    {w:'g1', t:'ピカー！', fx:'zap', pow:'ドカーン！💥', sfx:'boom', o:[['villain','hit','💫']]},
-    {w:'villain', t:'ひえーーー！ おぼえてろよー！', fx:'spin', mv:'R'},
-    {w:'g1', t:'ピカピカ！ ピッカー！', fx:'dance', emo:'✨', sfx:'happy'}]},
-  {id:'recital', cast:{boy:'L', bully:'C', hero:'R'}, steps:[
-    {w:'bully', t:'おれさまの リサイタルだー！ ボエ〜〜！', fx:'shake', emo:'🎵', sfx:'boing'},
-    {w:'boy', t:'み、みみがー！ うるさーい！', fx:'shake', emo:'💦'},
-    {w:'hero', t:'ぷっ… ちょっと おもしろいかも！', fx:'laugh'},
-    {w:'bully', t:'わっはっは！ もっと うたってやるぜー！', fx:'dance', emo:'🎵', o:[['boy','laugh',''],['hero','laugh','']], sfx:'happy'}]},
-  {id:'fight_friends', cast:{boy:'L', bully:'R'}, steps:[
-    {w:'bully', t:'おい！ その けしゴム よこせー！', mv:'A', fx:'run', emo:'💢'},
-    {w:'boy', t:'やだよー！ ぼくのだよー！', fx:'shake', emo:'💦'},
-    {w:'bully', t:'こうしてやるー！', fx:'jump', pow:'ポカッ！', sfx:'slap', o:[['boy','hit','💫']]},
-    {w:'boy', t:'いたたた… ひどいよー！', fx:'cry', emo:'💦'},
-    {w:'bully', t:'わ、わるかったよ。いっしょに あそぼうぜ！', fx:'bow', emo:'', o:[['boy','','']]},
-    {w:'boy', t:'うん！ なかなおり！ あはは！', fx:'laugh', emo:'✨', sfx:'happy', o:[['bully','laugh','']]}]},
-  {id:'paw_rescue', need:['g2'], cast:{boy:'L', g2:'R'}, steps:[
-    {w:'boy', t:'たすけてー！ おとしあなに おちたー！', fx:'cry', emo:'💦'},
-    {w:'g2', t:'ワン！ まかせて！ しゅつどう！', mv:'A', fx:'run', sfx:'whoosh'},
-    {w:'g2', t:'ロープで ひきあげるよー！ せーの！', fx:'jump', pow:'よいしょ！', sfx:'boing', o:[['boy','jump','']]},
-    {w:'boy', t:'ありがとう！ たすかったよー！', fx:'laugh', emo:'✨', sfx:'happy'},
-    {w:'g2', t:'ワンワン！ もんだいなし！', fx:'dance'}]},
-  {id:'bippy_dance', need:['g3'], cast:{g3:'L', hero:'R'}, steps:[
-    {w:'g3', t:'ルンルン！ いっしょに おどろうよー！', fx:'dance', emo:'🎵', sfx:'happy'},
-    {w:'hero', t:'いいね！ ハッピー ダンス！', mv:'B', fx:'dance', emo:'✨', pow:'♪ルンルン♪', o:[['g3','dance','🎵']]},
-    {w:'g3', t:'くるくる まわるよー！', fx:'spin'},
-    {w:'hero', t:'あははは！ たのしー！', fx:'laugh', o:[['g3','laugh','']]}]},
-  {id:'party', cast:{hero:'L', boy:'C', bully:'R'}, steps:[
-    {w:'hero', t:'せいかい おめでとう！ ハッピー！', fx:'jump', emo:'✨', pow:'🎉おめでとう🎉', sfx:'happy', o:[['boy','jump',''],['bully','jump','']]},
-    {w:'boy', t:'やったー！ ぱんぱかぱーん！', fx:'dance', emo:'🎊'},
-    {w:'bully', t:'おれも いわって やるぜー！', fx:'dance', emo:'🎊', o:[['boy','dance',''],['hero','dance','']]}]},
-  {id:'hero_vs_villain', cast:{hero:'L', villain:'R'}, steps:[
-    {w:'villain', t:'ハナゲ ビーーーム！', fx:'shake', emo:'💢', pow:'ハナゲビーム！', sfx:'whoosh'},
-    {w:'hero', t:'はね返すよ！ えいっ！', mv:'A', fx:'jump', pow:'キラキラ！✨', sfx:'boom', o:[['villain','hit','💫']]},
-    {w:'villain', t:'ひえーーー！ ボーボボ しんけんが やぶれたー！', fx:'spin', mv:'R'},
-    {w:'hero', t:'やっつけたよ！ ハッピー！', fx:'dance', emo:'✨', sfx:'happy'}]},
-  {id:'tickle', cast:{villain:'R', boy:'L'}, steps:[
-    {w:'villain', t:'こちょこちょ！ はなげで くすぐるぞー！', mv:'B', fx:'run', emo:'💢'},
-    {w:'boy', t:'あははは！ くすぐったーい！ やめてー！', fx:'laugh', emo:'', sfx:'boing'},
-    {w:'villain', t:'ふははは！ はなげは ふしぎだろー！', fx:'dance'},
-    {w:'boy', t:'へんなのー！ あははは！ おなかいたーい！', fx:'laugh', emo:'✨', sfx:'happy'}]},
-  {id:'chase', cast:{bully:'L', boy:'A'}, steps:[
-    {w:'boy', t:'わーっ！ おいかけてくるー！ にげろー！', mv:'R', fx:'run', emo:'💦'},
-    {w:'bully', t:'まてまてー！ つかまえるぞー！', mv:'B', fx:'run', emo:'💢'},
-    {w:'boy', t:'あっ！ ゴツン！', mv:'B', fx:'hit', pow:'ゴツン！💥', sfx:'slap', o:[['bully','hit','💫']]},
-    {w:'bully', t:'いてて… あははは！ おまえ おもしろいなー！', fx:'laugh', sfx:'happy', o:[['boy','laugh','']]}]},
-  {id:'gift', cast:{boy:'L', bully:'R'}, steps:[
-    {w:'bully', t:'ほらよ！ ごほうびに これ やるよ！', mv:'A', fx:'jump', emo:'🎁'},
-    {w:'boy', t:'ええっ！？ ほんとうに！？ ありがとう！', fx:'jump', emo:'✨', sfx:'happy'},
-    {w:'bully', t:'へへっ！ ともだちだろ！', fx:'laugh', emo:'❤️', o:[['boy','laugh','❤️']]}]},
-  {id:'laughall', cast:{boy:'L', bully:'C', hero:'R'}, steps:[
-    {w:'bully', t:'わっはっはっは！', fx:'laugh', sfx:'boing'},
-    {w:'boy', t:'あははは！ おなかいたーい！', fx:'laugh'},
-    {w:'hero', t:'うふふ！ ハッピー！', fx:'laugh', emo:'✨', pow:'😂😂😂', sfx:'happy', o:[['boy','laugh',''],['bully','laugh','']]}]},
-  {id:'villain_dance', cast:{villain:'C', hero:'L', boy:'R'}, steps:[
-    {w:'villain', t:'はなげ ふりふり ダンスだー！', fx:'dance', emo:'🎵', sfx:'boing'},
-    {w:'boy', t:'へんなダンス！ あははは！', fx:'laugh', o:[['hero','laugh','']]},
-    {w:'villain', t:'もっと へんに なるぞー！ くるくるー！', fx:'spin'},
-    {w:'hero', t:'おなか いたーい！ ハッピー！', fx:'laugh', emo:'✨', sfx:'happy', o:[['villain','dance','']]}]},
-  {id:'harisen', cast:{hero:'L', bully:'R'}, steps:[
-    {w:'bully', t:'おまえの かお、おもしろいなー！', fx:'laugh', emo:''},
-    {w:'hero', t:'しつれいな！ えいっ！', mv:'A', fx:'run', emo:'💢'},
-    {w:'hero', t:'おしおき ハリセン！', fx:'jump', emo:'', pow:'ぱこーん！💥', sfx:'slap', o:[['bully','hit','💫']]},
-    {w:'bully', t:'いてて… まいった まいった！', fx:'cry', emo:'💦'},
-    {w:'hero', t:'もう わらわない？ ハッピー！', fx:'dance', emo:'✨', sfx:'happy', o:[['bully','laugh','']]}]},
-  {id:'paw_vs_villain', need:['g2'], cast:{g2:'L', villain:'R'}, steps:[
-    {w:'villain', t:'はなげで パトロールを じゃまするぞー！', fx:'shake', emo:'💢'},
-    {w:'g2', t:'パトロール しゅつどう！ ワンワン！', mv:'A', fx:'run', sfx:'whoosh'},
-    {w:'g2', t:'ワン！ ロープ ぐるぐる！', fx:'jump', pow:'ぐるぐる！', sfx:'boom', o:[['villain','hit','💫']]},
-    {w:'villain', t:'ひえー！ つかまったー！', fx:'spin'},
-    {w:'g2', t:'ワンワン！ かいけつ！', fx:'dance', emo:'✨', sfx:'happy'}]},
-  {id:'pika_hero', need:['g1'], cast:{g1:'L', hero:'R'}, steps:[
-    {w:'g1', t:'ピカピカ！ ともだちに なろう！', mv:'A', fx:'jump', emo:'❤️'},
-    {w:'hero', t:'うん！ なかよし！ ハッピー！', mv:'B', fx:'jump', emo:'❤️', sfx:'happy'},
-    {w:'g1', t:'ピッカー！', fx:'dance', emo:'✨', o:[['hero','dance','']]}]},
-  {id:'poop_solo', cast:{poop:'C'}, steps:[
-    {w:'poop', t:'ぷりぷり！ せいかい！ ぼうぼう！', fx:'dance', emo:'✨', pow:'ぼうぼう！✨', sfx:'happy'},
-    {w:'poop', t:'ぼくと おどろうよー！ ぼうぼうダンス！', fx:'spin'}]},
-  {id:'poop_boy', cast:{boy:'L', poop:'R'}, steps:[
-    {w:'poop', t:'こんにちはー！ うんちぼうぼう だよー！', mv:'B', fx:'jump'},
-    {w:'boy', t:'わー！ くさいよー！ あっちいってー！', fx:'shake', emo:'💦'},
-    {w:'poop', t:'しつれいな！ くさくないよー！ ぼうぼう！', fx:'shake', emo:'💢'},
-    {w:'boy', t:'あははは！ へんなのー！ おもしろーい！', fx:'laugh', emo:'', sfx:'happy', o:[['poop','laugh','']]}]},
-  {id:'poop_hero', cast:{poop:'L', hero:'R'}, steps:[
-    {w:'poop', t:'いっしょに あそぼうよー！ ぼうぼう！', mv:'B', fx:'run'},
-    {w:'hero', t:'きゃー！ こないでー！', fx:'shake', emo:'💦', sfx:'boing'},
-    {w:'poop', t:'なんでよー！ えーん！', fx:'cry', emo:'💦'},
-    {w:'hero', t:'ごめんね… おともだちに なろう！ ハッピー！', fx:'dance', emo:'✨', sfx:'happy', o:[['poop','laugh','']]}]},
-  {id:'poop_bully', cast:{bully:'L', poop:'R'}, steps:[
-    {w:'bully', t:'おまえ だれだー！ まてー！', mv:'A', fx:'run', emo:'💢'},
-    {w:'poop', t:'うわー！ ぼうぼう！ にげろー！', fx:'run'},
-    {w:'bully', t:'あっ！ ふんじゃったー！', fx:'hit', emo:'💫', pow:'ズルッ！', sfx:'slap'},
-    {w:'poop', t:'あははは！ ぼうぼう！', fx:'laugh', o:[['bully','laugh','']], sfx:'happy'}]},
+  {id:'cheer', cast:{a:'C'}, steps:[
+    {w:'a', t:() => pick(CHEERS), fx:'dance', emo:'✨', pow:'せいかい！✨', sfx:'happy'},
+    {w:'a', t:'つぎも がんばろうね！', fx:'jump'}]},
+  {id:'henshin', cast:{a:'C'}, steps:[
+    {w:'a', t:'みててね！ へんしーん！', fx:'spin', sfx:'whoosh'},
+    {w:'a', t:'{a}、さんじょう！ せいかい おめでとう！', fx:'grow', emo:'✨', pow:'キラキラーン！✨', sfx:'happy'}]},
+  {id:'slap', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:() => pick(GAGS), fx:'shake', emo:'💢', sfx:'boing'},
+    {w:'b', t:'もう！ {a}ったら わがまま いっちゃ だめー！ ぷんぷん！', fx:'shake', emo:'💢', o:[['a','','']]},
+    {w:'b', mv:'A', fx:'run', ms:450},
+    {w:'b', t:'えいっ！ ビンタ！', fx:'jump', emo:'', pow:'パチーン！💥', sfx:'slap', o:[['a','hit','💫']]},
+    {w:'a', t:'いたーい！ ごめんなさーい！', fx:'cry', emo:'💦'},
+    {w:'b', t:'わかれば よろしい！ せいかい おめでとう！', mv:'R', fx:'dance', emo:'✨', sfx:'happy', o:[['a','laugh','']]}]},
+  {id:'comfort', cast:{a:'C', b:'R'}, steps:[
+    {w:'a', t:'うえーん！ もんだいが むずかしいよー！', fx:'cry', emo:'💦'},
+    {w:'b', t:'だいじょうぶ！ いっしょに がんばろう！', mv:'B', fx:'jump'},
+    {w:'a', t:'ぐすん… うん！ ありがとう {b}！', fx:'laugh', emo:'', sfx:'happy'},
+    {w:'b', t:'えがおが いちばん！', fx:'dance', emo:'✨'}]},
+  {id:'party', cast:{a:'L', b:'C', c:'R'}, steps:[
+    {w:'a', t:'せいかい おめでとう！', fx:'jump', emo:'✨', pow:'🎉おめでとう🎉', sfx:'happy', o:[['b','jump',''],['c','jump','']]},
+    {w:'b', t:'やったー！ ぱんぱかぱーん！', fx:'dance', emo:'🎊'},
+    {w:'c', t:'みんなで おいわいだよー！', fx:'dance', emo:'🎊', o:[['a','dance',''],['b','dance','']]}]},
+  {id:'teampose', cast:{a:'L', b:'C', c:'R'}, steps:[
+    {w:'a', t:'みんな いくよー！', fx:'jump', sfx:'whoosh'},
+    {w:'b', t:'せーの！', fx:'jump', o:[['a','jump',''],['c','jump','']]},
+    {w:'c', t:'きめポーズ！ だいせいかい！', fx:'grow', emo:'✨', pow:'⭐きまった！⭐', sfx:'happy', o:[['a','grow','✨'],['b','grow','✨']]}]},
+  {id:'laughall', cast:{a:'L', b:'C', c:'R'}, steps:[
+    {w:'b', t:'わっはっはっは！', fx:'laugh', sfx:'boing'},
+    {w:'a', t:'あははは！ おなかいたーい！', fx:'laugh'},
+    {w:'c', t:'うふふ！ たのしいね！', fx:'laugh', emo:'✨', pow:'😂😂😂', sfx:'happy', o:[['a','laugh',''],['b','laugh','']]}]},
+  {id:'dance', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:'ルンルン！ いっしょに おどろうよー！', fx:'dance', emo:'🎵', sfx:'happy'},
+    {w:'b', t:'いいね！ ハッピー ダンス！', mv:'B', fx:'dance', emo:'✨', pow:'♪ルンルン♪', o:[['a','dance','🎵']]},
+    {w:'a', t:'くるくる まわるよー！', fx:'spin'},
+    {w:'b', t:'あははは！ たのしー！', fx:'laugh', o:[['a','laugh','']]}]},
+  {id:'chase', cast:{b:'L', a:'A'}, steps:[
+    {w:'a', t:'わーっ！ {b}が おいかけてくるー！', mv:'R', fx:'run', emo:'💦'},
+    {w:'b', t:'まてまてー！ つかまえるぞー！', mv:'B', fx:'run', emo:'💢'},
+    {w:'a', t:'あっ！', mv:'B', fx:'hit', pow:'ゴツン！💥', sfx:'slap', o:[['b','hit','💫']]},
+    {w:'b', t:'いてて… あははは！', fx:'laugh', emo:'', sfx:'happy', o:[['a','laugh','']]}]},
+  {id:'gift', cast:{a:'L', b:'R'}, steps:[
+    {w:'b', t:'はい！ ごほうびの プレゼント！', mv:'A', fx:'jump', emo:'🎁'},
+    {w:'a', t:'ええっ！ ほんとうに！？ ありがとう！', fx:'jump', emo:'✨', sfx:'happy'},
+    {w:'b', t:'えへへ！ ともだちだもん！', fx:'laugh', emo:'❤️', o:[['a','laugh','❤️']]}]},
+  {id:'fight_friends', cast:{a:'L', b:'R'}, steps:[
+    {w:'b', t:'それ わたしの おやつだよー！', mv:'A', fx:'run', emo:'💢'},
+    {w:'a', t:'ちがうもん！ わたしのだもん！', fx:'shake', emo:'💢'},
+    {w:'b', t:'もう！ えいっ！', fx:'jump', pow:'ポカッ！', sfx:'slap', o:[['a','hit','💫']]},
+    {w:'a', t:'いたた… ひどいよー！', fx:'cry', emo:'💦'},
+    {w:'b', t:'ご、ごめんね。はんぶんこ しよう！', fx:'', emo:''},
+    {w:'a', t:'うん！ なかなおり！', fx:'laugh', emo:'✨', sfx:'happy', o:[['b','laugh','❤️']]}]},
+  {id:'harisen', cast:{a:'L', b:'R'}, steps:[
+    {w:'b', t:'{a}の かお、おもしろーい！', fx:'laugh'},
+    {w:'a', t:'しつれいな！ えいっ！', mv:'A', fx:'run', emo:'💢'},
+    {w:'a', t:'おしおき ハリセン！', fx:'jump', emo:'', pow:'ぱこーん！💥', sfx:'slap', o:[['b','hit','💫']]},
+    {w:'b', t:'いてて… まいった まいった！', fx:'cry', emo:'💦'},
+    {w:'a', t:'もう わらわない？ ハッピー！', fx:'dance', emo:'✨', sfx:'happy', o:[['b','laugh','']]}]},
+  {id:'zap', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:'さわったら おこるよー！', fx:'shake', emo:'💢'},
+    {w:'b', t:'いくよー！ キラキラ ビーム！', mv:'B', fx:'run'},
+    {w:'b', t:'えーい！', fx:'zap', pow:'ビリビリ！⚡', sfx:'boom', o:[['a','zap','💫']]},
+    {w:'a', t:'あばばばば！ しびれるー！', fx:'shake'},
+    {w:'b', t:'ごめんね！ ちから いれすぎちゃった！', fx:'jump'},
+    {w:'a', t:'あははは！ びっくりしたー！', fx:'laugh', sfx:'happy'}]},
+  {id:'rescue', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:'たすけてー！ おとしあなに おちたー！', fx:'cry', emo:'💦'},
+    {w:'b', t:'まかせて！ いま たすけるよ！', mv:'A', fx:'run', sfx:'whoosh'},
+    {w:'b', t:'せーの！ よいしょー！', fx:'jump', pow:'よいしょ！', sfx:'boing', o:[['a','jump','']]},
+    {w:'a', t:'ありがとう {b}！ たすかったよー！', fx:'laugh', emo:'✨', sfx:'happy'}]},
+  {id:'recital', cast:{a:'L', b:'C', c:'R'}, steps:[
+    {w:'b', t:'{b}の リサイタルだよー！ ボエ〜〜！', fx:'shake', emo:'🎵', sfx:'boing'},
+    {w:'a', t:'み、みみがー！ うるさーい！', fx:'shake', emo:'💦'},
+    {w:'c', t:'ぷっ… ちょっと おもしろいかも！', fx:'laugh'},
+    {w:'b', t:'もっと うたっちゃうよー！', fx:'dance', emo:'🎵', o:[['a','laugh',''],['c','laugh','']], sfx:'happy'}]},
+  {id:'spinshow', cast:{a:'C'}, steps:[
+    {w:'a', t:'くるくる まわっちゃうよー！', fx:'spin', sfx:'whoosh'},
+    {w:'a', t:'め、めが まわったー！ あははは！', fx:'laugh', emo:'💫', pow:'ぐるぐる〜', sfx:'boing'}]},
+  {id:'hug', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:'{b}、だーいすき！', mv:'A', fx:'jump', emo:'❤️'},
+    {w:'b', t:'わたしもー！ なかよし！', mv:'B', fx:'jump', emo:'❤️', sfx:'happy', pow:'💕なかよし💕'},
+    {w:'a', t:'ずーっと ともだちだよ！', fx:'dance', emo:'✨', o:[['b','dance','✨']]}]},
+  {id:'jumpcontest', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:'どっちが たかく とべるか しょうぶだよ！', fx:'shake'},
+    {w:'b', t:'まけないよー！ それー！', fx:'jump', sfx:'boing', o:[['a','jump','']]},
+    {w:'a', t:'ひきわけ！ あははは！', fx:'laugh', emo:'✨', sfx:'happy', o:[['b','laugh','✨']]}]},
+  {id:'vs_villain', cast:{a:'L', v:'R'}, steps:[
+    {w:'v', t:'わっはっは！ じゃまを してやるぞー！', fx:'shake', emo:'💢', sfx:'whoosh'},
+    {w:'a', t:'そうは させない！ えーい！', mv:'A', fx:'jump', pow:'キラキラ！✨', sfx:'boom', o:[['v','hit','💫']]},
+    {w:'v', t:'ひえーーー！ おぼえてろよー！', fx:'spin'},
+    {w:'a', t:'やっつけたよ！ せいかい おめでとう！', fx:'dance', emo:'✨', sfx:'happy'}]},
+  {id:'tickle', cast:{v:'R', a:'L'}, steps:[
+    {w:'v', t:'こちょこちょ こうげきだー！', mv:'B', fx:'run', emo:'💢'},
+    {w:'a', t:'あははは！ くすぐったーい！ やめてー！', fx:'laugh', sfx:'boing'},
+    {w:'v', t:'ふははは！ まいったか！', fx:'dance'},
+    {w:'a', t:'へんなのー！ あははは！', fx:'laugh', emo:'✨', sfx:'happy'}]},
+  {id:'villain_dance', cast:{v:'C', a:'L', b:'R'}, steps:[
+    {w:'v', t:'へんてこ ダンスだー！ ふりふり！', fx:'dance', emo:'🎵', sfx:'boing'},
+    {w:'a', t:'へんなダンス！ あははは！', fx:'laugh', o:[['b','laugh','']]},
+    {w:'v', t:'もっと へんに なるぞー！ くるくるー！', fx:'spin'},
+    {w:'b', t:'おなか いたーい！', fx:'laugh', emo:'✨', sfx:'happy', o:[['v','dance','']]}]},
 ];
-const SPACE_ID = 'space';
+const SPACE = {id:'space'};
 
-// 登場できるのは、画像が読み込めたキャラだけ（うんちぼうぼうは常にOK）
+// 使えるキャラの数に合わせてシーンを選び、役にキャラを割りあてる
 function chooseScene(){
-  if(window.FORCE_SCENE) return window.FORCE_SCENE;
-  if(okCount % 3 === 0 && CAST.boy.ok && CAST.villain.ok) return SPACE_ID;
-  const pool = SCENES.filter(s => Object.keys(s.cast).every(k => CAST[k].ok) && s.id !== lastScene);
-  return (pool.length ? pick(pool) : SCENES.find(s => s.id === 'poop_solo')).id;
+  const heroes = shuffle(ready().filter(c => !c.villain)), vils = shuffle(ready().filter(c => c.villain));
+  const fits = sc => { const ks = Object.keys(sc.cast); return ks.filter(k => k !== 'v').length <= heroes.length && (!ks.includes('v') || vils.length); };
+  let pool;
+  if(window.FORCE_SCENE) pool = [...SCENES, SPACE].filter(s => s.id === window.FORCE_SCENE);
+  else{
+    pool = SCENES.filter(s => fits(s) && s.id !== lastScene);
+    if(heroes.length && vils.length && lastScene !== 'space') pool.push(SPACE);
+  }
+  if(!pool.length) return null;
+  const sc = pick(pool), map = {};
+  const keys = sc === SPACE ? ['a', 'b', 'v'] : Object.keys(sc.cast);
+  let i = 0;
+  for(const k of keys){ const c = k === 'v' ? vils[0] : heroes[i++]; if(c) map[k] = c; }
+  return {sc, map};
 }
 
 async function reaction(done){
@@ -708,30 +674,36 @@ async function reaction(done){
   const t0 = Date.now(), st = $('stage');
   st.onclick = () => { if(alive() && Date.now() - t0 > 900){ stageId++; endStage(done); } };
   const bub = $('bubble');
-  const say = async (t, who) => {
+  const say = async (t, k) => {
     if(!alive()) return false;
-    const c = CAST[who];
+    const c = CH[k];
+    t = t.replace(/\{([abcv])\}/g, (m, x) => CH[x] ? CH[x].name : '');
     bub.textContent = '';
     const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name; bub.append(nm);
     bub.append(document.createTextNode(t));
-    bub.className = '';
-    await Promise.all([speakDone(t, c.voice[0], c.voice[1]), sleep(1100)]);
+    const [p, r] = c.voice || (c.villain ? VILLAIN_VOICE : DEFAULT_VOICE);
+    await Promise.all([speakDone(t, p, r), sleep(1100)]);
     return alive();
   };
   const finish = async () => { await sleep(300); if(alive()) endStage(done); };
-  const sid = chooseScene(); lastScene = sid;
+  const ch = chooseScene();
+  if(!ch){                                             // キャラ画像がまだ無いとき
+    showPow('せいかい！🎉'); sfx('happy');
+    await sleep(1500); if(alive()) endStage(done); return;
+  }
+  lastScene = ch.sc.id;
+  for(const k in ch.map) mkActor(k, ch.map[k]);
   await sleep(60);
   if(!alive()) return;
+  if(ch.sc === SPACE) return spaceScene({alive, say, finish, st});
 
-  if(sid === SPACE_ID) return spaceScene({alive, say, finish, st});
-
-  const sc = SCENES.find(s => s.id === sid);
-  for(const k in sc.cast){ ACT[k].classList.remove('off-l', 'off-r'); ACT[k].style.left = SLOT[sc.cast[k]] + '%'; }
+  const sc = ch.sc;
+  for(const k in sc.cast){ EL[k].classList.remove('off-r'); EL[k].style.left = SLOT[sc.cast[k]] + '%'; }
   await sleep(450);
   for(const step of sc.steps){
     if(!alive()) return;
     const k = step.w;
-    if(step.mv){ ACT[k].style.left = SLOT[step.mv] + '%'; if(step.mv === 'R' && step.fx === 'spin') ACT[k].classList.add('off-r'); }
+    if(step.mv) EL[k].style.left = SLOT[step.mv] + '%';
     if(step.fx !== undefined) fx(k, step.fx);
     if(step.emo !== undefined) emo(k, step.emo);
     for(const [who, f, e] of step.o || []){ fx(who, f); emo(who, e); }
@@ -743,77 +715,67 @@ async function reaction(done){
   return finish();
 }
 
-// 3回に1回：鼻毛で宇宙へ（ジャイアンがいれば道づれ）→ おしっこジャー → プリキュアがやっつける
+// 宇宙：わるもの の鼻毛で宇宙へ → おしっこジャー → なかま がやっつける
 async function spaceScene({alive, say, finish, st}){
-  const boy = ACT.boy, bully = ACT.bully, vil = ACT.villain, hero = ACT.hero, hair = vil.querySelector('.hair');
-  const hasB = !!CAST.bully.ok, hasH = !!CAST.hero.ok;
-  const riders = hasB ? ['boy', 'bully'] : ['boy'];
-  boy.classList.remove('off-r'); boy.style.left = '50%'; boy.style.zIndex = 3;
-  if(hasB){ bully.classList.remove('off-r'); bully.style.left = '35%'; bully.style.zIndex = 2; }
-  fx('boy', 'shake'); emo('boy', '💢'); sfx('boing');
+  const a = EL.a, v = EL.v, hair = v.querySelector('.hair'), hasB = !!EL.b;
+  a.classList.remove('off-r'); a.style.left = '50%'; a.style.zIndex = 3;
+  fx('a', 'shake'); emo('a', '💢'); sfx('boing');
   await sleep(450);
-  if(!await say(pick(GAGS), 'boy')) return;
-  vil.classList.remove('off-r'); vil.classList.add('top', 'show');
+  if(!await say(pick(GAGS), 'a')) return;
+  v.classList.remove('off-r'); v.classList.add('top', 'show');
   await sleep(600);
-  if(!await say('ハナゲしんけん！ いってこーい！', 'villain')) return;
+  if(!await say('はなげ こうげきだー！ うちゅうへ いってこーい！', 'v')) return;
 
-  const n = CAST.villain.nose, W = 220, sR = st.getBoundingClientRect(), bR = boy.getBoundingClientRect();
-  const noseY = vil.offsetHeight * n.y;
-  vil.style.marginLeft = '0'; vil.style.left = (bR.left + bR.width / 2 - sR.left - n.x * W) + 'px';
+  const n = CH.v.nose || DEFAULT_NOSE, W = 220, sR = st.getBoundingClientRect(), aR = a.getBoundingClientRect();
+  const noseY = v.offsetHeight * n.y;
+  v.style.marginLeft = '0'; v.style.left = (aR.left + aR.width / 2 - sR.left - n.x * W) + 'px';
   hair.style.left = (n.x * W - 20) + 'px'; hair.style.top = noseY + 'px';
-  const dist = bR.top + 10 - sR.top - noseY;
+  const dist = aR.top + 10 - sR.top - noseY;
   hair.style.transition = 'height .6s ease-in'; hair.style.height = dist + 'px';
   await sleep(700);
   if(!alive()) return;
-  sfx('whoosh');
+  sfx('whoosh'); fx('a', '');
   hair.style.transition = 'height 1.8s ease-in-out'; hair.style.height = '160px';
-  fx('boy', ''); if(hasB){ fx('bully', ''); emo('bully', '💦'); }   // 動き(アニメ)を止めないと上昇の変形が効かない
-  for(const k of riders){
-    const b = body(k); b.style.transition = 'transform 1.8s ease-in-out'; b.style.transformOrigin = '50% 0';
-    b.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
-  }
+  const b = body('a'); b.style.transition = 'transform 1.8s ease-in-out'; b.style.transformOrigin = '50% 0';
+  b.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
   st.classList.add('space');
-  if(!await say('うわーーー！ たすけてーーー！', 'boy')) return;
-  if(hasB && !await say('おれまで つれていかれるのかよー！ ぎゃー！', 'bully')) return;
+  if(!await say('きゃーーー！ たすけてーーー！', 'a')) return;
 
-  // うちゅうから おしっこ ジャーーー！
-  const vR = vil.getBoundingClientRect(), bR2 = boy.getBoundingClientRect();
+  const vR = v.getBoundingClientRect(), aR2 = a.getBoundingClientRect();
   sfx('whoosh'); showPow('ジャーーー！💦');
   for(let i = 0; i < 16; i++){
     const d = document.createElement('span'); d.className = 'drop'; d.textContent = '💧';
     d.style.left = (vR.left + vR.width * n.x - sR.left - 10 + rnd(-16, 16)) + 'px';
     d.style.top = (vR.top + vR.height * .9 - sR.top) + 'px';
-    d.style.setProperty('--dy', Math.max(40, bR2.top + bR2.height * .4 - vR.top - vR.height * .9) + 'px');
+    d.style.setProperty('--dy', Math.max(40, aR2.top + aR2.height * .4 - vR.top - vR.height * .9) + 'px');
     d.style.animationDelay = (i * 70) + 'ms';
     st.append(d);
   }
-  if(!await say('ひっひっひ！ おしっこ ジャーーー！', 'villain')) return;
-  emo('boy', '💦');
-  if(!await say('うわー！ なんか ふってきたー！ くさーい！', 'boy')) return;
+  if(!await say('ひっひっひ！ おしっこ ジャーーー！', 'v')) return;
+  emo('a', '💦');
+  if(!await say('いやーん！ なんか ふってきたー！', 'a')) return;
   st.querySelectorAll('.drop').forEach(e => e.remove());
 
-  if(hasH){
-    hero.classList.remove('off-r'); hero.style.left = '78%'; emo('hero', '💢');
-    if(!await say('まてー！ ボーボボ！ わたしが やっつけるよ！', 'hero')) return;
+  if(hasB){
+    EL.b.classList.remove('off-r'); EL.b.style.left = '78%'; emo('b', '💢');
+    if(!await say('まてー！ {v}！ わたしが やっつけるよ！', 'b')) return;
     await playClip();
     if(!alive()) return;
     showPow('ドカーン！✨'); sfx('boom');
-  }else if(!await say('ふははは！ もう あきたぞ！ かえしてやる！', 'villain')) return;
-  vil.classList.remove('show'); vil.classList.add('defeated');
-  for(const k of riders){
-    const b = body(k); b.style.transition = 'transform .7s cubic-bezier(.3,1.6,.5,1)'; b.style.transform = '';
-  }
+  }else if(!await say('ふははは！ もう あきたぞ！ かえしてやる！', 'v')) return;
+  v.classList.remove('show'); v.classList.add('defeated');
+  b.style.transition = 'transform .7s cubic-bezier(.3,1.6,.5,1)'; b.style.transform = '';
   hair.style.transition = 'height .8s'; hair.style.height = '0px';
   st.classList.remove('space');
-  emo('hero', '');
-  if(!await say('おちるーーー！', 'boy')) return;
-  fx('boy', 'laugh'); emo('boy', ''); if(hasB){ fx('bully', 'laugh'); emo('bully', ''); }
-  if(!await say('ただいまー！ たすかったよー！', 'boy')) return;
+  if(hasB) emo('b', '');
+  if(!await say('おちるーーー！', 'a')) return;
+  fx('a', 'laugh'); emo('a', '');
+  if(!await say('ただいまー！ たすかったよー！', 'a')) return;
   sfx('happy');
-  if(hasH){ fx('hero', 'dance'); emo('hero', '✨'); if(!await say('やっつけたよ！ ハッピー！', 'hero')) return; }
+  if(hasB){ fx('b', 'dance'); emo('b', '✨'); if(!await say('やっつけたよ！ ハッピー！', 'b')) return; }
   return finish();
 }
-buildCast(); refreshMascots();
+refreshMascots();
 </script>
 </body>
 </html>
