@@ -68,6 +68,7 @@
     transform:translateY(-110%);transition:transform .6s ease-out}
   #bobo.show{transform:none}
   #bobo img,#bobo svg#bobosvg{display:block;width:220px;height:auto}
+  #bobo img{border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
   #hair{position:absolute;left:50%;margin-left:-20px;width:40px;height:0;overflow:hidden;
     transition:height .6s ease-in}
   .hs{display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:4px 6px;
@@ -425,7 +426,7 @@ function resetStage(){
   const st = $('stage');
   st.className = '';
   $('nobi').className = ''; $('nobi').style.transform = '';
-  $('bobo').className = '';
+  $('bobo').className = ''; $('bobo').style.marginLeft = '-110px';
   const h = $('hair'); h.style.transition = 'none'; h.style.height = '0px';
   $('bubble').classList.add('hide');
 }
@@ -457,7 +458,10 @@ async function reaction(done){
   bobo.classList.add('show');
   await sleep(600);
   if(!await say('ハナゲしんけん！ いってこーい！', 'ボーボボ')) return;
-  const noseY = bobo.offsetHeight * ($('bobosvg').style.display === 'none' ? .62 : .654);
+  const img = $('bobosvg').style.display === 'none';
+  const nx = img ? .57 : .5, noseY = bobo.offsetHeight * (img ? .76 : .654);
+  bobo.style.marginLeft = -(nx * 220) + 'px';          // 鼻をのびたくんの真上にそろえる
+  hair.style.left = (nx * 220 - 20) + 'px'; hair.style.marginLeft = '0';
   const dist = nobi.getBoundingClientRect().top + 10 - noseY;
   hair.style.top = noseY + 'px';
   hair.style.transition = 'height .6s ease-in'; hair.style.height = dist + 'px';
