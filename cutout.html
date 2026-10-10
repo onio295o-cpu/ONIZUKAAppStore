@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>キャラ きりぬき</title>
+<style>
+  :root{--ink:#4a3b2a;--pink:#ff7aa8;--blue:#4cb8ff;--green:#5fd068;--yellow:#ffc933;--purple:#9b6bff}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;min-height:100vh;background:linear-gradient(#fff7d6,#ffe6f1) fixed;color:var(--ink);
+    font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif}
+  main{max-width:720px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+  h1{margin:4px 0;font-size:1.8rem;color:var(--pink);text-align:center}
+  .btn{border:none;border-radius:16px;font:inherit;font-weight:bold;color:#fff;cursor:pointer;padding:12px 14px;
+    box-shadow:0 4px 0 rgba(0,0,0,.18);font-size:1rem}
+  .btn:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+  .btn:disabled{opacity:.45}
+  .btn.on{outline:4px solid var(--ink)}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .row label{font-weight:bold}
+  .card{background:#fff;border-radius:20px;padding:12px;box-shadow:0 4px 0 rgba(0,0,0,.08)}
+  .file{display:block;text-align:center;background:var(--purple);font-size:1.2rem;padding:16px}
+  .file input{display:none}
+  #wrap{position:relative;border-radius:14px;overflow:hidden;touch-action:none;
+    background:repeating-conic-gradient(#ddd 0 25%,#fff 0 50%) 0 0/20px 20px}
+  #wrap.sky{background:linear-gradient(#6ec9ff,#d9f4ff 62%,#7fdc62 62%)}
+  #view{display:block;width:100%;height:auto;cursor:crosshair}
+  #msg{min-height:1.4em;font-weight:bold;text-align:center}
+  input[type=range]{flex:1;min-width:120px}
+  .hide{display:none!important}
+  small{opacity:.75}
+</style>
+</head>
+<body>
+<main>
+  <h1>✂️ キャラ きりぬき</h1>
+  <a class="btn" style="background:var(--yellow);color:var(--ink);text-align:center;text-decoration:none" href="index.html">← アプリに もどる</a>
+
+  <label class="btn file">🖼 画像を えらぶ<input type="file" id="file" accept="image/*"></label>
+
+  <section id="editor" class="hide">
+    <div class="card row">
+      <button class="btn" style="background:var(--pink)" id="ai">🤖 AIで 自動きりぬき</button>
+      <button class="btn" style="background:var(--blue)" id="easy">🪄 かんたん 自動きりぬき</button>
+      <label for="tol">きびしさ</label><input type="range" id="tol" min="5" max="80" value="28">
+    </div>
+
+    <div id="msg"></div>
+    <div id="wrap"><canvas id="view"></canvas></div>
+
+    <div class="card row">
+      <button class="btn on" style="background:#e5534b" id="erase">🧽 けす</button>
+      <button class="btn" style="background:var(--green)" id="restore">🖌 もどす</button>
+      <label for="size">ふでの 大きさ</label><input type="range" id="size" min="4" max="80" value="24">
+      <button class="btn" style="background:#888" id="undo">↩ ひとつ もどす</button>
+    </div>
+
+    <div class="card row">
+      <label for="edge">ふちどり</label><input type="range" id="edge" min="0" max="24" value="8">
+      <input type="color" id="edgeColor" value="#ffffff" aria-label="ふちどりの色">
+      <button class="btn" style="background:#6ec9ff" id="bg">🌤 はいけい きりかえ</button>
+    </div>
+
+    <button class="btn" style="background:var(--green);font-size:1.3rem;padding:16px" id="save">💾 PNGで ほぞん</button>
+    <p class="card"><small>
+      ほぞんした PNG を、GitHub の「キャラクター」フォルダに アップロードしてください。
+      もとの画像と おなじ名前（例：キュアハート.png）なら、アプリが じどうで こちらを つかいます。
+    </small></p>
+  </section>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const MAX = 900;                       // 作業サイズの上限（長い辺）
+let src = null, W = 0, H = 0, base = 'character';
+let pix = null;                        // 元画像の画素（RGBA）
+let alpha = null;                      // 残す=255 / 消す=0
+let undoStack = [], tool = 'erase', drawing = false, pad = 0;
+const msg = t => { $('msg').textContent = t; };
+
+$('file').onchange = e => {
+  const f = e.target.files[0]; if(!f) return;
+  base = f.name.replace(/\.[^.]+$/, '') || 'character';
+  const img = new Image();
+  img.onload = () => {
+    const k = Math.min(1, MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    W = Math.round(img.naturalWidth * k); H = Math.round(img.naturalHeight * k);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
+    src = c; pix = x.getImageData(0, 0, W, H).data;
+    alpha = new Uint8ClampedArray(W * H).fill(255);
+    undoStack = [];
+    $('editor').classList.remove('hide');
+    msg('「自動きりぬき」を おしてね。のこりは ふでで なおせるよ。');
+    render();
+  };
+  img.src = URL.createObjectURL(f);
+};
+
+function pushUndo(){ undoStack.push(alpha.slice()); if(undoStack.length > 15) undoStack.shift(); }
+$('undo').onclick = () => { if(undoStack.length){ alpha = undoStack.pop(); render(); } };
+
+/* ---- かんたん自動きりぬき：画像のふちから、にた色を たどって 消す ---- */
+$('easy').onclick = () => {
+  if(!src) return;
+  pushUndo();
+  const tol = +$('tol').value, n = W * H;
+  const seen = new Uint8Array(n), seed = new Int32Array(n);
+  const q = new Int32Array(n); let qh = 0, qt = 0;
+  const d = (i, j) => { const a = i * 4, b = j * 4; return Math.abs(pix[a] - pix[b]) + Math.abs(pix[a + 1] - pix[b + 1]) + Math.abs(pix[a + 2] - pix[b + 2]); };
+  const push = (i, s) => { if(!seen[i]){ seen[i] = 1; seed[i] = s; q[qt++] = i; } };
+  for(let x = 0; x < W; x++){ push(x, x); push((H - 1) * W + x, (H - 1) * W + x); }
+  for(let y = 0; y < H; y++){ push(y * W, y * W); push(y * W + W - 1, y * W + W - 1); }
+  const bg = new Uint8Array(n);
+  while(qh < qt){
+    const i = q[qh++]; bg[i] = 1;
+    const x = i % W, y = (i / W) | 0, s = seed[i];
+    const nb = [x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1, y > 0 ? i - W : -1, y < H - 1 ? i + W : -1];
+    for(const j of nb){
+      if(j < 0 || seen[j]) continue;
+      if(d(i, j) < tol && d(s, j) < tol * 3) push(j, s);
+    }
+  }
+  for(let i = 0; i < n; i++) alpha[i] = bg[i] ? 0 : 255;
+  smooth();
+  msg('けしきれない ところは 🧽で、けしすぎた ところは 🖌で なおしてね。');
+  render();
+};
+
+// ふちを なめらかに（ぎざぎざ を へらす）
+function smooth(){
+  const a = alpha.slice();
+  for(let y = 1; y < H - 1; y++) for(let x = 1; x < W - 1; x++){
+    const i = y * W + x;
+    const s = a[i - W - 1] + a[i - W] + a[i - W + 1] + a[i - 1] + a[i] + a[i + 1] + a[i + W - 1] + a[i + W] + a[i + W + 1];
+    alpha[i] = s / 9;
+  }
+}
+
+/* ---- AIで自動きりぬき（はじめての時は データを よみこむので 少し 時間がかかります） ---- */
+$('ai').onclick = async () => {
+  if(!src) return;
+  $('ai').disabled = true;
+  msg('AIを じゅんびちゅう…（はじめては 1ぷんくらい かかるよ）');
+  try{
+    const mod = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/+esm');
+    const blob = await new Promise(r => src.toBlob(r, 'image/png'));
+    const out = await mod.removeBackground(blob, {
+      progress: (key, cur, total) => msg(`AIが よみこみちゅう… ${total ? Math.round(cur / total * 100) : 0}%`)
+    });
+    const img = await createImageBitmap(out);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
+    const d = x.getImageData(0, 0, W, H).data;
+    pushUndo();
+    for(let i = 0; i < W * H; i++) alpha[i] = d[i * 4 + 3];
+    msg('できた！ のこりは ふでで なおしてね。');
+    render();
+  }catch(e){
+    msg('AIが つかえなかったよ（ネットに つながっているか かくにんしてね）。「かんたん自動きりぬき」を ためしてね。');
+  }
+  $('ai').disabled = false;
+};
+
+/* ---- 表示（ふちどり つき） ---- */
+let finalCanvas = null;
+function render(){
+  if(!src) return;
+  const cut = document.createElement('canvas'); cut.width = W; cut.height = H;
+  const cx = cut.getContext('2d'); const id = cx.createImageData(W, H);
+  for(let i = 0; i < W * H; i++){
+    id.data[i * 4] = pix[i * 4]; id.data[i * 4 + 1] = pix[i * 4 + 1]; id.data[i * 4 + 2] = pix[i * 4 + 2]; id.data[i * 4 + 3] = alpha[i];
+  }
+  cx.putImageData(id, 0, 0);
+  const t = +$('edge').value; pad = t;
+  const out = document.createElement('canvas'); out.width = W + t * 2; out.height = H + t * 2;
+  const ox = out.getContext('2d');
+  if(t > 0){
+    const sh = document.createElement('canvas'); sh.width = out.width; sh.height = out.height;
+    const sx = sh.getContext('2d');
+    for(let a = 0; a < 360; a += 15){
+      const r = a * Math.PI / 180;
+      sx.drawImage(cut, t + Math.cos(r) * t, t + Math.sin(r) * t);
+    }
+    sx.globalCompositeOperation = 'source-in';
+    sx.fillStyle = $('edgeColor').value; sx.fillRect(0, 0, sh.width, sh.height);
+    ox.drawImage(sh, 0, 0);
+  }
+  ox.drawImage(cut, t, t);
+  finalCanvas = out;
+  const v = $('view'); v.width = out.width; v.height = out.height;
+  v.getContext('2d').drawImage(out, 0, 0);
+}
+['edge', 'edgeColor'].forEach(k => $(k).oninput = render);
+$('bg').onclick = () => $('wrap').classList.toggle('sky');
+
+/* ---- ふで（けす／もどす） ---- */
+$('erase').onclick = () => { tool = 'erase'; $('erase').classList.add('on'); $('restore').classList.remove('on'); };
+$('restore').onclick = () => { tool = 'restore'; $('restore').classList.add('on'); $('erase').classList.remove('on'); };
+function paint(e){
+  const v = $('view'), r = v.getBoundingClientRect();
+  const x = (e.clientX - r.left) * v.width / r.width - pad, y = (e.clientY - r.top) * v.height / r.height - pad;
+  const rad = +$('size').value * v.width / r.width / 2, val = tool === 'erase' ? 0 : 255;
+  const x0 = Math.max(0, Math.floor(x - rad)), x1 = Math.min(W - 1, Math.ceil(x + rad));
+  const y0 = Math.max(0, Math.floor(y - rad)), y1 = Math.min(H - 1, Math.ceil(y + rad));
+  for(let yy = y0; yy <= y1; yy++) for(let xx = x0; xx <= x1; xx++)
+    if((xx - x) ** 2 + (yy - y) ** 2 <= rad * rad) alpha[yy * W + xx] = val;
+  render();
+}
+const view = $('view');
+view.addEventListener('pointerdown', e => { if(!src) return; drawing = true; pushUndo(); view.setPointerCapture(e.pointerId); paint(e); });
+view.addEventListener('pointermove', e => { if(drawing) paint(e); });
+['pointerup', 'pointercancel'].forEach(t => view.addEventListener(t, () => { drawing = false; }));
+
+/* ---- ほぞん ---- */
+$('save').onclick = () => {
+  if(!finalCanvas) return;
+  finalCanvas.toBlob(b => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(b); a.download = base + '.png';
+    document.body.append(a); a.click(); a.remove();
+    msg(`「${base}.png」を ほぞんしたよ！`);
+  }, 'image/png');
+};
+</script>
+</body>
+</html>

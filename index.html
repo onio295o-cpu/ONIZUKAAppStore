@@ -146,6 +146,7 @@
     <button class="btn age a5" data-lv="5">5さい<small>10 までの たしざん</small></button>
     <button class="btn age a6" data-lv="6">6さい<small>200 までの たしざん・くく・わりざん</small></button>
     <button class="btn age" style="background:#9b6bff" id="toH">✏️ ひっさん<small>2けた・3けた の たしざん</small></button>
+    <a class="btn age" style="background:#ff9f43;text-decoration:none;font-size:1.4rem;padding:14px" href="cutout.html">✂️ キャラ きりぬき<small>画像の はいけいを けして ふちどり</small></a>
     <div class="mascot"><span class="say">いっしょに<br>がんばろー！<br>ハッピー！</span></div>
   </section>
 
@@ -476,8 +477,17 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const pick = a => a[rnd(0, a.length - 1)];
 const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
 
-// 画像が読み込めたキャラだけ使う
-ROSTER.forEach(c => { const i = new Image(); i.onload = () => { c.ok = true; refreshMascots(); }; i.src = c.img; });
+// 画像が読み込めたキャラだけ使う。同じ名前の .png（きりぬき済み）や .gif があればそちらを優先
+ROSTER.forEach(c => {
+  const b = c.img.replace(/\.[^.]+$/, ''), tries = [...new Set([b + '.png', b + '.gif', c.img])];
+  const next = () => {
+    if(!tries.length) return;
+    const p = tries.shift(), i = new Image();
+    i.onload = () => { c.img = p; c.ok = true; refreshMascots(); };
+    i.onerror = next; i.src = p;
+  };
+  next();
+});
 const ready = () => ROSTER.filter(c => c.ok);
 
 // ホーム／ゲーム画面の応援キャラ（ランダム）
@@ -486,7 +496,7 @@ function refreshMascots(){
   document.querySelectorAll('.mascot').forEach(m => {
     m.classList.toggle('on', hs.length > 0);
     if(!hs.length || m.querySelector('.mc')) return;
-    const c = pick(hs), i = new Image(); i.src = c.img; i.className = 'mc' + (/\.png$/i.test(c.img) ? '' : ' card'); m.prepend(i);
+    const c = pick(hs), i = new Image(); i.src = c.img; i.className = 'mc' + (/\.(png|gif)$/i.test(c.img) ? '' : ' card'); m.prepend(i);
   });
 }
 
@@ -495,7 +505,7 @@ function mkActor(k, c){
   el.className = 'actor off-r' + (k === 'v' ? ' villain' : '');
   const b = document.createElement('div'); b.className = 'body';
   const emo = document.createElement('span'); emo.className = 'emo'; b.append(emo);
-  const img = new Image(); img.className = 'pic' + (/\.png$/i.test(c.img) ? '' : ' card'); img.src = c.img; b.prepend(img);
+  const img = new Image(); img.className = 'pic' + (/\.(png|gif)$/i.test(c.img) ? '' : ' card'); img.src = c.img; b.prepend(img);
   el.append(b);
   if(k === 'v') el.insertAdjacentHTML('beforeend',
     '<div class="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>');
