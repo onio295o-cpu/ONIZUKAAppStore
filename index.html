@@ -514,17 +514,17 @@ const wazaClip = () => pick(CLIPS.filter(c => c.kind === 'waza'));
 // 登場キャラ一覧（「キャラクター」フォルダの画像）。わるもの は villain:true（宇宙・対決シーンに出ます）
 // nose は わるもの の鼻の位置（画像の幅・高さに対する割合）
 const ROSTER = [
-  {name:'キュアハート',       img:'キャラクター/キュアハート.jpeg'},
-  {name:'キュアダイヤモンド', img:'キャラクター/キュアダイヤモンド.jpeg'},
-  {name:'キュアロゼッタ',     img:'キャラクター/キュアロゼった.jpeg'},
+  {name:'キュアハート',       img:'キャラクター/キュアハート.png'},
+  {name:'キュアダイヤモンド', img:'キャラクター/キュアダイヤモンド (1).png'},
+  {name:'キュアロゼッタ',     img:'キャラクター/キュアロゼった.png'},
+  {name:'キュアエース',       img:'キャラクター/image_main05 (1).png'},
   {name:'キュアエース',       img:'キャラクター/キュアエース.jpeg'},
-  {name:'キュアエース',       img:'キャラクター/image_main05.png'},
-  {name:'キュアアルカナ',     img:'キャラクター/キュアあるかな.jpeg'},
-  {name:'キュアアンサー',     img:'キャラクター/キュアアンサー.jpeg'},
-  {name:'キュアエクレール',   img:'キャラクター/キュアエクレール.jpeg'},
-  {name:'キュアフローラ',     img:'キャラクター/キュアフローラ.jpeg'},
-  {name:'キュアマーメイド',   img:'キャラクター/キュアマーメイド.jpeg'},
-  {name:'キュアミスティック', img:'キャラクター/キュアミススティック.jpeg'},
+  {name:'キュアアルカナ',     img:'キャラクター/キュアあるかな.png'},
+  {name:'キュアアンサー',     img:'キャラクター/キュアアンサー.png'},
+  {name:'キュアエクレール',   img:'キャラクター/キュアエクレール.png'},
+  {name:'キュアフローラ',     img:'キャラクター/キュアフローラ.png'},
+  {name:'キュアマーメイド',   img:'キャラクター/キュアマーメイド.png'},
+  {name:'キュアミスティック', img:'キャラクター/キュアミススティック.png'},
 ];
 const DEFAULT_VOICE = [2, 1.15], VILLAIN_VOICE = [.6, .9], DEFAULT_NOSE = {x:.5, y:.6};
 const SLOT = {L:22, A:38, C:50, B:62, R:78};          // 立ち位置（％）
@@ -727,7 +727,8 @@ const SPACE = {id:'space'};
 
 // 使えるキャラの数に合わせてシーンを選び、役にキャラを割りあてる
 function chooseScene(){
-  const heroes = shuffle(ready().filter(c => !c.villain)), vils = shuffle(ready().filter(c => c.villain));
+  const seenName = new Set();
+  const heroes = shuffle(ready().filter(c => !c.villain)).filter(c => !seenName.has(c.name) && seenName.add(c.name)), vils = shuffle(ready().filter(c => c.villain));
   const fits = sc => { const ks = Object.keys(sc.cast); return ks.filter(k => k !== 'v').length <= heroes.length && (!ks.includes('v') || vils.length); };
   let pool;
   if(window.FORCE_SCENE) pool = [...SCENES, SPACE].filter(s => s.id === window.FORCE_SCENE);
