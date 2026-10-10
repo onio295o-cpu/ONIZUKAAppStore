@@ -106,6 +106,38 @@
   .fx-grow{transform:scale(1.25)}
   .fx-spin{animation:spinb .7s linear infinite}
   @keyframes spinb{to{transform:rotate(360deg)}}
+  /* ---- アニメらしい動き：ため／伸び縮み／余韻／息づかい／影 ---- */
+  .actor{transition:left .65s cubic-bezier(.34,1.45,.64,1),opacity .3s;--sp:1}
+  .actor::after{content:"";position:absolute;left:50%;bottom:-8px;width:120px;height:18px;margin-left:-60px;border-radius:50%;
+    background:radial-gradient(rgba(0,0,0,.28),rgba(0,0,0,0) 70%);z-index:-1;transform-origin:center}
+  .actor.top::after,#stage.space .actor::after{display:none}
+  .actor .body{transform-origin:50% 100%;animation:breathe calc(2.4s*var(--sp)) ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:scale(1,1) skewX(0)}50%{transform:scale(1.015,1.035) skewX(-1deg)}}
+  .actor .body.rise{animation:none!important}
+  .actor.enter .body{animation:hopin .55s cubic-bezier(.3,.7,.4,1) both}
+  @keyframes hopin{0%{transform:translateY(-60px) scale(.9,1.1)}60%{transform:translateY(0) scale(1.12,.86)}80%{transform:scale(.96,1.05)}100%{transform:none}}
+  .fx-jump{animation:jump2 calc(.62s*var(--sp)) cubic-bezier(.3,0,.3,1) infinite!important}
+  @keyframes jump2{0%{transform:scale(1,1)}15%{transform:scale(1.14,.84)}40%{transform:translateY(-46px) scale(.9,1.12)}60%{transform:translateY(-50px) scale(1,1)}85%{transform:translateY(0) scale(1.12,.86)}100%{transform:scale(1,1)}}
+  .actor[data-fx=jump]::after{animation:shadowjump calc(.62s*var(--sp)) cubic-bezier(.3,0,.3,1) infinite}
+  @keyframes shadowjump{40%,60%{transform:scale(.55);opacity:.5}}
+  .fx-run{animation:run2 calc(.3s*var(--sp)) ease-in-out infinite alternate!important}
+  @keyframes run2{from{transform:rotate(6deg) translateY(0) scale(1.04,.96)}to{transform:rotate(9deg) translateY(-14px) scale(.97,1.04)}}
+  .fx-dance{animation:dance2 calc(.8s*var(--sp)) ease-in-out infinite!important}
+  @keyframes dance2{0%,100%{transform:rotate(-8deg) skewX(4deg) scale(1,1)}25%{transform:translateY(-16px) scale(.95,1.07)}50%{transform:rotate(8deg) skewX(-4deg) scale(1,1)}75%{transform:translateY(-16px) scale(.95,1.07)}}
+  .fx-laugh{animation:laugh2 calc(.36s*var(--sp)) ease-in-out infinite alternate!important}
+  @keyframes laugh2{from{transform:rotate(-5deg) scale(1.03,.97)}to{transform:rotate(5deg) scale(.98,1.04) translateY(-6px)}}
+  .fx-shake{animation:shake2 calc(.22s*var(--sp)) linear infinite!important}
+  @keyframes shake2{0%,100%{transform:translateX(0) skewX(0)}25%{transform:translateX(-7px) skewX(4deg) scale(1.03,.97)}75%{transform:translateX(7px) skewX(-4deg) scale(1.03,.97)}}
+  .fx-cry{animation:cry2 calc(.7s*var(--sp)) ease-in-out infinite!important}
+  @keyframes cry2{0%,100%{transform:rotate(-3deg) scale(1,.97)}50%{transform:rotate(3deg) scale(.98,1.01) translateY(4px)}}
+  .fx-hit{animation:hit2 .5s cubic-bezier(.2,.9,.3,1.4) forwards!important;transition:none}
+  @keyframes hit2{0%{transform:none}20%{transform:translateX(-30px) rotate(-26deg) scale(1.1,.85)}60%{transform:translateX(-18px) rotate(-14deg)}100%{transform:translateX(-22px) rotate(-18deg)}}
+  .fx-spin{animation:spin2 calc(.9s*var(--sp)) cubic-bezier(.5,0,.5,1) infinite!important}
+  @keyframes spin2{0%{transform:rotateY(0) scale(1,1)}50%{transform:rotateY(180deg) translateY(-20px) scale(.9,1.1)}100%{transform:rotateY(360deg)}}
+  .fx-grow{animation:grow2 .8s cubic-bezier(.3,1.6,.5,1) forwards!important}
+  @keyframes grow2{0%{transform:scale(1)}40%{transform:scale(.85,1.15)}100%{transform:scale(1.22)}}
+  .fx-zap{animation:zap2 .1s steps(2) infinite!important}
+  @keyframes zap2{0%{filter:brightness(1);transform:translateX(-4px)}100%{filter:brightness(2.6) saturate(.2);transform:translateX(4px) scale(1.03)}}
   #pow{position:absolute;top:32%;left:50%;transform:translateX(-50%);font-size:2.6rem;font-weight:900;color:#ff3b3b;
     -webkit-text-stroke:2px #fff;paint-order:stroke fill;z-index:4;opacity:0;white-space:nowrap}
   #pow.on{animation:powpop .9s forwards}
@@ -448,8 +480,20 @@ function sfx(kind){
 }
 
 /* ---------- ごほうびシーン ---------- */
-// 動画クリップ：YouTube の ID と、再生する区間（秒）
-const CLIP = {id:'INbco2MQ1dM', start:0, end:8};
+// 動画クリップ（YouTube の公式チャンネル）。who はそのキャラの変身シーン、kind:'waza' は必殺技
+const CLIPS = [
+  {id:'l-PoXgn2kCk', start:0, end:69, who:'キュアアルカナ'},                       // 名探偵プリキュア！ キュアアルカナ 変身シーン
+  {id:'QwExFKxU5ok', start:0, end:74, who:'キュアエクレール'},                     // キュアエクレール 変身シーン
+  {id:'ANZ2qYtKdMA', start:0, end:60, who:['キュアアンサー','キュアミスティック']}, // キュアアンサー＆キュアミスティック 変身シーン
+  {id:'aLIKtTHpn1c', start:0, end:15, who:'キュアハート'},                         // キュアハート 10周年メッセージ（東映アニメーション公式）
+  {id:'FtyzmWfGhcs', start:0, end:48, kind:'waza'},                                 // プリキュア！アルカナホワイトリリー！
+  {id:'_w_XpbkFhDc', start:0, end:63, kind:'waza'},                                 // プリキュア！フライング・スペクトル！
+  {id:'2pDtyVGAN5c', start:0, end:52, kind:'waza'},                                 // プリキュア！スターディテクティブ！
+  {id:'cg2RJr8eXOk', start:0, end:60, kind:'waza'},                                 // プリキュア！フライング・インフィニティ！
+  {id:'INbco2MQ1dM', start:0, end:72, kind:'waza'},                                 // 映画ドキドキ！プリキュア 予告編
+];
+const clipFor = name => CLIPS.find(c => [].concat(c.who || []).includes(name));
+const wazaClip = () => pick(CLIPS.filter(c => c.kind === 'waza'));
 
 // 登場キャラ一覧（「キャラクター」フォルダの画像）。わるもの は villain:true（宇宙・対決シーンに出ます）
 // nose は わるもの の鼻の位置（画像の幅・高さに対する割合）
@@ -509,17 +553,18 @@ function mkActor(k, c){
   el.append(b);
   if(k === 'v') el.insertAdjacentHTML('beforeend',
     '<div class="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>');
+  el.style.setProperty('--sp', (0.88 + Math.random() * .3).toFixed(2));   // 動きの速さに個体差
   $('cast').append(el); EL[k] = el; CH[k] = c;
 }
 const body = k => EL[k].querySelector('.body');
-function fx(k, name){ const b = body(k); b.className = 'body' + (name ? ' fx-' + name : ''); void b.offsetWidth; }
+function fx(k, name){ const b = body(k); EL[k].classList.remove('enter'); b.className = 'body' + (name ? ' fx-' + name : ''); EL[k].dataset.fx = name || ''; void b.offsetWidth; }
 function emo(k, t){ const e = body(k).querySelector('.emo'); e.textContent = t || ''; e.classList.toggle('on', !!t); }
 function showPow(t){ const p = $('pow'); p.textContent = t; p.classList.remove('on'); void p.offsetWidth; p.classList.add('on'); }
-function playClip(){
+function playClip(clip = wazaClip()){
   const tok = ++clipTok, box = $('clip');
-  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${CLIP.id}?autoplay=1&start=${CLIP.start}&end=${CLIP.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.id}?autoplay=1&start=${clip.start}&end=${clip.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
   box.classList.remove('hide');
-  return sleep((CLIP.end - CLIP.start + 1.5) * 1000).then(() => { if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; } });
+  return sleep((clip.end - clip.start + 1.5) * 1000).then(() => { if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; } });
 }
 
 // 声が終わるまで待つ（声が出せない環境でも止まらないよう保険のタイマー付き）
@@ -560,7 +605,7 @@ const SCENES = [
     {w:'a', t:() => pick(CHEERS), fx:'dance', emo:'✨', pow:'せいかい！✨', sfx:'happy'},
     {w:'a', t:'つぎも がんばろうね！', fx:'jump'}]},
   {id:'henshin', cast:{a:'C'}, steps:[
-    {w:'a', t:'みててね！ へんしーん！', fx:'spin', sfx:'whoosh'},
+    {w:'a', t:'みててね！ へんしーん！', fx:'spin', sfx:'whoosh', clip:'self'},
     {w:'a', t:'{a}、さんじょう！ せいかい おめでとう！', fx:'grow', emo:'✨', pow:'キラキラーン！✨', sfx:'happy'}]},
   {id:'slap', cast:{a:'L', b:'R'}, steps:[
     {w:'a', t:() => pick(GAGS), fx:'shake', emo:'💢', sfx:'boing'},
@@ -574,6 +619,10 @@ const SCENES = [
     {w:'b', t:'だいじょうぶ！ いっしょに がんばろう！', mv:'B', fx:'jump'},
     {w:'a', t:'ぐすん… うん！ ありがとう {b}！', fx:'laugh', emo:'', sfx:'happy'},
     {w:'b', t:'えがおが いちばん！', fx:'dance', emo:'✨'}]},
+  {id:'waza', cast:{a:'L', b:'R'}, steps:[
+    {w:'a', t:'せいかいの ごほうびに ひっさつわざを みせちゃうよ！', fx:'jump', emo:'✨'},
+    {w:'b', t:'わーい！ みたい みたい！', fx:'dance', clip:'waza'},
+    {w:'a', t:'どうだった？ だいせいかい！', fx:'grow', emo:'✨', pow:'⭐キマった！⭐', sfx:'happy', o:[['b','jump','❤️']]}]},
   {id:'party', cast:{a:'L', b:'C', c:'R'}, steps:[
     {w:'a', t:'せいかい おめでとう！', fx:'jump', emo:'✨', pow:'🎉おめでとう🎉', sfx:'happy', o:[['b','jump',''],['c','jump','']]},
     {w:'b', t:'やったー！ ぱんぱかぱーん！', fx:'dance', emo:'🎊'},
@@ -643,7 +692,8 @@ const SCENES = [
     {w:'a', t:'ひきわけ！ あははは！', fx:'laugh', emo:'✨', sfx:'happy', o:[['b','laugh','✨']]}]},
   {id:'vs_villain', cast:{a:'L', v:'R'}, steps:[
     {w:'v', t:'わっはっは！ じゃまを してやるぞー！', fx:'shake', emo:'💢', sfx:'whoosh'},
-    {w:'a', t:'そうは させない！ えーい！', mv:'A', fx:'jump', pow:'キラキラ！✨', sfx:'boom', o:[['v','hit','💫']]},
+    {w:'a', t:'そうは させない！ ひっさつわざ！', mv:'A', fx:'jump', clip:'waza'},
+    {w:'a', t:'えーい！', fx:'jump', pow:'キラキラ！✨', sfx:'boom', o:[['v','hit','💫']]},
     {w:'v', t:'ひえーーー！ おぼえてろよー！', fx:'spin'},
     {w:'a', t:'やっつけたよ！ せいかい おめでとう！', fx:'dance', emo:'✨', sfx:'happy'}]},
   {id:'tickle', cast:{v:'R', a:'L'}, steps:[
@@ -708,7 +758,7 @@ async function reaction(done){
   if(ch.sc === SPACE) return spaceScene({alive, say, finish, st});
 
   const sc = ch.sc;
-  for(const k in sc.cast){ EL[k].classList.remove('off-r'); EL[k].style.left = SLOT[sc.cast[k]] + '%'; }
+  for(const k in sc.cast){ EL[k].classList.remove('off-r'); EL[k].classList.add('enter'); EL[k].style.left = SLOT[sc.cast[k]] + '%'; }
   await sleep(450);
   for(const step of sc.steps){
     if(!alive()) return;
@@ -720,7 +770,8 @@ async function reaction(done){
     if(step.pow) showPow(step.pow);
     if(step.sfx) sfx(step.sfx);
     if(step.t){ if(!await say(typeof step.t === 'function' ? step.t() : step.t, k)) return; }
-    else await sleep(step.ms || 700);
+    else if(!step.clip) await sleep(step.ms || 700);
+    if(step.clip){ await playClip(step.clip === 'self' ? (clipFor(CH[k].name) || wazaClip()) : wazaClip()); if(!alive()) return; }
   }
   return finish();
 }
@@ -746,7 +797,7 @@ async function spaceScene({alive, say, finish, st}){
   if(!alive()) return;
   sfx('whoosh'); fx('a', '');
   hair.style.transition = 'height 1.8s ease-in-out'; hair.style.height = '160px';
-  const b = body('a'); b.style.transition = 'transform 1.8s ease-in-out'; b.style.transformOrigin = '50% 0';
+  const b = body('a'); b.classList.add('rise'); b.style.transition = 'transform 1.8s ease-in-out'; b.style.transformOrigin = '50% 0';
   b.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
   st.classList.add('space');
   if(!await say('きゃーーー！ たすけてーーー！', 'a')) return;
