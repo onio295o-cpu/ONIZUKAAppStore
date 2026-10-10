@@ -36,7 +36,38 @@
   .choice.ok{background:var(--green)}
   #msg{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
   .big{font-size:5rem}
-  .hide{display:none}
+  .hide{display:none!important}
+  #stage{position:fixed;inset:0;z-index:50;overflow:hidden;background:linear-gradient(#7fd3ff,#d9f4ff 60%)}
+  #spacebg{position:absolute;inset:0;opacity:0;transition:opacity 1s;
+    background:radial-gradient(#fff 1px,transparent 2px) 0 0/38px 38px,radial-gradient(#ffe 1.5px,transparent 2px) 19px 19px/53px 53px,#0b0b30}
+  #stage.space #spacebg{opacity:1}
+  #park{position:absolute;left:0;right:0;bottom:0;height:30%;background:#6fcf5a;transition:opacity 1s;font-size:4.5rem}
+  #stage.space #park{opacity:0}
+  #park span{position:absolute;bottom:55%}
+  .t1{left:4%}.t2{right:5%}.t3{left:28%;bottom:70%!important;font-size:2rem}.t4{right:30%;bottom:60%!important;font-size:2rem}
+  #planets span{position:absolute;font-size:3.2rem;opacity:0;transition:opacity 1s;animation:float 3s ease-in-out infinite}
+  #stage.space #planets span{opacity:1}
+  @keyframes float{50%{transform:translateY(-14px) rotate(8deg)}}
+  #nobi{position:absolute;left:50%;bottom:20%;width:170px;margin-left:-85px;transition:transform 1.8s ease-in-out}
+  #nobi.up{transform:translateY(-62vh) scale(.55) rotate(540deg)}
+  #nobi.fall{transition:transform .7s cubic-bezier(.3,1.6,.5,1)}
+  #nobi.shake svg{animation:shake .25s infinite}
+  #nobi.shake .arm{animation:wave .2s infinite alternate}
+  .arm{transform-box:fill-box;transform-origin:50% 0}
+  .arm.l{transform-origin:100% 0}
+  @keyframes wave{from{transform:rotate(-35deg)}to{transform:rotate(35deg)}}
+  #nobi.shake .mouth{animation:yell .25s infinite alternate}
+  .mouth{transform-box:fill-box;transform-origin:center}
+  @keyframes yell{from{transform:scaleY(.5)}to{transform:scale(1.2,1.4)}}
+  #mark{position:absolute;top:-6px;right:-6px;font-size:3rem;opacity:0}
+  #nobi.shake #mark{opacity:1;animation:pop .3s infinite alternate}
+  #bubble{position:absolute;top:14%;left:50%;transform:translateX(-50%);z-index:2;width:max-content;max-width:88vw;
+    background:#fff;border:4px solid var(--ink);border-radius:22px;padding:8px 16px;font-size:1.7rem;font-weight:bold;text-align:center}
+  #hair{position:absolute;left:50%;margin-left:-20px;width:40px;height:62vh;bottom:calc(20% + 150px);
+    transform:translateY(-120vh);transition:transform .6s ease-in}
+  #hair.in{transform:none}
+  #hair.up{transform:translateY(-62vh);transition:transform 1.8s ease-in-out}
+  #hair.out{transform:translateY(-120vh);transition:transform .8s}
   .hs{display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:4px 6px;
     font-size:3rem;font-weight:bold;font-variant-numeric:tabular-nums}
   .hs div{height:64px;display:flex;align-items:center;justify-content:center}
@@ -121,6 +152,33 @@
   </section>
 </div>
 
+<div id="stage" class="hide">
+  <div id="spacebg"></div>
+  <div id="park"><span class="t1">🌳</span><span class="t2">🌳</span><span class="t3">🌷</span><span class="t4">🌷</span></div>
+  <div id="planets"><span style="left:12%;top:18%">🪐</span><span style="left:76%;top:30%">🌙</span><span style="left:30%;top:55%">☄️</span><span style="left:70%;top:60%">👽</span><span style="left:50%;top:10%">⭐</span></div>
+  <div id="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#222" stroke-width="5" stroke-linecap="round"/></svg></div>
+  <div id="bubble" class="hide"></div>
+  <div id="nobi">
+    <div id="mark">💢</div>
+    <svg viewBox="0 0 120 170" width="170">
+      <g class="arm l"><path d="M32 100 L14 128" stroke="#ffd7b0" stroke-width="11" stroke-linecap="round"/></g>
+      <g class="arm r"><path d="M88 100 L106 128" stroke="#ffd7b0" stroke-width="11" stroke-linecap="round"/></g>
+      <rect x="30" y="90" width="60" height="42" rx="10" fill="#ffd23f"/>
+      <rect x="34" y="126" width="52" height="24" rx="6" fill="#3b5bdb"/>
+      <rect x="42" y="148" width="12" height="16" fill="#ffd7b0"/><rect x="66" y="148" width="12" height="16" fill="#ffd7b0"/>
+      <rect x="38" y="162" width="18" height="7" rx="3" fill="#fff"/><rect x="64" y="162" width="18" height="7" rx="3" fill="#fff"/>
+      <circle cx="60" cy="56" r="38" fill="#ffd7b0"/>
+      <path d="M22 54 Q20 12 60 12 Q100 12 98 54 Q80 30 60 34 Q40 30 22 54Z" fill="#222"/>
+      <circle cx="44" cy="60" r="12" fill="#fff" stroke="#222" stroke-width="3"/><circle cx="76" cy="60" r="12" fill="#fff" stroke="#222" stroke-width="3"/>
+      <line x1="56" y1="60" x2="64" y2="60" stroke="#222" stroke-width="3"/>
+      <circle cx="46" cy="62" r="3.5" fill="#222"/><circle cx="74" cy="62" r="3.5" fill="#222"/>
+      <path d="M32 44 L54 52 M88 44 L66 52" stroke="#222" stroke-width="4" stroke-linecap="round"/>
+      <ellipse class="mouth" cx="60" cy="86" rx="13" ry="9" fill="#b3202a"/>
+      <ellipse cx="60" cy="91" rx="6" ry="3" fill="#ff8a8a"/>
+    </svg>
+  </div>
+</div>
+
 <script>
 const TOTAL = 10;
 const LEVELS = {
@@ -139,18 +197,18 @@ let lastRun, lv, op, n, score, cur, locked, miss;
 const SYM = {add:'＋', mul:'×', div:'÷'};
 const WORD = {add:'たす', mul:'かける', div:'わる'};
 
-function speak(t){
+function speak(t, pitch){
   try{
     if(!('speechSynthesis' in window)) return;
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(t);
-    u.lang = 'ja-JP'; u.rate = .9; u.pitch = 1.2;
+    u.lang = 'ja-JP'; u.rate = .9; u.pitch = pitch || 1.2;
     speechSynthesis.speak(u);
   }catch(e){}
 }
 
 function start(level, o){
-  lv = level; op = o || 'add'; lastRun = () => start(level, o); n = 0; score = 0;
+  okCount = 0; lv = level; op = o || 'add'; lastRun = () => start(level, o); n = 0; score = 0;
   show('game'); next();
 }
 
@@ -208,9 +266,8 @@ function answer(el, v, ans){
     $('msg').textContent = '🎉 ' + p;
     $('eq').innerHTML = `${cur.a} ${SYM[cur.kind]} ${cur.b} ＝ <span class="q">${ans}</span>`;
     $('stars').textContent = '⭐ ' + score;
-    speak(`${ans}！ ${p}`);
     n++;
-    setTimeout(next, 1600);
+    setTimeout(() => reaction(next), 700);
   }else{
     miss++;
     el.classList.add('ng','shake');
@@ -244,7 +301,7 @@ let hType, hA, hB, hAns, hDig, hCarry, hPos, hMiss, hLocked;
 const dg = (x, p) => Math.floor(x / 10 ** p) % 10;
 
 function hStart(t){
-  hType = t; n = 0; score = 0; lastRun = () => hStart(t);
+  hType = t; n = 0; score = 0; okCount = 0; lastRun = () => hStart(t);
   show('hgame'); hNext();
 }
 
@@ -296,9 +353,8 @@ function hPress(d){
       const p = PRAISE[rnd(0, PRAISE.length - 1)];
       $('hmsg').textContent = '🎉 ' + p;
       $('hstars').textContent = '⭐ ' + score;
-      speak(`${hAns}！ ${p}`);
       n++;
-      setTimeout(hNext, 1800);
+      setTimeout(() => reaction(hNext), 700);
     }else hMark();
   }else{
     hMiss++;
@@ -314,6 +370,39 @@ $('toH').onclick = () => show('hmode');
 $('hmodeBack').onclick = () => show('home');
 $('hback').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
 document.querySelectorAll('.age[data-h]').forEach(btn => btn.onclick = () => hStart(btn.dataset.h));
+
+/* ---------- のびたくん ---------- */
+let okCount = 0, stageTimers = [];
+const GAGS = ['だめーーー！','なんでよーーー！','あーーー！','ひどいよー！','うえーん！','ぼくの せいじゃないよー！','せいかいって なにさー！','やめてよーーー！'];
+const later = (fn, ms) => stageTimers.push(setTimeout(fn, ms));
+function say(t){ const b = $('bubble'); b.textContent = t; b.classList.remove('hide'); speak(t, 1.7); }
+function resetStage(){
+  $('stage').className = '';
+  $('nobi').className = ''; $('hair').className = ''; $('bubble').classList.add('hide');
+}
+function endStage(done){
+  stageTimers.forEach(clearTimeout); stageTimers = [];
+  $('stage').classList.add('hide'); $('stage').onclick = null;
+  resetStage(); $('stage').classList.add('hide');
+  done();
+}
+function reaction(done){
+  okCount++;
+  resetStage();
+  const t0 = Date.now(), st = $('stage');
+  st.onclick = () => { if(Date.now() - t0 > 900) endStage(done); };
+  const nobi = $('nobi'), hair = $('hair');
+  nobi.classList.add('shake');
+  say(GAGS[rnd(0, GAGS.length - 1)]);
+  if(okCount % 3 !== 0){ later(() => endStage(done), 2600); return; }
+  later(() => say('ボボボーボ・ボーボボの はなげだー！'), 1500);
+  later(() => hair.classList.add('in'), 1500);
+  later(() => { say('うわーーー！ たすけてーーー！'); st.classList.add('space'); nobi.classList.add('up'); hair.classList.add('up'); }, 2400);
+  later(() => say('うちゅうだーーー！'), 4400);
+  later(() => { say('おちるーーー！'); hair.className = 'out'; st.classList.remove('space'); nobi.classList.add('fall'); nobi.classList.remove('up'); }, 5600);
+  later(() => { nobi.classList.remove('fall'); say('ただいまー！ こうえんに もどったよ'); nobi.classList.remove('shake'); }, 6500);
+  later(() => endStage(done), 8200);
+}
 </script>
 </body>
 </html>
