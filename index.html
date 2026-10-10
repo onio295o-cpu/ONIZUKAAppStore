@@ -51,7 +51,17 @@
     <p class="sub">いくつ かな？ えらんでね！</p>
     <button class="btn age a4" data-lv="4">4さい<small>1〜5 の たしざん</small></button>
     <button class="btn age a5" data-lv="5">5さい<small>10 までの たしざん</small></button>
-    <button class="btn age a6" data-lv="6">6さい<small>20 までの たしざん</small></button>
+    <button class="btn age a6" data-lv="6">6さい<small>たしざん・くく・わりざん</small></button>
+  </section>
+
+  <section id="mode" class="hide">
+    <h1>6さい</h1>
+    <p class="sub">なにを やる？</p>
+    <button class="btn age a4" data-op="add">➕ たしざん</button>
+    <button class="btn age a5" data-op="mul">✖️ かけざん（くく）</button>
+    <button class="btn age a6" data-op="div">➗ わりざん</button>
+    <button class="btn age" style="background:var(--yellow);color:var(--ink)" data-op="mix">🌈 ぜんぶ まぜまぜ</button>
+    <button class="btn home" id="modeBack">← もどる</button>
   </section>
 
   <section id="game" class="hide">
@@ -88,10 +98,12 @@ const ITEMS = ['🍎','🍌','🍓','🐶','🐱','🚗','🌸','🐟','🍪','�
 const PRAISE = ['すごい！','せいかい！','てんさい！','やったね！','かしこい！'];
 
 const $ = id => document.getElementById(id);
-const show = id => ['home','game','end'].forEach(s => $(s).classList.toggle('hide', s !== id));
+const show = id => ['home','mode','game','end'].forEach(s => $(s).classList.toggle('hide', s !== id));
 const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
 
-let lv, n, score, a, b, locked, miss;
+let lv, op, n, score, cur, locked, miss;
+const SYM = {add:'＋', mul:'×', div:'÷'};
+const WORD = {add:'たす', mul:'かける', div:'わる'};
 
 function speak(t){
   try{
@@ -103,39 +115,51 @@ function speak(t){
   }catch(e){}
 }
 
-function start(level){
-  lv = level; n = 0; score = 0;
+function start(level, o){
+  lv = level; op = o || 'add'; n = 0; score = 0;
   show('game'); next();
 }
 
 function next(){
   if(n >= TOTAL) return finish();
   const L = LEVELS[lv];
-  do{
-    a = rnd(1, L.max); b = rnd(1, L.max);
-  }while(a + b > L.sum || (lv === 6 && a + b < 6));
+  const kind = (lv === 6 && op === 'mix') ? ['add','mul','div'][rnd(0,2)] : op;
+  let a, b, ans, max = L.sum;
+  if(kind === 'add'){
+    do{
+      a = rnd(1, L.max); b = rnd(1, L.max);
+    }while(a + b > L.sum || (lv === 6 && a + b < 6));
+    ans = a + b;
+  }else if(kind === 'mul'){
+    a = rnd(1, 9); b = rnd(1, 9); ans = a * b; max = 81;
+  }else{
+    b = rnd(2, 9); ans = rnd(1, 9); a = b * ans; max = 9;
+  }
+  cur = {a, b, kind, ans};
   locked = false; miss = 0;
   $('msg').textContent = '';
   $('prog').style.width = (n / TOTAL * 100) + '%';
   $('stars').textContent = '⭐ ' + score;
 
   const item = ITEMS[rnd(0, ITEMS.length - 1)];
-  $('pics').innerHTML = L.pics
+  $('pics').innerHTML = (L.pics && kind === 'add')
     ? `<div class="grp">${item.repeat(a)}</div><span class="plus">＋</span><div class="grp">${item.repeat(b)}</div>`
     : '';
-  $('eq').innerHTML = `${a} ＋ ${b} ＝ <span class="q">？</span>`;
-  speak(`${a} たす ${b} は？`);
+  $('eq').innerHTML = `${a} ${SYM[kind]} ${b} ＝ <span class="q">？</span>`;
+  speak(`${a} ${WORD[kind]} ${b} は？`);
 
-  const ans = a + b, set = new Set([ans]);
+  const set = new Set([ans]);
+  const near = kind === 'mul' ? [a*(b+1), a*(b-1), (a+1)*b, (a-1)*b] : [];
   while(set.size < 3){
-    const w = ans + rnd(-3, 3);
-    if(w >= 0 && w <= L.sum) set.add(w);
+    let w = near.length && Math.random() < .6 ? near[rnd(0, near.length - 1)] : ans + rnd(-3, 3);
+    if(w >= 0 && w <= max && w !== ans) set.add(w);
+    else if(set.size < 3 && Math.random() < .2) set.add(rnd(0, max));
   }
   const box = $('choices'); box.innerHTML = '';
   [...set].sort(() => Math.random() - .5).forEach(v => {
     const el = document.createElement('button');
     el.className = 'btn choice'; el.textContent = v;
-    el.onclick = () => answer(el, v, ans);
+    el.onclick = () => answer(el, v, cur.ans);
     box.appendChild(el);
   });
 }
@@ -148,7 +172,7 @@ function answer(el, v, ans){
     if(miss === 0) score++;
     const p = PRAISE[rnd(0, PRAISE.length - 1)];
     $('msg').textContent = '🎉 ' + p;
-    $('eq').innerHTML = `${a} ＋ ${b} ＝ <span class="q">${ans}</span>`;
+    $('eq').innerHTML = `${cur.a} ${SYM[cur.kind]} ${cur.b} ＝ <span class="q">${ans}</span>`;
     $('stars').textContent = '⭐ ' + score;
     speak(`${ans}！ ${p}`);
     n++;
@@ -170,11 +194,15 @@ function finish(){
   speak('よくできました！');
 }
 
-document.querySelectorAll('.age').forEach(btn => {
-  if(btn.dataset.lv) btn.onclick = () => start(+btn.dataset.lv);
+document.querySelectorAll('.age[data-lv]').forEach(btn => {
+  btn.onclick = () => +btn.dataset.lv === 6 ? show('mode') : start(+btn.dataset.lv);
 });
+document.querySelectorAll('.age[data-op]').forEach(btn => {
+  btn.onclick = () => start(6, btn.dataset.op);
+});
+$('modeBack').onclick = () => show('home');
 $('back').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
-$('again').onclick = () => start(lv);
+$('again').onclick = () => start(lv, op);
 $('toHome').onclick = () => show('home');
 </script>
 </body>
