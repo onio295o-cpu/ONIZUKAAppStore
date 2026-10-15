@@ -908,6 +908,44 @@
   }
   #map .leaflet-control-zoom a { color: var(--navy); font-family: var(--font-body); }
   .map-msg { border: 2px solid var(--border); font-weight: 700; }
+
+  /* ---------- motion ---------- */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes sheetUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  @keyframes sheetDown { from { transform: translateY(0); } to { transform: translateY(100%); } }
+  @keyframes viewIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes popIn { from { opacity: 0; transform: scale(.92) translateY(-6px); } to { opacity: 1; transform: none; } }
+  @keyframes flip { 0% { transform: rotateX(80deg); opacity: 0; } 60% { transform: rotateX(-12deg); opacity: 1; } 100% { transform: none; } }
+  @keyframes cellIn { from { opacity: 0; transform: translateX(14px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes bounce { 0% { transform: scale(1); } 40% { transform: scale(1.12); } 70% { transform: scale(.96); } 100% { transform: scale(1); } }
+  @keyframes spin { from { transform: rotate(0); } to { transform: rotate(180deg); } }
+  @keyframes soonPulse { 0%, 100% { text-shadow: 0 0 0 rgba(255,255,255,0); } 50% { text-shadow: 0 0 18px rgba(255,255,255,.9); } }
+  @keyframes soonBadge { 0%, 100% { opacity: 1; } 50% { opacity: .55; } }
+
+  .overlay:not([hidden]) { animation: fadeIn .2s ease-out; }
+  .overlay:not([hidden]) .sheet { animation: sheetUp .34s cubic-bezier(.2, .9, .3, 1.05); }
+  .overlay.closing { animation: fadeOut .22s ease-in forwards; }
+  .overlay.closing .sheet { animation: sheetDown .22s ease-in forwards; }
+  #view-route:not([hidden]), #view-stops:not([hidden]) { animation: viewIn .28s ease-out; }
+  #view-map:not([hidden]) { animation: fadeIn .25s ease-out; }
+  .od-menu.dep:not([hidden]) { transform-origin: top left; animation: popIn .18s ease-out; }
+  .od-menu.dest:not([hidden]) { transform-origin: top right; animation: popIn .18s ease-out; }
+  .next-time { perspective: 400px; }
+  .next-time.tick { animation: flip .45s ease-out; transform-origin: 50% 60%; }
+  .next-card.soon .next-time { animation: soonPulse 1.4s ease-in-out infinite; }
+  .next-card.soon .next-time.tick { animation: flip .45s ease-out, soonPulse 1.4s ease-in-out .45s infinite; }
+  .next-card.soon .next-sub { animation: soonBadge 1.4s ease-in-out infinite; }
+  .time-grid.enter .time-cell { animation: cellIn .32s ease-out both; animation-delay: calc(var(--i, 0) * 35ms); }
+  .tab.active svg { animation: bounce .35s ease-out; }
+  .star-btn.pop { animation: bounce .35s ease-out; }
+  .swap-btn.spin { animation: spin .35s ease-in-out; }
+  .result-row, .dir-box, .chain-chip { animation: fadeIn .2s ease-out both; }
+  .card, .pick-chip, .chain-chip, .od-item, .time-cell, .tab, .od-box, .float-btn, .round-btn { -webkit-tap-highlight-color: transparent; }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -1331,6 +1369,7 @@ function renderMap(dep) {
     markers.push(m);
   };
 
+  const isNewView = `${selectedDeparture}|${selectedDestination}|${dep ? dep.p : ""}` !== lastViewKey;
   let focus = null; // the stop to center on: destination if there is one, else departure
   if (!map.midLabelsHooked) {
     // names of the stops on the way only when zoomed in enough for them not to overlap
@@ -1342,6 +1381,7 @@ function renderMap(dep) {
     const path = pathThrough(seq, dep.pos, dep.j);
     routeLines.push(L.polyline(path, { color: "#ffffff", weight: 11, opacity: 1, lineJoin: "round" }).addTo(map));
     routeLines.push(L.polyline(path, { color: ROUTE_BLUE, weight: 6.5, opacity: 1, lineJoin: "round" }).addTo(map));
+    if (isNewView) routeLines.forEach(l => drawIn(l));
     // every stop the bus calls at on the way, with its name and time
     for (let k = dep.pos + 1; k < dep.j; k++) {
       const m = L.circleMarker(poleLatLng(seq[k]), {
@@ -1419,7 +1459,7 @@ function openDetail(dep) {
     li.append(t, dot, n, e);
     list.appendChild(li);
   }
-  document.getElementById("detailOverlay").hidden = false;
+  showOverlay("detailOverlay");
 }
 
 function routeText(d) {
@@ -1427,8 +1467,58 @@ function routeText(d) {
   return [pat.r, pat.h].filter(Boolean).join(" ");
 }
 
+// ---------- motion helpers ----------
+const REDUCED_MOTION = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function showOverlay(id) {
+  const el = document.getElementById(id);
+  clearTimeout(el.closeTimer);
+  el.classList.remove("closing");
+  el.hidden = false;
+}
+
+// slide the sheet back down, then hide it
+function hideOverlay(id) {
+  const el = document.getElementById(id);
+  if (el.hidden || el.classList.contains("closing")) return;
+  if (REDUCED_MOTION) { el.hidden = true; return; }
+  el.classList.add("closing");
+  el.closeTimer = setTimeout(() => {
+    el.hidden = true;
+    el.classList.remove("closing");
+  }, 220);
+}
+
+// restart a one-shot CSS animation class on an element
+function replay(el, cls) {
+  el.classList.remove(cls);
+  void el.offsetWidth;
+  el.classList.add(cls);
+}
+
+// grow a Leaflet SVG polyline from its first point to its last
+function drawIn(line, ms = 1100) {
+  if (REDUCED_MOTION) return;
+  requestAnimationFrame(() => {
+    const el = line.getElement && line.getElement();
+    if (!el || !el.getTotalLength) return;
+    const len = el.getTotalLength();
+    el.style.transition = "none";
+    el.style.strokeDasharray = `${len} ${len}`;
+    el.style.strokeDashoffset = `${len}`;
+    void el.getBoundingClientRect();
+    el.style.transition = `stroke-dashoffset ${ms}ms cubic-bezier(.45,.05,.25,1)`;
+    el.style.strokeDashoffset = "0";
+    // leave no dash behind: Leaflet redraws the path on zoom
+    const done = () => { el.style.transition = el.style.strokeDasharray = el.style.strokeDashoffset = ""; };
+    el.addEventListener("transitionend", done, { once: true });
+    setTimeout(done, ms + 200);
+  });
+}
+
 function clearCardExtras() {
   shownDep = null;
+  document.getElementById("nextCard").classList.remove("soon");
   document.getElementById("nextArrive").textContent = "";
   document.getElementById("detailBtn").hidden = true;
   document.getElementById("backToNextBtn").hidden = true;
@@ -1495,6 +1585,7 @@ async function render() {
 
   if (shownIdx === -1) {
     shownDep = null;
+    document.getElementById("nextCard").classList.remove("soon");
     nextTimeEl.textContent = "--:--";
     arriveEl.textContent = "";
     nextSubEl.textContent = `本日の運行は終了しました（始発 ${fmt(deps[0].min)} ${routeText(deps[0])}）`;
@@ -1504,7 +1595,11 @@ async function render() {
     shownDep = d;
     if (picked) nextLabel.textContent = `選択した便（${selectedDeparture} → ${selectedDestination}）`;
     const diff = d.min - nowMin;
-    nextTimeEl.textContent = fmt(d.min);
+    if (nextTimeEl.textContent !== fmt(d.min)) {
+      nextTimeEl.textContent = fmt(d.min);
+      replay(nextTimeEl, "tick");
+    }
+    document.getElementById("nextCard").classList.toggle("soon", diff >= 0 && diff <= 3);
     arriveEl.innerHTML = "";
     const at = document.createElement("b");
     at.textContent = fmt(d.arr);
@@ -1519,12 +1614,17 @@ async function render() {
 
   grid.innerHTML = "";
   const cells = [];
+  const animateCells = routeKey !== grid.dataset.routeKey;
+  grid.dataset.routeKey = routeKey;
+  grid.classList.toggle("enter", animateCells);
+  const firstShown = Math.max(0, (nextIdx === -1 ? deps.length : nextIdx) - 1);
   deps.forEach((d, i) => {
     const cell = document.createElement("div");
     cell.className = "time-cell";
     if (d.min < nowMin) cell.classList.add("past");
     if (i === nextIdx) cell.classList.add("next");
     if (picked && i === shownIdx) cell.classList.add("picked");
+    cell.style.setProperty("--i", Math.max(0, Math.min(12, i - firstShown)));
     cell.textContent = fmt(d.min);
     const r = document.createElement("span");
     r.className = "time-route";
@@ -1683,7 +1783,7 @@ function openStopSearch(side) {
   const search = document.getElementById("stopSearch");
   search.value = "";
   buildSettingsSheet();
-  document.getElementById("overlay").hidden = false;
+  showOverlay("overlay");
   search.focus();
 }
 
@@ -1744,7 +1844,7 @@ async function buildSettingsSheet() {
     }
     row.append(label, b);
     row.onclick = () => {
-      document.getElementById("overlay").hidden = true;
+      hideOverlay("overlay");
       chooseStop(sheetSide, name);
     };
     list.appendChild(row);
@@ -1802,6 +1902,7 @@ function starButton(name, onChange) {
     toggleFav(name);
     b.className = "star-btn" + (isFav(name) ? " on" : "");
     b.textContent = isFav(name) ? "★" : "☆";
+    replay(b, "pop");
     if (onChange) onChange();
   };
   return b;
@@ -1849,7 +1950,7 @@ async function openStopSheet(name) {
   star.replaceWith(Object.assign(starButton(name), { id: "stopSheetStar" }));
   const body = document.getElementById("stopSheetBody");
   body.textContent = "読み込み中…";
-  document.getElementById("stopOverlay").hidden = false;
+  showOverlay("stopOverlay");
 
   const groups = await stopTimetable(name);
   if (sheetStop !== name) return;
@@ -1939,14 +2040,14 @@ async function openStopSheet(name) {
 
 // open ルート検索 for dep → dest in one go
 function routeBetween(dep, dest) {
-  document.getElementById("stopOverlay").hidden = true;
+  hideOverlay("stopOverlay");
   showView("route");
   chooseStop("dep", dep);
   chooseStop("dest", dest);
 }
 
 function useInRoute(name, asDestination) {
-  document.getElementById("stopOverlay").hidden = true;
+  hideOverlay("stopOverlay");
   showView("route");
   chooseStop(asDestination ? "dest" : "dep", name);
 }
@@ -2121,12 +2222,12 @@ function initTabs() {
   document.getElementById("favSearch").oninput = buildStopsView;
   document.getElementById("closeStopSheet").onclick = () => {
     sheetStop = null;
-    document.getElementById("stopOverlay").hidden = true;
+    hideOverlay("stopOverlay");
   };
   document.getElementById("stopOverlay").onclick = (e) => {
     if (e.target.id === "stopOverlay") {
       sheetStop = null;
-      document.getElementById("stopOverlay").hidden = true;
+      hideOverlay("stopOverlay");
     }
   };
   document.getElementById("useAsDep").onclick = () => useInRoute(sheetStop, false);
@@ -2162,10 +2263,10 @@ function init([index, patterns]) {
     render();
   };
   document.getElementById("closeDetail").onclick = () => {
-    document.getElementById("detailOverlay").hidden = true;
+    hideOverlay("detailOverlay");
   };
   document.getElementById("detailOverlay").onclick = (e) => {
-    if (e.target.id === "detailOverlay") document.getElementById("detailOverlay").hidden = true;
+    if (e.target.id === "detailOverlay") hideOverlay("detailOverlay");
   };
 
   document.getElementById("stopSearch").oninput = buildSettingsSheet;
@@ -2175,7 +2276,11 @@ function init([index, patterns]) {
       if (odMenuSide === side) closeOdMenu(); else openOdMenu(side);
     };
   }
-  document.getElementById("swapBtn").onclick = (e) => { e.stopPropagation(); swapStops(); };
+  document.getElementById("swapBtn").onclick = (e) => {
+    e.stopPropagation();
+    replay(e.currentTarget, "spin");
+    swapStops();
+  };
   // while a dropdown is open, a tap elsewhere only closes it (and doesn't press what's under it)
   document.addEventListener("click", (e) => {
     if (!odMenuSide || e.target.closest(".od-row")) return;
@@ -2184,10 +2289,10 @@ function init([index, patterns]) {
     closeOdMenu();
   }, true);
   document.getElementById("closeSheet").onclick = () => {
-    document.getElementById("overlay").hidden = true;
+    hideOverlay("overlay");
   };
   document.getElementById("overlay").onclick = (e) => {
-    if (e.target.id === "overlay") document.getElementById("overlay").hidden = true;
+    if (e.target.id === "overlay") hideOverlay("overlay");
   };
 }
 
