@@ -290,6 +290,9 @@ a.btn{text-decoration:none}
 .chars .c{position:relative}
 .chars .cn{width:100%;font:inherit;font-size:.8rem;text-align:center;border:2px solid var(--ink2);border-radius:8px;padding:2px;background:#fff;color:var(--ink)}
 .chars .del{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;border:3px solid var(--ink);font-size:.9rem;line-height:1}
+.cheer canvas.rig{flex:1.15;height:100%;min-width:0;display:block}
+.fx.rig-big{left:0;right:0;top:10%;height:62vh}
+.fx.rig-big canvas{width:100%;height:100%;display:block}
 </style>
 </head>
 <body>
@@ -407,6 +410,76 @@ a.btn{text-decoration:none}
   }
   global.ChaosCharacter={create};
 })(window);
+/* ================================================================
+   0b) ChaosRig（もらった 関節アニメ：Canvasで 全身の関節を 動かす）
+       もとの character.js を、ボタンや id に たよらず 何体でも 置ける形に したもの
+   ================================================================ */
+const ChaosRig = (() => {
+  const DUR = {idle:1800, dance:4000, punch:2500, kick:2300, tentacle:3500, fall:3000, flip:2400, bow:2400, rage:2400, blast:3700, run:2800, pose:3000};
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v)), lerp = (a, b, t) => a + (b - a) * t, noise = t => Math.sin(t * 13) * Math.sin(t * 7.3);
+  const all = new Set(); let raf = 0;
+  function loop(t){ all.forEach(r => r.frame(t)); raf = all.size ? requestAnimationFrame(loop) : 0; }
+  function create(canvas, opt = {}){
+    const ctx = canvas.getContext('2d');
+    let W = 300, H = 300, act = 'idle', started = performance.now(), duration = DUR.idle, parts = [], onEnd = null;
+    const zoom = opt.zoom || 1;
+    function resize(){ const dpr = Math.min(devicePixelRatio || 1, 2); W = canvas.clientWidth || 300; H = canvas.clientHeight || 300; canvas.width = W * dpr; canvas.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); }
+    resize();
+    const ro = window.ResizeObserver ? new ResizeObserver(resize) : null; ro && ro.observe(canvas);
+    function emit(n){ for(let i = 0; i < n; i++) parts.push({x:W / 2 + (Math.random() - .5) * 80, y:H * .62, vx:(Math.random() - .5) * 8, vy:-Math.random() * 8 - 2, life:50 + Math.random() * 25, h:Math.random() * 360}); }
+    function play(name, cb){ if(!DUR[name]) return; act = name; started = performance.now(); duration = DUR[name]; onEnd = cb || null; if(['blast', 'tentacle', 'fall'].includes(name)) emit(15); }
+    const line = (a, b, w, c) => { ctx.strokeStyle = c; ctx.lineWidth = w; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(...a); ctx.lineTo(...b); ctx.stroke(); };
+    const circle = (x, y, r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); };
+    const ellipse = (x, y, rx, ry, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2); ctx.fill(); };
+    function limb(s, a1, a2, l1, l2, c, w){ const e = [s[0] + Math.sin(a1) * l1, s[1] + Math.cos(a1) * l1], end = [e[0] + Math.sin(a1 + a2) * l2, e[1] + Math.cos(a1 + a2) * l2];
+      line(s, e, w, c); line(e, end, w * .83, c); circle(e[0], e[1], w * .47, c); circle(end[0], end[1], w * .52, c); }
+    function frame(t){
+      if(!canvas.isConnected){ destroy(); return; }
+      if(act !== 'idle' && t - started > duration){ const cb = onEnd; onEnd = null; act = 'idle'; started = t; duration = DUR.idle; cb && cb(); }
+      ctx.clearRect(0, 0, W, H);
+      const ground = H * .92, scale = Math.min(W / 350, H / 330) * zoom;
+      ctx.save(); ctx.translate(W / 2, ground); ctx.scale(scale, scale);
+      ellipse(0, 9, 64, 12, 'rgba(59,42,30,.25)');
+      let p = clamp((t - started) / duration, 0, 1), q = p * Math.PI * 2, left = 0, right = 0, legL = 0, legR = 0, kneeL = 0, kneeR = 0, tilt = 0, y = 0, x = 0, head = 0;
+      switch(act){
+        case 'dance': left = Math.sin(q * 3) * 1.8; right = -left; legL = Math.sin(q * 3) * .65; legR = -legL; tilt = Math.sin(q * 2) * .22; y = -Math.abs(Math.sin(q * 3)) * 16; break;
+        case 'punch': left = -1.4 + Math.sin(q * 5) * .8; right = 1.4 - Math.sin(q * 5 + Math.PI) * .8; tilt = Math.sin(q * 5) * .1; break;
+        case 'kick': legR = -Math.sin(q * 2) * 1.7; kneeR = -.8; left = -1; right = 1; tilt = -.25; break;
+        case 'tentacle': left = -1.4; right = 1.4; tilt = Math.sin(q) * .12; break;
+        case 'fall': tilt = lerp(0, Math.PI * .48, clamp(p * 2, 0, 1)); y = clamp(p * 2, 0, 1) * 35; left = -1.4; right = 1.4; break;
+        case 'flip': tilt = q; y = -Math.sin(Math.PI * p) * 110; left = -1; right = 1; break;
+        case 'bow': tilt = Math.sin(Math.PI * p) * 1.3; left = .5; right = -.5; break;
+        case 'rage': x = noise(t * .02) * 9; left = -1.5; right = 1.5; head = Math.sin(q * 12) * .12; break;
+        case 'blast': left = -1.7; right = 1.7; tilt = p > .75 ? .8 : 0; x = p > .75 ? Math.sin(q * 8) * 20 : 0; break;
+        case 'run': x = Math.sin(q) * 65; left = Math.sin(q * 6) * 1.1; right = -left; legL = Math.sin(q * 6) * .85; legR = -legL; y = -Math.abs(Math.sin(q * 6)) * 12; break;
+        case 'pose': left = -2.6; right = 2.3; legL = .35; legR = -.45; tilt = .24; break;
+        default: y = Math.sin(t * .003) * 3; head = Math.sin(t * .002) * .07;
+      }
+      ctx.translate(x, y); ctx.rotate(tilt);
+      const hipY = -88, shoulderY = -171;
+      limb([-23, hipY], legL, kneeL, 57, 55, '#232436', 19); limb([23, hipY], legR, kneeR, 57, 55, '#232436', 19);
+      ctx.fillStyle = '#168cda'; ctx.beginPath(); ctx.moveTo(-36, shoulderY); ctx.lineTo(36, shoulderY); ctx.lineTo(28, hipY); ctx.lineTo(-28, hipY); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-30, -168); ctx.lineTo(-7, -138); ctx.lineTo(0, -165); ctx.lineTo(7, -138); ctx.lineTo(30, -168); ctx.strokeStyle = '#073967'; ctx.lineWidth = 4; ctx.stroke();
+      limb([-38, shoulderY + 12], left, .1, 51, 46, '#d59b64', 16); limb([38, shoulderY + 12], right, -.1, 51, 46, '#d59b64', 16);
+      ctx.save(); ctx.translate(0, -201); ctx.rotate(head);
+      ellipse(0, -2, 29, 35, '#d59b64'); ellipse(0, -39, 47, 39, '#ffeb21'); ellipse(-15, -8, 5, 3, '#17151c'); ellipse(15, -8, 5, 3, '#17151c'); line([-12, 17], [12, 17], 3, '#28212b'); circle(0, 3, 5, '#a96848');
+      if(act === 'tentacle' || act === 'blast'){ const k = act === 'tentacle' ? clamp(Math.sin(Math.PI * p) * 1.4, 0, 1) : clamp(Math.sin(Math.PI * p) * 1.1, 0, 1);
+        for(let i = 0; i < 2; i++){ ctx.beginPath(); ctx.moveTo(i ? 5 : -5, 5);
+          for(let j = 1; j <= 25; j++) ctx.lineTo((i ? 1 : -1) * j * 6 * k, Math.sin(j * .65 + t * .012 + i) * 23 * k + j * .2);
+          ctx.strokeStyle = i ? '#fce973' : '#ffe4a6'; ctx.lineWidth = 6; ctx.lineCap = 'round'; ctx.stroke(); } }
+      ctx.restore(); ctx.restore();
+      if(act === 'blast' && p > .65){ ctx.save(); ctx.translate(W / 2, H * .45); for(let i = 0; i < 12; i++){ const a = i * Math.PI / 6 + t * .003; line([Math.cos(a) * 30, Math.sin(a) * 30], [Math.cos(a) * 130, Math.sin(a) * 130], 4, '#ffe463'); } ctx.restore(); }
+      for(const z of parts){ circle(z.x, z.y, 3 + z.life / 28, `hsl(${z.h} 95% 65%)`); z.x += z.vx; z.y += z.vy; z.vy += .22; z.life--; }
+      parts = parts.filter(z => z.life > 0);
+    }
+    function destroy(){ all.delete(r); ro && ro.disconnect(); }
+    const r = {play, frame, destroy, moves:Object.keys(DUR)};
+    all.add(r); if(!raf) raf = requestAnimationFrame(loop);
+    return r;
+  }
+  return {create};
+})();
+
 /* ================================================================
    1) ロジック（画面から独立）：問題生成・選択肢・ヒント・星
    ================================================================ */
@@ -729,7 +802,10 @@ function startStudy(type){
     const img = c.element.querySelector('img'); img.classList.add('pose', 'normal'); img.dataset.name = m.name;   // ポーズの 差しかえにも 対応
     return c;
   });
+  const cv = document.createElement('canvas'); cv.className = 'rig';                  // 関節アニメの キャラ（まん中）
+  $('cheer').insertBefore(cv, $('cheer').children[1] || null);
   show('study');
+  S.rig = ChaosRig.create(cv);
   nextQuestion();
 }
 $('quit').onclick = () => { (S && S.chars || []).forEach(c => c.destroy()); endShow(); stopClip(); stopFireworks(); S = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); show('menu'); };
@@ -768,7 +844,7 @@ function answer(btn, v){
 }
 function wrong(){
   S.misses++; S.first = false;
-  sfx('miss'); setPose($('cheer'), 'surprised'); chaosPlay(['fall', 'shake', 'bow'], t('あれれ〜？', 'あれれ〜？')); later(() => setPose($('cheer'), 'normal'), 900);
+  sfx('miss'); setPose($('cheer'), 'surprised'); chaosPlay(['fall', 'shake', 'bow'], t('あれれ〜？', 'あれれ〜？')); rigPlay(S.rig, ['fall', 'bow', 'rage']); later(() => setPose($('cheer'), 'normal'), 900);
   const h = Logic.hint(S.p);
   if(h){
     let html = `💡 ${h.text}`;
@@ -781,7 +857,7 @@ function wrong(){
 function correct(){
   if(S.first) S.firstOk++;
   S.n++; renderProg();
-  sfx('ding'); sceneFx('pulse'); setPose($('cheer'), 'happy'); chaosPlay(['victory', 'dance', 'jump', 'spin', 'slide', 'charge'], AGE < 5 ? pick(['やったー！', 'すごーい！', 'せいかい！']) : undefined); later(() => setPose($('cheer'), 'normal'), 1000);
+  sfx('ding'); sceneFx('pulse'); setPose($('cheer'), 'happy'); chaosPlay(['victory', 'dance', 'jump', 'spin', 'slide', 'charge'], AGE < 5 ? pick(['やったー！', 'すごーい！', 'せいかい！']) : undefined); rigPlay(S.rig, ['dance', 'punch', 'kick', 'flip', 'pose', 'run']); later(() => setPose($('cheer'), 'normal'), 1000);
   if(S.n >= TOTAL){ later(finalReward, 700); return; }
   if(S.n % BIG_EVERY === 0){ later(() => bigShow(nextQuestion), 500); return; }
   quickPop();
@@ -789,6 +865,9 @@ function correct(){
 }
 
 // 応援キャラを ChaosCharacter の 動きで 反応させる（4さいは ひらがなの セリフ）
+// 関節アニメの キャラ：動きと 効果音を あわせる
+const RIG_SFX = {dance:[0, 'pop'], punch:[200, 'hit'], kick:[350, 'hit'], flip:[300, 'whoosh2'], pose:[0, 'boing'], run:[0, 'whoosh2'], fall:[500, 'land'], bow:[300, 'pop'], rage:[0, 'hurt'], tentacle:[300, 'boing'], blast:[2700, 'boom']};
+function rigPlay(r, names){ if(!r) return; const n = pick(names); r.play(n); const [ms, k] = RIG_SFX[n] || []; if(k) setTimeout(() => sfx(k), ms); }
 function chaosPlay(names, text){
   (S && S.chars || []).forEach((c, i) => { const n = pick(names); setTimeout(() => c.play(n, text ?? (AGE < 5 ? pick(['わーい！', 'えへへ']) : undefined)), i * 150); });
 }
@@ -912,6 +991,8 @@ const CRAZY = {
     word(t('キャラが ふってきた！', 'キャラが 降ってきた！')); sfx('whoosh2'); },
   face(){ const m = member(); if(!m) return CRAZY.upside(); fxAdd('face', imgOf(m, 'funny'), 1900); setTimeout(() => { word('ドアップ！'); sfx('boing'); }, 400); },
   upside(){ document.body.classList.add('upside'); word('さかさま〜！'); sfx('whoosh2'); setTimeout(() => document.body.classList.remove('upside'), 1900); },
+  rig(){ const d = fxAdd('rig-big', '<canvas></canvas>', 3800); const r = ChaosRig.create(d.firstChild, {zoom:1.15});
+    rigPlay(r, ['tentacle', 'blast', 'flip', 'dance']); word(pick(['はなげ しんけん！？', 'ひっさつわざ！', 'なぞの ダンス！'])); },
   chaos(){ const m = member(); if(!m) return CRAZY.jelly();
     const d = fxAdd('chaos-big', '', 2000); const c = ChaosCharacter.create({stage:d, image:imgOfSrc(m, 'funny'), alt:m.name});
     c.play(pick(['vanish', 'charge', 'fall', 'spin', 'shake']), AGE < 5 ? pick(['へんしーん！', 'ひっさつわざ……ふはつ！']) : undefined); sfx('boing'); },
