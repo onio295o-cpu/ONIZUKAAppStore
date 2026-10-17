@@ -201,6 +201,15 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .prog i.done{background:var(--yellow)}.prog i.now{background:var(--orange);animation:nowp 1s ease-in-out infinite}
 @keyframes nowp{50%{transform:scale(1.25)}}
 .cheer{position:relative;height:20vh;min-height:120px;flex-shrink:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 4%}
+/* ChaosCharacter（もらった モジュール） */
+.chaos-stage{position:relative;width:100%;height:100%;min-height:320px;overflow:hidden;isolation:isolate}.chaos-actor{position:absolute;left:50%;bottom:4%;width:min(34vw,180px);transform:translateX(-50%);transform-origin:50% 92%;will-change:transform;user-select:none;touch-action:manipulation}.chaos-actor img{display:block;width:100%;height:auto;pointer-events:none}.chaos-actor[data-motion="idle"]{animation:chaos-idle 2.6s ease-in-out infinite}.chaos-actor[data-motion="dance"]{animation:chaos-dance .42s ease-in-out 9 alternate}.chaos-actor[data-motion="jump"]{animation:chaos-jump .65s ease-in-out 4}.chaos-actor[data-motion="spin"]{animation:chaos-spin 1.1s ease-in-out 2}.chaos-actor[data-motion="fall"]{animation:chaos-fall 2.5s ease-in-out 1}.chaos-actor[data-motion="shake"]{animation:chaos-shake .12s linear 20}.chaos-actor[data-motion="bow"]{animation:chaos-bow 1.4s ease-in-out 2}.chaos-actor[data-motion="vanish"]{animation:chaos-vanish 2.8s ease-in-out 1}.chaos-actor[data-motion="charge"]{animation:chaos-charge 2.8s ease-in-out 1}.chaos-actor[data-motion="sleep"]{animation:chaos-sleep 4s ease-in-out 1}.chaos-actor[data-motion="slide"]{animation:chaos-slide 2.5s ease-in-out 1}.chaos-actor[data-motion="victory"]{animation:chaos-victory 2.4s ease-in-out 1}.chaos-bubble{position:absolute;z-index:2;left:50%;top:8%;transform:translateX(-50%);max-width:85%;padding:9px 14px;border:2px solid #222;border-radius:16px;background:#fff;color:#111;font:bold 16px/1.3 system-ui,sans-serif;text-align:center;box-shadow:3px 4px 0 #222;opacity:0;transition:opacity .16s;pointer-events:none}.chaos-bubble.is-visible{opacity:1}@keyframes chaos-idle{0%,100%{transform:translateX(-50%) rotate(-1deg)}50%{transform:translateX(-50%) translateY(-5px) rotate(1deg)}}@keyframes chaos-dance{0%{transform:translateX(-50%) rotate(-15deg) translateY(0)}100%{transform:translateX(-50%) rotate(15deg) translateY(-24px)}}@keyframes chaos-jump{0%,100%{transform:translateX(-50%) translateY(0) scaleY(1)}20%{transform:translateX(-50%) scaleY(.88)}55%{transform:translateX(-50%) translateY(-90px) rotate(7deg)}}@keyframes chaos-spin{0%{transform:translateX(-50%) rotate(0)}100%{transform:translateX(-50%) rotate(360deg)}}@keyframes chaos-fall{0%,10%{transform:translateX(-50%) rotate(0)}42%,75%{transform:translateX(-50%) translateY(35px) rotate(84deg)}100%{transform:translateX(-50%) rotate(0)}}@keyframes chaos-shake{0%,100%{transform:translateX(calc(-50% - 8px)) rotate(-4deg)}50%{transform:translateX(calc(-50% + 8px)) rotate(4deg)}}@keyframes chaos-bow{0%,100%{transform:translateX(-50%) rotate(0)}50%{transform:translateX(-50%) scaleY(.55) rotate(4deg)}}@keyframes chaos-vanish{0%,100%{transform:translateX(-50%) scale(1);opacity:1}30%,65%{transform:translateX(-50%) scale(.02);opacity:0}}@keyframes chaos-charge{0%,100%{transform:translateX(-50%) scale(1)}40%{transform:translateX(-50%) scale(1.17) rotate(-8deg)}60%{transform:translateX(-50%) scale(.9) rotate(12deg)}75%{transform:translateX(-50%) scale(.8)}}@keyframes chaos-sleep{0%,100%{transform:translateX(-50%) rotate(0)}35%,70%{transform:translateX(-50%) rotate(17deg) translateY(10px)}}@keyframes chaos-slide{0%,100%{transform:translateX(-50%)}40%{transform:translateX(calc(-50% - 65px)) rotate(-12deg)}75%{transform:translateX(calc(-50% + 65px)) rotate(12deg)}}@keyframes chaos-victory{0%,100%{transform:translateX(-50%) scale(1)}30%{transform:translateX(-50%) translateY(-30px) scale(1.12)}60%{transform:translateX(-50%) rotate(14deg) scale(1.12)}}@media(prefers-reduced-motion:reduce){.chaos-actor{animation:none!important}}
+.cheer .chaos-stage{min-height:0;height:100%;width:48%;overflow:visible}
+.cheer .chaos-actor{width:auto;height:100%;bottom:0}
+.cheer .chaos-actor img{height:100%;width:auto;max-width:none;object-fit:contain}
+.cheer .chaos-bubble{top:-14%;font:800 .95rem/1.25 var(--font);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);white-space:nowrap;max-width:none}
+.fx.chaos-big{left:0;right:0;top:12%;height:60vh}
+.fx.chaos-big .chaos-actor{width:min(60vw,300px)}
+.fx.chaos-big .chaos-bubble{font:800 1.2rem/1.3 var(--font);border:4px solid var(--ink)}
 .cheer img{height:100%;max-width:40%;object-fit:contain;animation:bob 1.8s ease-in-out infinite;transform-origin:50% 100%}
 .cheer img:nth-child(2){animation-delay:-.9s}
 .cheer.yay img{animation:yay .5s ease-out 2}
@@ -348,6 +357,50 @@ a.btn{text-decoration:none}
 <canvas id="fw"></canvas>
 
 <script>
+/* ================================================================
+   0) ChaosCharacter（もらった モジュール：12種類の動き＋セリフ）
+   ================================================================ */
+/* Reusable browser module: load after character.css and after the stage exists. */
+(function(global){
+  'use strict';
+  const motions={idle:2600,dance:3780,jump:2600,spin:2200,fall:2500,shake:2400,bow:2800,vanish:2800,charge:2800,sleep:4000,slide:2500,victory:2400};
+  const lines={dance:['見よ！この謎の踊り！','宇宙との交信中'],jump:['天井に用事がある！','重力、休め！'],spin:['方向性を見失った！'],fall:['床が襲ってきた！'],shake:['これは計画通りだ！'],bow:['突然ですが謝罪します'],vanish:['今のは見なかったことに'],charge:['必殺……不発！'],sleep:['起きてます。たぶん。'],slide:['横移動こそ正義！'],victory:['何もしてないけど優勝！']};
+  function create(options={}){
+    const stage=typeof options.stage==='string'?document.querySelector(options.stage):options.stage;
+    if(!stage)throw new Error('ChaosCharacter: stage element not found');
+    stage.classList.add('chaos-stage');
+    const actor=document.createElement('div');actor.className='chaos-actor';actor.dataset.motion='idle';
+    const img=document.createElement('img');img.src=options.image||'character.jpg';img.alt=options.alt||'キャラクター';img.draggable=false;actor.appendChild(img);
+    const bubble=document.createElement('div');bubble.className='chaos-bubble';bubble.setAttribute('aria-live','polite');
+    stage.append(actor,bubble);
+    let currentTimer=null,autoTimer=null,token=0,auto=false,destroyed=false,last='';
+    const names=Object.keys(motions).filter(x=>x!=='idle');
+    const rand=(a)=>a[Math.floor(Math.random()*a.length)];
+    function idle(){actor.dataset.motion='idle';bubble.classList.remove('is-visible')}
+    function play(name='dance',text){
+      if(destroyed||!motions[name])return false;
+      ++token;const mine=token;clearTimeout(currentTimer);clearTimeout(autoTimer);
+      actor.dataset.motion='';void actor.offsetWidth;actor.dataset.motion=name;
+      if(name!=='idle'){
+        bubble.textContent=text??rand(lines[name]||['なんだこれは！']);bubble.classList.add('is-visible');
+      }else bubble.classList.remove('is-visible');
+      last=name;
+      currentTimer=setTimeout(()=>{if(mine!==token||destroyed)return;idle();if(auto)schedule()},motions[name]);
+      return true;
+    }
+    function schedule(){
+      clearTimeout(autoTimer);if(!auto||destroyed)return;
+      autoTimer=setTimeout(()=>{let pool=names.filter(x=>x!==last);play(rand(pool))},1200+Math.random()*3300);
+    }
+    function start(){if(destroyed)return;auto=true;schedule()}
+    function stop(){auto=false;clearTimeout(autoTimer);clearTimeout(currentTimer);++token;idle()}
+    function destroy(){stop();destroyed=true;actor.remove();bubble.remove()}
+    function tap(){play(rand(names.filter(x=>x!==last)))}
+    actor.addEventListener('click',tap);
+    return {play,start,stop,destroy,motions:Object.keys(motions),element:actor};
+  }
+  global.ChaosCharacter={create};
+})(window);
 /* ================================================================
    1) ロジック（画面から独立）：問題生成・選択肢・ヒント・星
    ================================================================ */
@@ -543,6 +596,7 @@ const imgOf = (m, pose = 'normal') => {
   const has = !!m.poses?.[pose];
   return `<img src="${has ? m.poses[pose] : m.src}" alt="" class="pose ${pose}${has ? '' : ' fb'}" data-name="${m.name.replace(/"/g, '')}">`;
 };
+const imgOfSrc = (m, pose) => m.poses?.[pose] || m.src;
 // 表示中の 画像の ポーズを きりかえる（画像が あれば 差しかえ、なければ 動きで 表情を つくる）
 function setPose(root, pose){
   root.querySelectorAll('img.pose').forEach(img => {
@@ -603,11 +657,16 @@ function startStudy(type){
   S = {id:Math.random(), type, n:0, first:true, firstOk:0, misses:0, locked:false};
   buildScene(pick(['bg-meadow', 'bg-forest', 'bg-sky', 'bg-desert']));
   const cs = shuffle(PARTY.filter(m => !isVillain(m))).slice(0, 2);
-  $('cheer').innerHTML = cs.map(imgOf).join('');
+  $('cheer').innerHTML = ''; S.chars = cs.map(m => {
+    const st = document.createElement('div'); $('cheer').append(st);
+    const c = ChaosCharacter.create({stage:st, image:m.src, alt:m.name});
+    const img = c.element.querySelector('img'); img.classList.add('pose', 'normal'); img.dataset.name = m.name;   // ポーズの 差しかえにも 対応
+    return c;
+  });
   show('study');
   nextQuestion();
 }
-$('quit').onclick = () => { endShow(); stopClip(); stopFireworks(); S = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); show('menu'); };
+$('quit').onclick = () => { (S && S.chars || []).forEach(c => c.destroy()); endShow(); stopClip(); stopFireworks(); S = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); show('menu'); };
 function renderProg(){
   $('prog').innerHTML = Array.from({length:TOTAL}, (_, i) => `<i class="${i < S.n ? 'done' : i === S.n ? 'now' : ''}"></i>`).join('');
   const q = Math.min(S.n + 1, TOTAL);
@@ -643,7 +702,7 @@ function answer(btn, v){
 }
 function wrong(){
   S.misses++; S.first = false;
-  sfx('miss'); setPose($('cheer'), 'surprised'); replay($('cheer'), 'sad'); later(() => setPose($('cheer'), 'normal'), 900);
+  sfx('miss'); setPose($('cheer'), 'surprised'); chaosPlay(['fall', 'shake', 'bow'], t('あれれ〜？', 'あれれ〜？')); later(() => setPose($('cheer'), 'normal'), 900);
   const h = Logic.hint(S.p);
   if(h){
     let html = `💡 ${h.text}`;
@@ -656,13 +715,17 @@ function wrong(){
 function correct(){
   if(S.first) S.firstOk++;
   S.n++; renderProg();
-  sfx('ding'); sceneFx('pulse'); setPose($('cheer'), 'happy'); replay($('cheer'), 'yay'); later(() => setPose($('cheer'), 'normal'), 1000);
+  sfx('ding'); sceneFx('pulse'); setPose($('cheer'), 'happy'); chaosPlay(['victory', 'dance', 'jump', 'spin', 'slide', 'charge'], AGE < 5 ? pick(['やったー！', 'すごーい！', 'せいかい！']) : undefined); later(() => setPose($('cheer'), 'normal'), 1000);
   if(S.n >= TOTAL){ later(finalReward, 700); return; }
   if(S.n % BIG_EVERY === 0){ later(() => bigShow(nextQuestion), 500); return; }
   quickPop();
   later(nextQuestion, 1100);
 }
 
+// 応援キャラを ChaosCharacter の 動きで 反応させる（4さいは ひらがなの セリフ）
+function chaosPlay(names, text){
+  (S && S.chars || []).forEach((c, i) => { const n = pick(names); setTimeout(() => c.play(n, text ?? (AGE < 5 ? pick(['わーい！', 'えへへ']) : undefined)), i * 150); });
+}
 /* ---- 筆算（一の位から1けたずつ） ---- */
 function renderHissan(){
   const p = S.p, D = String(p.ans).length;
@@ -783,6 +846,9 @@ const CRAZY = {
     word(t('キャラが ふってきた！', 'キャラが 降ってきた！')); sfx('whoosh2'); },
   face(){ const m = member(); if(!m) return CRAZY.upside(); fxAdd('face', imgOf(m, 'funny'), 1900); setTimeout(() => { word('ドアップ！'); sfx('boing'); }, 400); },
   upside(){ document.body.classList.add('upside'); word('さかさま〜！'); sfx('whoosh2'); setTimeout(() => document.body.classList.remove('upside'), 1900); },
+  chaos(){ const m = member(); if(!m) return CRAZY.jelly();
+    const d = fxAdd('chaos-big', '', 2000); const c = ChaosCharacter.create({stage:d, image:imgOfSrc(m, 'funny'), alt:m.name});
+    c.play(pick(['vanish', 'charge', 'fall', 'spin', 'shake']), AGE < 5 ? pick(['へんしーん！', 'ひっさつわざ……ふはつ！']) : undefined); sfx('boing'); },
   jelly(){ document.body.classList.add('jelly'); word('ぐにゃ〜ん！'); sfx('boing'); setTimeout(() => document.body.classList.remove('jelly'), 1900); },
 };
 let showTimers = [], showDone = null;
