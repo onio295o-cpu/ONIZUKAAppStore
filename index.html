@@ -293,6 +293,15 @@ a.btn{text-decoration:none}
 .chars .cn{width:100%;font:inherit;font-size:.8rem;text-align:center;border:2px solid var(--ink2);border-radius:8px;padding:2px;background:#fff;color:var(--ink)}
 .chars .del{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;border:3px solid var(--ink);font-size:.9rem;line-height:1}
 </style>
+<link rel="stylesheet" href="volleyball/story.css">
+<style>
+#vb{position:fixed;inset:0;z-index:60;background:#08101f;display:flex;flex-direction:column;justify-content:center}
+#vb .app{max-width:none;width:100%;padding:0;margin:0}
+#vb .header,#vb .controls,#vb .seek,#vb .scene-row,#vb .lower,#vb .jointpanel,#vb .footer{display:none!important}
+#vb .screen{width:100%!important;height:auto!important;aspect-ratio:1000/610!important;max-height:100dvh;margin:auto;border:0;border-radius:0}
+@media (orientation:landscape){#vb .screen{width:auto!important;height:100dvh!important}}
+#vbSkip{position:absolute;right:12px;bottom:14px;z-index:9;font-size:1rem;padding:10px 16px}
+</style>
 </head>
 <body>
 
@@ -361,11 +370,13 @@ a.btn{text-decoration:none}
 <div id="fxl"></div>
 <div id="showveil" class="showveil hide"><button class="btn ghost" id="showSkip">スキップ ▶▶</button></div>
 <div id="clipov" class="clipov hide"></div>
+<div id="vb" class="hide"><main class="app"><header class="header"></header><section class="screen" aria-label="アニメーション"><div class="actorhost" id="actorhost"></div><div class="shade" id="shade"></div><div class="bobobo-holder" id="bobobo-holder"></div><div class="scene-gloss"></div><div class="info"><div class="scene-label" id="sceneTitle"></div><div class="counter" id="counter"></div></div><div class="dialogue"><span id="dialogText"></span></div><div class="flash" id="flash"></div></section><section class="controls"><button id="playBtn"></button><button id="restartBtn"></button><button id="nextBtn"></button><button id="soundBtn"></button><span id="timecode"></span></section><input id="seekbar" class="seek" type="range" min="0" max="60" step="0.01" value="0"><nav id="sceneRow" class="scene-row"></nav><div class="lower"><select id="speed"><option value="1" selected>1</option></select><button id="loopBtn"></button></div><details class="jointpanel"><select id="who"><option value="n">n</option><option value="g">g</option></select><button id="resetJoint"></button><div id="jointGrid"></div></details></main><button class="btn ghost" id="vbSkip">スキップ ▶▶</button></div>
 <div id="overlay" class="overlay hide"><div class="panel result" id="resultBox"></div></div>
 <canvas id="fw"></canvas>
 
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
+<script src="volleyball/story.js"></script>
 <script>
 /* ================================================================
    0) ChaosCharacter（もらった モジュール：12種類の動き＋セリフ）
@@ -736,7 +747,7 @@ function startStudy(type){
   show('study');
   nextQuestion();
 }
-$('quit').onclick = () => { (S && S.chars || []).forEach(c => c.destroy()); endShow(); stopClip(); stopFireworks(); S = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); show('menu'); };
+$('quit').onclick = () => { if(vbDone){ vbDone = null; endStory(); } (S && S.chars || []).forEach(c => c.destroy()); endShow(); stopClip(); stopFireworks(); S = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); show('menu'); };
 function renderProg(){
   $('prog').innerHTML = Array.from({length:TOTAL}, (_, i) => `<i class="${i < S.n ? 'done' : i === S.n ? 'now' : ''}"></i>`).join('');
   const q = Math.min(S.n + 1, TOTAL);
@@ -959,6 +970,7 @@ function finalReward(){
   const after = () => { if(S && S.id === id) result(); };
   word(t('ぜんぶ せいかい！', '全問 正解！')); sfx('win'); confetti(40);
   setTimeout(() => {
+    if(S && S.id === id && playStory(after)) return;
     fireworks(15000); showDone = after; $('showveil').classList.remove('hide');
     const keys = shuffle(Object.keys(CRAZY));
     const bb = bobobo('hyper', 6300);
@@ -966,6 +978,23 @@ function finalReward(){
     showTimers.push(setTimeout(endShow, 15000));
   }, 1300);
 }
+// 12問クリア：超次元バレー（約69秒・スキップ可）
+let vbTimer = null, vbDone = null;
+function playStory(done){
+  if(!window.VolleyStory) return false;
+  if(!window.StoryApp){ try{ VolleyStory(); }catch(e){ console.error(e); return false; } }
+  vbDone = done; $('vb').classList.remove('hide');
+  StoryApp.setSound(!!save.sound); StoryApp.restart();
+  vbTimer = setInterval(() => { const s = StoryApp.getState(); if(s.time >= StoryApp.total - .05 || !s.playing) endStory(); }, 300);
+  return true;
+}
+function endStory(){
+  clearInterval(vbTimer); vbTimer = null;
+  if(window.StoryApp) StoryApp.pause();
+  $('vb').classList.add('hide');
+  const d = vbDone; vbDone = null; d && d();
+}
+$('vbSkip').onclick = () => { sfx('tap'); endStory(); };
 function result(){
   stopFireworks();
   const ps = shuffle(PARTY).slice(0, 3).map(imgOf).join('');
