@@ -234,6 +234,19 @@ body.jelly #study{animation:jelly 1.9s ease-in-out}
 body.shake #study{animation:sshake .12s linear 10}
 @keyframes sshake{25%{transform:translate(-6px,3px)}75%{transform:translate(6px,-3px)}}
 
+/* ===== ポーズ：画像が ない ときは 動きで 表情を つくる ===== */
+img.pose{transition:filter .15s}
+img.pose.happy.fb{animation:fbHappy .5s ease-out}
+@keyframes fbHappy{40%{transform:translateY(-14%) scale(1.06,.94) rotate(-4deg)}70%{transform:scale(.97,1.04) rotate(3deg)}}
+img.pose.surprised.fb{animation:fbSurp .45s cubic-bezier(.3,1.8,.5,1);filter:saturate(1.3) brightness(1.08)}
+@keyframes fbSurp{0%{transform:scale(1)}30%{transform:scale(.85,1.2) translateY(-8%)}100%{transform:scale(1.04)}}
+img.pose.attack.fb{animation:fbAtk .5s ease-out;filter:drop-shadow(0 0 10px rgba(255,90,60,.8))}
+@keyframes fbAtk{30%{transform:translateX(8%) rotate(8deg) scale(1.1)}}
+img.pose.funny.fb{animation:fbFunny .9s ease-in-out infinite;filter:hue-rotate(25deg) saturate(1.4)}
+@keyframes fbFunny{0%,100%{transform:scale(1,1)}25%{transform:scale(1.25,.75) skewX(10deg)}50%{transform:scale(.8,1.25)}75%{transform:scale(1.15,.85) skewX(-10deg)}}
+.chars .slots{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;margin-top:3px}
+.chars .slots span{font-size:.6rem;padding:0 4px;border-radius:6px;background:#e8e2d8;color:#9a8f84}
+.chars .slots span.on{background:var(--green);color:#fff}
 /* ===== 動画 ===== */
 .clipov{position:fixed;inset:0;z-index:40;background:rgba(20,14,10,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px}
 .clipov iframe{width:min(100%,720px);aspect-ratio:16/9;border:var(--line);border-radius:16px;background:#000}
@@ -315,7 +328,7 @@ a.btn{text-decoration:none}
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
       <label class="btn">📁 画像を 読み込む<input type="file" id="charFiles" accept="image/*" multiple hidden></label>
       <a class="btn sub" href="cutout.html">✂️ 画像を 切り抜く</a>
-      <p class="note">読み込んだ画像は この端末に保存され、ごほうびの演出に登場します。<br>名前に「ボーボボ」が入った画像は、てき役になります。</p>
+      <p class="note">ファイル名の 最後に「_喜ぶ」「_驚く」「_攻撃」「_変顔」を つけると、その ポーズで 登場します（例：キュアハート_喜ぶ.png）。<br>ポーズの 画像が ない ときは、通常の 画像を 動かして 表情を 出します。</p>
     </div>
   </div>
 </section>
@@ -480,16 +493,30 @@ const isVillain = m => /ボーボボ|ぼーぼぼ|わるもの|てき|敵/.test(
 const FOLDER = ['キュアハート.png','キュアダイヤモンド (1).png','キュアロゼった.png','image_main05 (1).png','キュアあるかな.png',
   'キュアアンサー.png','キュアエクレール.png','キュアフローラ.png','キュアマーメイド.png','キュアミススティック.png'];
 const PARTY = [];
-const nameOf = f => f.replace(/\.[^.]+$/, '').replace(/\s*\(\d+\)$/, '').trim();
-function addMember(name, src){
+// ポーズ：ファイル名の さいごに「_喜ぶ」などを つけると その ポーズの 画像に なる（なければ 通常）
+const POSES = {normal:'通常', happy:'喜ぶ', surprised:'驚く', attack:'攻撃', funny:'変顔'};
+const POSE_WORDS = {normal:/(通常|ふつう)$/, happy:/(喜ぶ|よろこぶ)$/, surprised:/(驚く|おどろく)$/, attack:/(攻撃|こうげき)$/, funny:/(変顔|へんがお)$/};
+function parseName(f){
+  let n = f.replace(/\.[^.]+$/, '').replace(/\s*\(\d+\)$/, '').trim(), pose = 'normal';
+  for(const k in POSE_WORDS){ const m = n.match(new RegExp('[_＿\\- ]?' + POSE_WORDS[k].source)); if(m){ pose = k; n = n.slice(0, m.index).trim(); break; } }
+  return {name:n, pose};
+}
+const nameOf = f => parseName(f).name;
+function addMember(name, src, pose = 'normal'){
   const i = new Image();
-  i.onload = () => { if(!PARTY.some(m => m.name === name)){ PARTY.push({name, src}); renderParty(); if(!$('home').classList.contains('hide')) renderHome(); } };
+  i.onload = () => {
+    let m = PARTY.find(x => x.name === name);
+    if(!m){ m = {name, poses:{}}; PARTY.push(m); }
+    if(!m.poses[pose]) m.poses[pose] = src;
+    m.src = m.poses.normal || Object.values(m.poses)[0];
+    renderParty(); if(!$('home').classList.contains('hide')) renderHome();
+  };
   i.src = src;
 }
 const CharDB = {
   open(){ return this.p = this.p || new Promise(res => {
-    try{ const r = indexedDB.open('tashizan-chars', 1);
-      r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath:'name'});
+    try{ const r = indexedDB.open('tashizan-chars2', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath:'key'});
       r.onsuccess = () => res(r.result); r.onerror = () => res(null);
     }catch(e){ res(null); } }); },
   async all(){ const d = await this.open(); if(!d) return [];
@@ -497,19 +524,34 @@ const CharDB = {
   async put(rec){ const d = await this.open(); if(!d) return;
     return new Promise(res => { try{ const t = d.transaction('chars', 'readwrite'); t.objectStore('chars').put(rec); t.oncomplete = t.onerror = res; }catch(e){ res(); } }); },
 };
-CharDB.all().then(rs => rs.forEach(r => r.data && addMember(r.name, r.data)));
-FOLDER.forEach(f => addMember(nameOf(f), 'キャラクター/' + f));
+CharDB.all().then(rs => rs.forEach(r => r.data && addMember(r.name, r.data, r.pose || 'normal')));
+try{ const r = indexedDB.open('tashizan-chars', 1); r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath:'name'});   // 前の版で 読み込んだ 画像も つかう
+  r.onsuccess = () => { try{ const q = r.result.transaction('chars').objectStore('chars').getAll(); q.onsuccess = () => (q.result || []).forEach(x => x.data && addMember(x.name, x.data)); }catch(e){} }; }catch(e){}
+FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, 'キャラクター/' + f, pose); });
 document.getElementById('charFiles').onchange = async e => {
   for(const f of [...e.target.files]){
     const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.onerror = () => r(null); fr.readAsDataURL(f); });
     if(!data) continue;
-    const name = nameOf(f.name); addMember(name, data); await CharDB.put({name, data});
+    const {name, pose} = parseName(f.name); addMember(name, data, pose); await CharDB.put({key:name + '|' + pose, name, pose, data});
   }
   e.target.value = '';
 };
 const heroes = () => PARTY.filter(m => !isVillain(m));
 const villains = () => PARTY.filter(isVillain);
-const imgOf = m => m ? `<img src="${m.src}" alt="">` : '';
+const imgOf = (m, pose = 'normal') => {
+  if(!m) return '';
+  const has = !!m.poses?.[pose];
+  return `<img src="${has ? m.poses[pose] : m.src}" alt="" class="pose ${pose}${has ? '' : ' fb'}" data-name="${m.name.replace(/"/g, '')}">`;
+};
+// 表示中の 画像の ポーズを きりかえる（画像が あれば 差しかえ、なければ 動きで 表情を つくる）
+function setPose(root, pose){
+  root.querySelectorAll('img.pose').forEach(img => {
+    const m = PARTY.find(x => x.name === img.dataset.name); if(!m) return;
+    const has = !!m.poses[pose];
+    img.src = has ? m.poses[pose] : m.src;
+    img.className = `pose ${pose}${has ? '' : ' fb'}`; void img.offsetWidth;
+  });
+}
 const heroHTML = () => imgOf(pick(heroes().length ? heroes() : PARTY));
 
 /* ================================================================
@@ -542,7 +584,11 @@ function renderMenu(){
 function renderParty(){
   const l = $('charList');
   l.innerHTML = PARTY.length ? '' : '<p class="note" style="grid-column:1/-1">まだ キャラが いません。<br>画像を 読み込んでください。</p>';
-  PARTY.forEach(m => { const d = document.createElement('div'); d.className = 'panel c'; d.innerHTML = `<img src="${m.src}" alt=""><div></div>`; d.lastChild.textContent = m.name; l.append(d); });
+  PARTY.forEach(m => {
+    const d = document.createElement('div'); d.className = 'panel c';
+    d.innerHTML = `<img src="${m.src}" alt=""><div class="cn"></div><div class="slots">${Object.keys(POSES).map(k => `<span class="${m.poses[k] ? 'on' : ''}">${POSES[k]}</span>`).join('')}</div>`;
+    d.querySelector('.cn').textContent = m.name; l.append(d);
+  });
 }
 function renderSettings(){ document.querySelectorAll('[data-set]').forEach(x => x.classList.toggle('on', !!save[x.dataset.set])); }
 document.querySelectorAll('[data-set]').forEach(x => x.onclick = () => { save[x.dataset.set] = !save[x.dataset.set]; Save.store(); renderSettings(); sfx('tap'); });
@@ -597,7 +643,7 @@ function answer(btn, v){
 }
 function wrong(){
   S.misses++; S.first = false;
-  sfx('miss'); replay($('cheer'), 'sad');
+  sfx('miss'); setPose($('cheer'), 'surprised'); replay($('cheer'), 'sad'); later(() => setPose($('cheer'), 'normal'), 900);
   const h = Logic.hint(S.p);
   if(h){
     let html = `💡 ${h.text}`;
@@ -610,7 +656,7 @@ function wrong(){
 function correct(){
   if(S.first) S.firstOk++;
   S.n++; renderProg();
-  sfx('ding'); sceneFx('pulse'); replay($('cheer'), 'yay');
+  sfx('ding'); sceneFx('pulse'); setPose($('cheer'), 'happy'); replay($('cheer'), 'yay'); later(() => setPose($('cheer'), 'normal'), 1000);
   if(S.n >= TOTAL){ later(finalReward, 700); return; }
   if(S.n % BIG_EVERY === 0){ later(() => bigShow(nextQuestion), 500); return; }
   quickPop();
@@ -659,6 +705,7 @@ function fxAdd(cls, html, ms, style){
 }
 const member = () => PARTY.length ? pick(PARTY) : null;
 const memberHTML = imgOf;
+const POSE_OF = {'p-tobi':'attack','p-kyodai':'surprised','p-run':'happy','p-manga':'surprised','p-hyokko':'happy','p-kuru':'happy','p-pyon':'happy','p-buni':'funny','p-ufo':'surprised','p-parade':'happy','q-bottom':'happy','q-left':'happy','q-right':'happy','q-zoom':'happy'};
 const SAYS = ['やったね！', 'てんさい！', 'すごーい！', 'ナイス！', 'かんぺき！', 'いえーい！'];
 function word(t, cls){ fxAdd('fx-word' + (cls ? ' ' + cls : ''), '', 1400).textContent = t; }
 function confetti(n){
@@ -674,17 +721,18 @@ function sparks(x, y, n, ch){
 function sceneFx(cls){ const sc = $('scene'); sc.classList.remove(cls); void sc.offsetWidth; sc.classList.add(cls); setTimeout(() => sc.classList.remove(cls), 800); }
 function actor(cls, m, extra, ms){
   if(!m) return fxAdd('hide', '', 10);
-  const a = fxAdd('fx-actor ' + cls, memberHTML(m) + (extra || ''), ms || 2000);
+  const a = fxAdd('fx-actor ' + cls, imgOf(m, POSE_OF[cls.split(' ')[0]] || 'normal') + (extra || ''), ms || 2000);
   return a;
 }
 const PATTERNS = {
-  tobi(){ actor('p-tobi', member(), `<div class="say">${pick(SAYS)}</div>`, 1800); sfx('whoosh2'); setTimeout(() => { sfx('land'); sparks(50, 48, 8, '💨'); }, 680); },
+  tobi(){ const a = actor('p-tobi', member(), `<div class="say">${pick(SAYS)}</div>`, 1800); sfx('whoosh2'); setTimeout(() => { sfx('land'); sparks(50, 48, 8, '💨'); setPose(a, 'happy'); }, 680); },
   yaburi(){
     const d = fxAdd('p-yaburi', `<svg class="hole" viewBox="0 0 200 200"><path d="M100 4 L118 52 L170 30 L150 80 L196 100 L150 120 L170 170 L118 148 L100 196 L82 148 L30 170 L50 120 L4 100 L50 80 L30 30 L82 52Z" fill="#fff8e7" stroke="#3b2a1e" stroke-width="6" stroke-linejoin="round"/></svg>`, 1900, 'inset:0');
-    d.append(Object.assign(document.createElement('div'), {className:'fx fx-actor', innerHTML:memberHTML(member())}));
+    const ya = Object.assign(document.createElement('div'), {className:'fx fx-actor', innerHTML:imgOf(member(), 'attack')}); d.append(ya);
+    setTimeout(() => setPose(ya, 'happy'), 900);
     word('バリーン！'); sfx('crash'); sceneFx('flash');
   },
-  kyodai(){ actor('p-kyodai', member(), '', 1900); setTimeout(() => { word('ででーん！'); sfx('boing'); }, 500); },
+  kyodai(){ const a = actor('p-kyodai', member(), '', 1900); setPose(a, 'normal'); setTimeout(() => { word('ででーん！'); sfx('boing'); setPose(a, 'surprised'); }, 500); setTimeout(() => setPose(a, 'funny'), 1200); },
   run(){
     const ms = shuffle(PARTY).slice(0, 3); const list = ms;
     list.forEach((m, i) => setTimeout(() => { actor('p-run', m, i === 0 ? `<div class="say">わーい！</div>` : '', 2000); sfx('pop'); }, i * 260));
@@ -705,7 +753,7 @@ const PATTERNS = {
     replay($('enemy'), 'yank'); setTimeout(() => $('enemy').classList.remove('yank'), 1600);
     word('はなげ しんけん！？'); sfx('whoosh2'); setTimeout(() => sfx('boing'), 700);
   },
-  ufo(){ fxAdd('ufo', '🛸', 2000); fxAdd('beam', '', 2000); actor('p-ufo', member(), '', 2000); sfx('ufo'); setTimeout(() => word('ただいま〜'), 1500); },
+  ufo(){ fxAdd('ufo', '🛸', 2000); fxAdd('beam', '', 2000); const a = actor('p-ufo', member(), '', 2000); sfx('ufo'); setTimeout(() => { word('ただいま〜'); setPose(a, 'happy'); sfx('land'); }, 1500); },
   parade(){
     const list = shuffle(PARTY).slice(0, 5); if(!list.length) return;
     const w = 100 / list.length;
@@ -731,9 +779,9 @@ const CRAZY = {
   yaburi:PATTERNS => PATTERNS.yaburi(), kyodai:P => P.kyodai(), run:P => P.run(), manga:P => P.manga(), kuru:P => P.kuru(),
   pyon:P => P.pyon(), buni:P => P.buni(), ufo:P => P.ufo(), tobi:P => P.tobi(),
   rain(){ const ms = PARTY.length ? PARTY : []; for(let i = 0; i < 9 && ms.length; i++)
-      fxAdd('rain', imgOf(pick(ms)), 2600, `--x:${rnd(-5, 80)}%;--t:${(1.4 + Math.random() * .6).toFixed(2)}s;--d:${(i * .12).toFixed(2)}s;--r:${rnd(-540, 540)}deg`);
+      fxAdd('rain', imgOf(pick(ms), pick(['surprised', 'happy', 'funny'])), 2600, `--x:${rnd(-5, 80)}%;--t:${(1.4 + Math.random() * .6).toFixed(2)}s;--d:${(i * .12).toFixed(2)}s;--r:${rnd(-540, 540)}deg`);
     word(t('キャラが ふってきた！', 'キャラが 降ってきた！')); sfx('whoosh2'); },
-  face(){ const m = member(); if(!m) return CRAZY.upside(); fxAdd('face', imgOf(m), 1900); setTimeout(() => { word('ドアップ！'); sfx('boing'); }, 400); },
+  face(){ const m = member(); if(!m) return CRAZY.upside(); fxAdd('face', imgOf(m, 'funny'), 1900); setTimeout(() => { word('ドアップ！'); sfx('boing'); }, 400); },
   upside(){ document.body.classList.add('upside'); word('さかさま〜！'); sfx('whoosh2'); setTimeout(() => document.body.classList.remove('upside'), 1900); },
   jelly(){ document.body.classList.add('jelly'); word('ぐにゃ〜ん！'); sfx('boing'); setTimeout(() => document.body.classList.remove('jelly'), 1900); },
 };
