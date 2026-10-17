@@ -226,12 +226,14 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 @keyframes hgCam{0%{transform:rotateY(-16deg) scale(1.08)}30%{transform:rotateY(9deg) rotateX(5deg)}55%{transform:rotateY(-7deg) scale(1.16)}75%{transform:rotateY(5deg) scale(1.05)}100%{transform:none}}
 .hg-bb{position:absolute;left:-8%;width:64%;top:14%;bottom:4%}
 .hg-hair{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3}
-.hg-t{position:absolute;left:58%;top:44%;width:40%;height:44%;z-index:2;transition:left .8s cubic-bezier(.6,-.35,.7,1),top .8s cubic-bezier(.6,-.35,.7,1),transform .8s,opacity .2s;transform-origin:50% 0}
-.hg-t img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 10px #22e4ff) drop-shadow(0 6px 3px rgba(0,0,0,.5))}
+.hg-t{position:absolute;left:52%;top:30%;width:46%;height:58%;z-index:2;transition:left .8s cubic-bezier(.6,-.35,.7,1),top .8s cubic-bezier(.6,-.35,.7,1),transform .8s,opacity .2s;transform-origin:50% 0}
+.hg-t.kid{top:40%;height:48%;width:38%;left:56%}
+.hg-t .cw{position:absolute;inset:0;filter:drop-shadow(0 0 10px #22e4ff) drop-shadow(0 6px 3px rgba(0,0,0,.5))}
+.hg-t.upside .cw{transform:rotate(180deg)}
 .hg-t.in{animation:hgIn .6s cubic-bezier(.2,1.4,.4,1) both}
 @keyframes hgIn{from{transform:translateX(90vw) rotate(25deg)}}
-.hg-t.shake img{animation:wShake .22s infinite}
-.hg-t.spin img{animation:hgSpin .3s linear infinite}
+.hg-t.shake .cw{animation:wShake .22s infinite}
+.hg-t.spin .cw{animation:hgSpin .3s linear infinite}
 @keyframes hgSpin{to{transform:rotateY(360deg)}}
 .hg-t.swing{animation:hgSwing 1s ease-in-out infinite alternate}
 @keyframes hgSwing{from{transform:rotate(-38deg)}to{transform:rotate(38deg)}}
@@ -431,6 +433,7 @@ a.btn{text-decoration:none}
 
 <script src="chars/precure.js"></script>
 <script src="chars/ng.js"></script>
+<script src="chars/cutout.js"></script>
 <script src="chars/whip.js"></script>
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
@@ -660,7 +663,7 @@ const CharDB = {
 };
 if(window.NG_IMAGES){   // のび太・ジャイアンも ショーの キャラに
   const N = window.NG_IMAGES;
-  [['のび太', {normal:'n_shout', happy:'n_panic', surprised:'n_shock', funny:'n_cry', attack:'n_run'}], ['ジャイアン', {normal:'g_angry', happy:'g_laugh', surprised:'g_tilt', funny:'g_daze', attack:'g_yell'}]]
+  [['のび太', {normal:'n_normal', happy:'n_happy', surprised:'n_surprised', funny:'n_funny', attack:'n_attack'}], ['ジャイアン', {normal:'g_normal', happy:'g_happy', surprised:'g_surprised', funny:'g_funny', attack:'g_attack'}]]
     .forEach(([name, ps]) => Object.entries(ps).forEach(([pose, k]) => N[k] && addMember(name, N[k], pose)));
 }
 FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, (window.CHAR_IMAGES || {})[f] || 'キャラクター/' + f, pose); });   // 埋めこみ画像（chars/precure.js）を つかう
@@ -948,13 +951,17 @@ function crew(d, n){
 // 鼻毛劇場：ボーボボの はなげに のび太が からまる／ジャイアンが はなに すいこまれる
 const NG = window.NG_IMAGES || {};
 function hanage(kind){
-  if(!window.BoboboAnimator || !NG.g_angry) return false;
+  if(!window.BoboboAnimator || !window.CutoutActor) return false;
   const D = kind === 'g' ? 7800 : 6600, isG = kind === 'g';
-  const d = fxAdd('hg', `<div class="hg-grid"></div><div class="hg-cam"><div class="hg-bb"></div><div class="hg-t in"><img alt=""></div><canvas class="hg-hair"></canvas></div><div class="hg-speed"></div>
+  const d = fxAdd('hg', `<div class="hg-grid"></div><div class="hg-cam"><div class="hg-bb"></div><div class="hg-t in"><div class="cw"></div></div><canvas class="hg-hair"></canvas></div><div class="hg-speed"></div>
     <div class="hg-hud"><div>ボーボボ<div class="hg-hp"><i></i></div></div><span class="hg-vs">VS</span><div class="r">${isG ? 'ジャイアン' : 'のび太'}<div class="hg-hp"><i class="hp2"></i></div></div></div><div class="hg-combo"></div><div class="hg-scan"></div>`, D);
-  const cam = d.querySelector('.hg-cam'), host = d.querySelector('.hg-bb'), tg = d.querySelector('.hg-t'), img = tg.querySelector('img'), cv = d.querySelector('.hg-hair');
+  const cam = d.querySelector('.hg-cam'), host = d.querySelector('.hg-bb'), tg = d.querySelector('.hg-t'), cw = tg.querySelector('.cw'), cv = d.querySelector('.hg-hair');
   const r = BoboboAnimator.create({target:host, autoplay:false, transparent:true, noLabel:true, style:'impact', speed:.7}); r.play('roar'); bbLive.push(r);
-  const pose = k => img.src = NG[k], hp = v => d.querySelector('.hp2').style.width = v + '%';
+  // のび太・ジャイアンは 切り抜きパーツで 関節ごとに 動く
+  if(!isG) tg.classList.add('kid');   // のび太は ボーボボより 小さめ
+  const actor = CutoutActor.create(CUTOUT_CONFIGS[isG ? 'gian' : 'nobita'], cw).speed(.75);
+  const MOVE = {g_angry:'怒鳴る', g_yell:'迫る', g_tilt:'びっくり', g_daze:'考える', n_run:'走る', n_shock:'驚き', n_upside:'おどおど', n_fly:'転びそう'};
+  const pose = k => { actor.play(MOVE[k]); tg.classList.toggle('upside', k === 'n_upside'); }, hp = v => d.querySelector('.hp2').style.width = v + '%';
   let combo = 0; const hit = n => { combo += n; d.querySelector('.hg-combo').textContent = combo + ' COMBO!'; };
   const el = (cls, html, css, ms = 1300) => { const e = document.createElement('div'); e.className = cls; e.innerHTML = html; if(css) e.style.cssText = css; d.append(e); setTimeout(() => e.remove(), ms); return e; };
   const bubbles = {};
