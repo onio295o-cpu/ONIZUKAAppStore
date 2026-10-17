@@ -87,7 +87,7 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 
 /* ===== バトル ===== */
 #battle .wrap{gap:14px}
-.arena{position:relative;height:33vh;min-height:210px;flex-shrink:0;border-radius:var(--r);overflow:hidden;border:var(--line);box-shadow:var(--pop);background:inherit}
+.arena{position:relative;height:36vh;min-height:220px;flex-shrink:0;overflow:visible}
 .enemy-box{position:absolute;right:5%;top:6%;width:46%;max-width:200px;text-align:center;z-index:1}
 .enemy-box .enemy{width:100%;margin-top:4px;animation:bob 1.4s ease-in-out infinite;transform-origin:50% 100%}
 .enemy-box .enemy.hit{animation:hit .45s}
@@ -141,6 +141,105 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:auto}
 .pad .btn{font-size:2.2rem;min-height:76px;padding:0;background:#fff}
 
+/* ===== 世界（背景レイヤー：空・太陽・雲・遠い山・地面・かざり） ===== */
+#battle{background:linear-gradient(var(--sky1),var(--sky2))}
+.scene{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
+.scene .sun{position:absolute;top:8%;right:9%;width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fffbe0,var(--sunc) 65%);
+  box-shadow:0 0 50px 20px var(--glow);animation:sunb 5s ease-in-out infinite}
+@keyframes sunb{50%{transform:scale(1.07)}}
+.scene .cloud{position:absolute;width:130px;height:40px;border-radius:40px;background:var(--cloud);animation:drift linear infinite}
+.scene .cloud::before,.scene .cloud::after{content:"";position:absolute;background:inherit;border-radius:50%}
+.scene .cloud::before{width:58px;height:58px;top:-28px;left:22px}.scene .cloud::after{width:42px;height:42px;top:-18px;left:68px}
+.scene .c1{top:12%;animation-duration:38s;animation-delay:-8s}.scene .c2{top:24%;transform:scale(.7);animation-duration:52s;animation-delay:-30s;opacity:.85}
+.scene .c3{top:6%;animation-duration:64s;animation-delay:-45s;opacity:.7}
+@keyframes drift{from{translate:-180px 0}to{translate:110vw 0}}
+.scene .hill{position:absolute;border-radius:50% 50% 0 0;border-top:4px solid rgba(59,42,30,.25)}
+.scene .h1{left:-30%;width:95%;height:30%;top:24%;background:var(--hill1);animation:breathe 9s ease-in-out infinite}
+.scene .h2{right:-30%;width:100%;height:32%;top:27%;background:var(--hill2);animation:breathe 11s ease-in-out infinite reverse}
+@keyframes breathe{50%{transform:translateY(4px)}}
+.scene .ground{position:absolute;left:-10%;right:-10%;top:38%;bottom:0;background:var(--ground);border-radius:40% 40% 0 0/40px 40px 0 0;border-top:5px solid rgba(59,42,30,.3)}
+.scene .deco span{position:absolute;top:var(--y);left:var(--x);font-size:var(--s);transform-origin:50% 100%;animation:sway 3s ease-in-out infinite alternate;animation-delay:var(--d)}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.scene.float .deco span{animation:floaty 4s ease-in-out infinite alternate;animation-delay:var(--d)}
+@keyframes floaty{to{transform:translateY(-14px)}}
+.scene.pulse .sun{animation:sunp .7s ease-out}
+@keyframes sunp{40%{transform:scale(1.35);box-shadow:0 0 90px 40px var(--glow)}}
+.scene.pulse .deco span{animation:hop .6s ease-out}
+@keyframes hop{40%{transform:translateY(-18px) scale(1.15)}}
+.scene.pulse .h1,.scene.pulse .h2{animation:jig .5s}
+@keyframes jig{30%{transform:scaleY(1.06)}60%{transform:scaleY(.97)}}
+.scene.flash::after{content:"";position:absolute;inset:0;background:#fff;animation:flash .5s ease-out forwards}
+@keyframes flash{from{opacity:.85}to{opacity:0}}
+#battle .wrap{z-index:1}
+.ground-shadow{position:absolute;bottom:-2px;width:70%;left:15%;height:16px;border-radius:50%;background:rgba(59,42,30,.22)}
+.hdr .coins{background:#fff;border:3px solid var(--ink);border-radius:99px;padding:2px 10px;font-size:1rem;min-width:86px;text-align:center;box-shadow:0 3px 0 var(--ink)}
+.hdr .coins.bump{animation:bump .4s}
+@keyframes bump{40%{transform:scale(1.25)}}
+
+/* ===== ごほうび演出レイヤー（操作のじゃまをしない） ===== */
+#fxl{position:fixed;inset:0;z-index:15;pointer-events:none;overflow:hidden}
+.fx{position:absolute}
+.fx img,.fx svg{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 8px 6px rgba(0,0,0,.3))}
+.fx-actor{width:min(46vw,230px);height:min(36vh,280px);left:50%;top:22%;margin-left:min(-23vw,-115px)}
+.fx-word{left:0;right:0;top:12%;text-align:center;font-size:clamp(1.9rem,10vw,3.6rem);color:var(--yellow);-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;
+  text-shadow:0 6px 0 var(--ink);animation:wordpop 1.3s cubic-bezier(.3,1.6,.5,1) forwards;white-space:nowrap}
+@keyframes wordpop{0%{transform:scale(0) rotate(-12deg)}25%{transform:scale(1.15) rotate(4deg)}40%{transform:scale(1) rotate(-2deg)}85%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
+.say{position:absolute;left:50%;top:-12%;transform:translateX(-50%);background:#fff;border:4px solid var(--ink);border-radius:18px;padding:4px 12px;font-size:1.1rem;white-space:nowrap;box-shadow:0 4px 0 var(--ink)}
+.say::after{content:"";position:absolute;left:50%;bottom:-12px;margin-left:-8px;border:8px solid transparent;border-top-color:var(--ink)}
+/* パターン */
+.p-tobi{animation:p-tobi 1.7s cubic-bezier(.25,.8,.35,1) forwards}
+@keyframes p-tobi{0%{transform:translate(-110vw,-30vh) rotate(-50deg) scale(.7)}40%{transform:translate(0,0) rotate(12deg) scale(1.15,.85)}52%{transform:scale(.9,1.12)}64%{transform:none}85%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-20px)}}
+.p-yaburi .hole{position:absolute;left:50%;top:30%;width:min(80vw,380px);height:min(80vw,380px);margin:min(-40vw,-190px) 0 0 min(-40vw,-190px);animation:hole 1.8s ease-out forwards}
+@keyframes hole{0%{transform:scale(0) rotate(-20deg)}18%{transform:scale(1.1) rotate(3deg)}25%{transform:scale(1)}80%{opacity:1}100%{opacity:0}}
+.p-yaburi .fx-actor{animation:p-yab 1.8s cubic-bezier(.2,.9,.3,1.3) forwards}
+@keyframes p-yab{0%,12%{transform:scale(.1);opacity:0}30%{transform:scale(1.35);opacity:1}45%{transform:scale(1.05) rotate(-4deg)}85%{opacity:1}100%{opacity:0;transform:scale(1.1)}}
+.p-kyodai{animation:p-kyo 1.9s cubic-bezier(.3,1.4,.5,1) forwards;transform-origin:50% 100%}
+@keyframes p-kyo{0%{transform:scale(.3) translateY(60%);opacity:0}20%{opacity:1;transform:scale(1)}50%{transform:scale(2.6)}62%{transform:scale(2.45) rotate(3deg)}80%{transform:scale(2.5) rotate(-2deg);opacity:1}100%{transform:scale(3.2);opacity:0}}
+.p-run{top:40%;animation:p-run 1.9s linear forwards}
+@keyframes p-run{0%{transform:translateX(70vw)}100%{transform:translateX(-90vw)}}
+.p-run img,.p-run svg{animation:runhop .28s ease-in-out infinite alternate}
+@keyframes runhop{from{transform:translateY(0) rotate(-6deg)}to{transform:translateY(-22px) rotate(6deg)}}
+.manga{inset:0;background:repeating-conic-gradient(from 0deg at 50% 45%,#fff 0 4deg,#e9e3d6 4deg 8deg);animation:manga 1.4s steps(1) forwards}
+@keyframes manga{0%{opacity:1}92%{opacity:1}100%{opacity:0}}
+.p-manga{animation:p-manga 1.4s forwards;filter:grayscale(1) contrast(1.6)}
+@keyframes p-manga{0%{transform:scale(2.4) rotate(-8deg)}10%{transform:scale(1.7) rotate(6deg)}20%,92%{transform:scale(1.8) rotate(-3deg)}100%{opacity:0}}
+.manga-word{color:#111!important;-webkit-text-stroke:0!important;text-shadow:4px 4px 0 #fff,-4px -4px 0 #fff!important;font-size:clamp(2.6rem,14vw,4.6rem)!important;letter-spacing:.06em}
+.p-hyokko{top:auto;bottom:-4vh;animation:p-hyo 1.8s ease-in-out forwards}
+@keyframes p-hyo{0%{transform:translateY(100%)}25%{transform:translateY(8%) rotate(-8deg)}40%{transform:translateY(12%) rotate(10deg)}55%{transform:translateY(8%) rotate(-6deg)}75%{transform:translateY(10%)}100%{transform:translateY(110%)}}
+.p-kuru{top:34%;animation:p-kuru 1.8s cubic-bezier(.4,0,.6,1) forwards}
+@keyframes p-kuru{0%{transform:translateX(-80vw) translateY(10vh) rotate(0)}50%{transform:translateX(0) translateY(-6vh) rotate(540deg)}100%{transform:translateX(90vw) translateY(10vh) rotate(1080deg)}}
+.p-pyon{top:44%;animation:p-pyonx 1.9s linear forwards}
+.p-pyon img,.p-pyon svg{animation:pyony .475s cubic-bezier(.3,0,.7,1) 4}
+@keyframes p-pyonx{0%{transform:translateX(-70vw)}100%{transform:translateX(80vw)}}
+@keyframes pyony{0%,100%{transform:translateY(0) scale(1.15,.85)}50%{transform:translateY(-26vh) scale(.92,1.1)}}
+.p-buni{animation:p-buni 1.7s ease-in-out forwards}
+@keyframes p-buni{0%{transform:scale(0)}12%{transform:scale(1)}22%{transform:scale(1.7,.5)}34%{transform:scale(.6,1.6)}46%{transform:scale(1.5,.65) skewX(14deg)}58%{transform:scale(.8,1.3) skewX(-14deg)}72%{transform:scale(1.1,.9)}86%{transform:none;opacity:1}100%{opacity:0}}
+.hanage{left:var(--x);top:0;width:44px;height:var(--h);margin-left:-22px;transform-origin:50% 0;animation:hana 1.6s ease-in-out forwards}
+.hanage svg{filter:none}
+@keyframes hana{0%{transform:scaleY(0)}25%{transform:scaleY(1)}55%{transform:scaleY(.55)}75%{transform:scaleY(1.02)}90%{transform:scaleY(1);opacity:1}100%{transform:scaleY(0);opacity:0}}
+.enemy.yank{animation:yank 1.6s ease-in-out!important}
+@keyframes yank{25%{transform:none}55%{transform:translateY(-45%) rotate(14deg) scale(.9,1.15)}75%{transform:translateY(6%) scale(1.15,.85)}88%{transform:none}}
+.ufo{left:50%;top:6%;width:120px;margin-left:-60px;font-size:5rem;text-align:center;animation:ufo 2s ease-in-out forwards}
+@keyframes ufo{0%{transform:translateX(-80vw)}20%,80%{transform:none}100%{transform:translateX(80vw)}}
+.beam{left:50%;top:15%;width:200px;margin-left:-100px;height:46vh;background:linear-gradient(rgba(180,255,170,.75),rgba(180,255,170,0));clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);animation:beam 2s forwards}
+@keyframes beam{0%,22%{opacity:0}30%,70%{opacity:1}78%,100%{opacity:0}}
+.p-ufo{animation:p-ufo 2s ease-in-out forwards}
+@keyframes p-ufo{0%,25%{transform:translateY(20vh) scale(1)}55%{transform:translateY(-12vh) scale(.35) rotate(360deg)}70%{transform:translateY(-12vh) scale(.35)}82%{transform:translateY(20vh) scale(1.1,.85)}92%{transform:translateY(20vh);opacity:1}100%{opacity:0}}
+.p-parade{top:auto;bottom:6vh;width:min(28vw,150px);height:min(26vh,200px);margin-left:0;animation:parade 2.1s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes parade{0%{transform:translateY(120%)}25%{transform:translateY(0)}35%{transform:translateY(-14%)}45%{transform:translateY(0)}55%{transform:translateY(-14%)}65%{transform:translateY(0)}88%{opacity:1}100%{transform:translateY(120%);opacity:0}}
+/* エフェクト */
+.cf{top:-4vh;width:10px;height:16px;border-radius:2px;left:var(--x);background:var(--c);animation:cf var(--t) cubic-bezier(.3,.6,.6,1) forwards;animation-delay:var(--d)}
+@keyframes cf{0%{transform:translateY(0) rotate(0)}100%{transform:translate(var(--dx),110vh) rotate(var(--r))}}
+.shock{left:50%;top:var(--y);width:40px;height:40px;margin:-20px 0 0 -20px;border-radius:50%;border:8px solid #fff;animation:shock .6s ease-out forwards}
+@keyframes shock{0%{transform:scale(.2);opacity:1}100%{transform:scale(14);opacity:0;border-width:1px}}
+.sparks span{position:absolute;font-size:1.8rem;animation:spark .8s ease-out forwards}
+@keyframes spark{0%{transform:translate(0,0) scale(.3);opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(1.2) rotate(180deg);opacity:0}}
+.coinfly{font-size:1.6rem;color:var(--yellow);-webkit-text-stroke:4px var(--ink);paint-order:stroke fill;left:50%;top:44%;animation:coinfly 1s ease-in forwards;white-space:nowrap}
+@keyframes coinfly{0%{transform:translate(-50%,0) scale(.6);opacity:0}25%{transform:translate(-50%,-20px) scale(1.2);opacity:1}100%{transform:translate(32vw,-40vh) scale(.6);opacity:0}}
+.stamp{position:absolute;right:-12px;top:-40px;width:84px;height:84px;font-size:1rem!important;border-radius:50%;border:6px solid var(--red);color:var(--red);display:flex;align-items:center;justify-content:center;
+  font-size:1.2rem;line-height:1.1;background:rgba(255,255,255,.9);transform:rotate(-14deg);animation:stamp .5s .9s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes stamp{0%{transform:scale(3) rotate(-30deg);opacity:0}100%{transform:scale(1) rotate(-14deg);opacity:1}}
+@media (prefers-reduced-motion:reduce){.fx{animation-duration:.01s!important}}
 /* ===== リザルト ===== */
 .overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(59,42,30,.55)}
 .result{width:min(92vw,430px);padding:24px 18px 20px;text-align:center;position:relative;z-index:2}
@@ -201,9 +300,13 @@ a.btn{text-decoration:none}
   </div>
 </section>
 
-<section id="battle" class="screen bg-night hide">
+<section id="battle" class="screen hide">
+  <div class="scene" id="scene">
+    <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+    <div class="hill h1"></div><div class="hill h2"></div><div class="ground"></div><div class="deco" id="deco"></div>
+  </div>
   <div class="wrap">
-    <div class="hdr"><button class="btn ghost" id="flee">🏃 にげる</button><h2 id="bTitle"></h2><span class="sp chip" id="bCombo" style="text-align:center"></span></div>
+    <div class="hdr"><button class="btn ghost" id="flee">🏃 にげる</button><h2 id="bTitle"></h2><span class="coins" id="coins">🪙 0</span></div>
     <div class="arena" id="arena">
       <div class="enemy-box">
         <div class="ename" id="eName"></div>
@@ -214,6 +317,7 @@ a.btn{text-decoration:none}
       <svg class="slash" id="slash" viewBox="0 0 100 100"><path d="M10 80 Q50 50 92 12" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M18 88 Q55 58 96 26" stroke="#ffe46b" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
       <div class="dmg" id="dmg"></div>
       <div class="combo" id="comboFx"></div>
+      <span class="chip" id="bCombo" style="position:absolute;left:4px;top:4px"></span>
     </div>
     <div class="panel qwin">
       <span class="qcount" id="qcount"></span>
@@ -248,6 +352,7 @@ a.btn{text-decoration:none}
   </div>
 </section>
 
+<div id="fxl"></div>
 <div id="overlay" class="overlay hide"><div class="panel result" id="resultBox"></div></div>
 <canvas id="fw"></canvas>
 
@@ -311,12 +416,29 @@ const COURSES = [
   {id:'h22',  type:'h22',    name:'ひっさんの こおり',   age:'ひっさん', icon:'❄️', bg:'bg-ice',    hue:195, enemy:'こおり'},
   {id:'h32',  type:'h32',    name:'ひっさんの おしろ',   age:'ひっさん', icon:'🏰', bg:'bg-castle', hue:330, enemy:'まおう'},
 ];
+const WORLDS = {
+  'bg-meadow': {sky1:'#8fd3ff', sky2:'#e3f6ff', hill1:'#9ad97a', hill2:'#7cc865', ground:'#6fc05a', sunc:'#ffd23f', glow:'rgba(255,220,100,.55)', cloud:'#fff', deco:['🌷','🌼','🌳','🌷','🦋','🌼']},
+  'bg-forest': {sky1:'#9fe0b8', sky2:'#eefbf0', hill1:'#4fae5c', hill2:'#3a9a4a', ground:'#3f9a4c', sunc:'#fff0a0', glow:'rgba(255,250,170,.5)', cloud:'#fff', deco:['🌲','🍄','🌳','🌲','🐿️','🍄']},
+  'bg-desert': {sky1:'#ffc58f', sky2:'#fff1d6', hill1:'#f2c576', hill2:'#e8b25e', ground:'#e7b35f', sunc:'#ff9a3d', glow:'rgba(255,170,80,.6)', cloud:'#fff6e8', deco:['🌵','🐪','🌵','🏜️','🦂','🌵']},
+  'bg-sky':    {sky1:'#9fb0ff', sky2:'#ece8ff', hill1:'#ffffff', hill2:'#f0edff', ground:'#e3ddff', sunc:'#ffe680', glow:'rgba(255,255,200,.6)', cloud:'#fff', deco:['🎈','🕊️','☁️','🪁','🎈','⭐'], float:true},
+  'bg-cave':   {sky1:'#4a3a78', sky2:'#8a74c4', hill1:'#6a56a0', hill2:'#5a4890', ground:'#4e3f7e', sunc:'#c9f4ff', glow:'rgba(160,230,255,.5)', cloud:'#9a88d0', deco:['💎','🕯️','🦇','💎','🍄','💠']},
+  'bg-volcano':{sky1:'#ff9a7a', sky2:'#ffe0d0', hill1:'#a8604a', hill2:'#8e4c3a', ground:'#7a4434', sunc:'#ff5a3d', glow:'rgba(255,100,60,.6)', cloud:'#d8b8b0', deco:['🌋','🔥','🪨','🔥','🌋','🪨']},
+  'bg-ice':    {sky1:'#a8d4ff', sky2:'#f2f9ff', hill1:'#e6f3ff', hill2:'#d2e9ff', ground:'#cfe6fb', sunc:'#fff6c0', glow:'rgba(220,240,255,.7)', cloud:'#fff', deco:['⛄','❄️','🐧','🧊','❄️','🐧']},
+  'bg-castle': {sky1:'#7d73c4', sky2:'#e3dfff', hill1:'#9b95b8', hill2:'#857f9f', ground:'#8d879f', sunc:'#fff2b0', glow:'rgba(255,240,180,.5)', cloud:'#efeaff', deco:['🏰','🚩','🦇','🕯️','🏰','👻']},
+};
+function buildScene(bg){
+  const w = WORLDS[bg], el = $('battle');
+  for(const k of ['sky1','sky2','hill1','hill2','ground','sunc','glow','cloud']) el.style.setProperty('--' + k, w[k]);
+  $('scene').className = 'scene' + (w.float ? ' float' : '');
+  const pos = [[4,46,2.6],[20,58,2],[76,44,2.8],[88,60,2.1],[36,64,1.6],[60,66,1.5]];
+  $('deco').innerHTML = w.deco.map((e, i) => `<span style="--x:${pos[i][0]}%;--y:${pos[i][1]}%;--s:${pos[i][2]}rem;--d:${-i * .6}s">${e}</span>`).join('');
+}
 const STAGES = 5, Q_NORMAL = 5, Q_BOSS = 7;
 const Save = {
   load(){ try{ return JSON.parse(localStorage.getItem('sansu-quest')) || {}; }catch(e){ return {}; } },
   store(){ try{ localStorage.setItem('sansu-quest', JSON.stringify(save)); }catch(e){} },
 };
-const save = Object.assign({stars:{}, sound:true, voice:true}, Save.load());
+const save = Object.assign({stars:{}, sound:true, voice:true, coins:0}, Save.load());
 const starsOf = (c, s) => save.stars[c + '-' + s] || 0;
 const unlocked = (c, s) => s === 1 || starsOf(c, s - 1) > 0;
 const totalStars = () => Object.values(save.stars).reduce((x, y) => x + y, 0);
@@ -356,6 +478,14 @@ function sfx(kind){
       win:  () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .25, 'triangle', .18, i * .11)),
       star: () => tone(1400, .15, 'sine', .16, 0, 2000),
       boom: () => { tone(110, .5, 'sawtooth', .25, 0, 30); noise(.5, 350, .5); },
+      whoosh2:() => noise(.45, 1200, .45),
+      land: () => { tone(140, .18, 'sine', .3, 0, 60); noise(.1, 400, .3); },
+      crash:() => { noise(.35, 2500, .6, 0, 'highpass'); tone(90, .3, 'square', .2, 0, 40); },
+      boing:() => tone(220, .45, 'sine', .3, 0, 660),
+      pop:  () => tone(500, .08, 'sine', .25, 0, 900),
+      ufo:  () => { tone(600, 1.2, 'sine', .12, 0, 900); tone(900, 1.2, 'sine', .08, .1, 600); },
+      fanfare:() => [523, 523, 523, 784].forEach((f, i) => tone(f, i === 3 ? .5 : .14, 'square', .12, i * .16)),
+      coin: () => { tone(988, .08, 'square', .1); tone(1319, .25, 'square', .1, .08); },
     })[kind]?.();
   }catch(e){}
 }
@@ -489,7 +619,7 @@ function startBattle(c, s){
   const boss = s === STAGES;
   B = {id:Math.random(), c, s, boss, total:boss ? Q_BOSS : Q_NORMAL, misses:0, combo:0, maxCombo:0, done:0};
   B.hp = B.total;
-  $('battle').className = 'screen ' + c.bg;
+  $('battle').className = 'screen'; buildScene(c.bg); B.coins = 0; showCoins();
   $('bTitle').textContent = boss ? '👑 ボス バトル' : `ステージ ${s}`;
   $('eName').textContent = boss ? `${c.enemy}の キング` : `${c.enemy}の ${pick(ENEMY_NAMES)}`;
   const en = $('enemy'); en.className = 'enemy'; en.innerHTML = enemySVG(c.hue + (s - 1) * 14, boss);
@@ -500,7 +630,7 @@ function startBattle(c, s){
   speak(boss ? 'ボスが あらわれた！' : 'モンスターが あらわれた！');
   later(nextQuestion, 800);
 }
-$('flee').onclick = () => { B = null; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); openCourse(course); };
+$('flee').onclick = () => { B = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); openCourse(course); };
 function updateHp(){
   const r = B.hp / B.total; $('hpfill').style.width = (r * 100) + '%';
   $('hpbar').classList.toggle('low', r <= .34);
@@ -561,9 +691,9 @@ function attack(){
     if(crit){ const cf = $('comboFx'); cf.textContent = `🔥 ${B.combo} コンボ！`; replay(cf, 'on'); sfx('crit'); }
     sfx('hit');
     B.hp--; B.done++; updateHp();
-    speak(pick(['せいかい！', 'すごい！', 'やったね！', 'その ちょうし！']));
+    reward(B.first ? B.combo : 0, B.hp <= 0);
   }, 250);
-  later(() => { $('comboFx').classList.remove('on'); B.hp <= 0 ? defeat() : nextQuestion(); }, 1250);
+  later(() => { $('comboFx').classList.remove('on'); B.hp <= 0 ? defeat() : nextQuestion(); }, 1500);
 }
 
 /* ---- ひっ算（一のくらいから1けたずつ） ---- */
@@ -608,20 +738,103 @@ function result(){
   save.stars[key] = Math.max(st, save.stars[key] || 0); Save.store();
   const c = B.c, s = B.s, boss = B.boss, hasNext = s < STAGES;
   const party = shuffle(PARTY).slice(0, 3).map(m => `<img src="${m.src}" alt="">`).join('') || heroSVG();
-  $('resultBox').innerHTML = `<h2>${boss ? 'ボス げきは！' : 'ステージ クリア！'}</h2>
+  $('resultBox').innerHTML = `<div class="stamp">${boss ? 'ボス<br>げきは' : 'クリア'}</div><h2>${boss ? 'ボス げきは！' : 'ステージ クリア！'}</h2>
     <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
     <div class="party">${party}</div>
-    <div>${B.misses === 0 ? 'ノーミス！ パーフェクト！' : `まちがい ${B.misses}かい`}${B.maxCombo >= 3 ? `<br>🔥 さいだい ${B.maxCombo} コンボ` : ''}</div>
+    <div>${B.misses === 0 ? 'ノーミス！ パーフェクト！' : `まちがい ${B.misses}かい`}${B.maxCombo >= 3 ? `<br>🔥 さいだい ${B.maxCombo} コンボ` : ''}<br>🪙 ${B.coins} コイン ゲット！</div>
     <div class="row">${hasNext ? '<button class="btn" id="rNext">つぎへ ▶</button>' : ''}<button class="btn sub" id="rMap">マップ</button></div>`;
   $('overlay').classList.remove('hide');
   sfx('win'); speak(boss ? 'ボスを たおした！ すごい！' : 'ステージ クリア！');
   [...$('resultBox').querySelectorAll('.bigstars span')].forEach((el, i) => { if(i < st) setTimeout(() => { el.classList.add('on'); sfx('star'); }, 400 + i * 350); });
   if(st === 3 || boss) fireworks(boss ? 30000 : 4000);
+  $('fxl').innerHTML = '';
   B = null;
   const close = () => { stopFireworks(); $('overlay').classList.add('hide'); };
   if(hasNext) $('rNext').onclick = () => { close(); startBattle(c, s + 1); };
   $('rMap').onclick = () => { close(); openCourse(c); };
 }
+
+/* ================================================================
+   7) ごほうび演出：正解のたびに ちがう パターン。連続正解で ごうかに。
+      演出は #fxl（さわれない レイヤー）で 動くので、つぎの もんだいは すぐ とける。
+   ================================================================ */
+const fxl = $('fxl');
+function fxAdd(cls, html, ms, style){
+  const d = document.createElement('div'); d.className = 'fx ' + cls; d.innerHTML = html || '';
+  if(style) d.setAttribute('style', style);
+  fxl.append(d); setTimeout(() => d.remove(), ms); return d;
+}
+const member = () => PARTY.length ? pick(PARTY) : null;
+const memberHTML = m => m ? `<img src="${m.src}" alt="">` : heroSVG();
+const SAYS = ['やったね！', 'てんさい！', 'すごーい！', 'ナイス！', 'かんぺき！', 'いえーい！'];
+function word(t, cls){ fxAdd('fx-word' + (cls ? ' ' + cls : ''), '', 1400).textContent = t; }
+function confetti(n){
+  const cols = ['#ff5a6e', '#ffd23f', '#43a6ff', '#3ec46d', '#ff8a3d', '#b07cff'];
+  for(let i = 0; i < n; i++) fxAdd('cf', '', 2600, `--x:${rnd(0, 100)}%;--c:${pick(cols)};--t:${(1.4 + Math.random()).toFixed(2)}s;--d:${(Math.random() * .3).toFixed(2)}s;--dx:${rnd(-60, 60)}px;--r:${rnd(360, 1080)}deg`);
+}
+function shock(y){ fxAdd('shock', '', 700, `--y:${y || 40}%`); }
+function sparks(x, y, n, ch){
+  const d = fxAdd('sparks', '', 900, `left:${x}%;top:${y}%`);
+  for(let i = 0; i < n; i++){ const a = Math.PI * 2 * i / n, r = rnd(60, 120);
+    d.insertAdjacentHTML('beforeend', `<span style="--dx:${Math.cos(a) * r}px;--dy:${Math.sin(a) * r}px">${ch || '⭐'}</span>`); }
+}
+function sceneFx(cls){ const sc = $('scene'); sc.classList.remove(cls); void sc.offsetWidth; sc.classList.add(cls); setTimeout(() => sc.classList.remove(cls), 800); }
+function actor(cls, m, extra, ms){
+  const a = fxAdd('fx-actor ' + cls, memberHTML(m) + (extra || ''), ms || 2000);
+  return a;
+}
+const PATTERNS = {
+  tobi(){ actor('p-tobi', member(), `<div class="say">${pick(SAYS)}</div>`, 1800); sfx('whoosh2'); setTimeout(() => { sfx('land'); sparks(50, 48, 8, '💨'); }, 680); },
+  yaburi(){
+    const d = fxAdd('p-yaburi', `<svg class="hole" viewBox="0 0 200 200"><path d="M100 4 L118 52 L170 30 L150 80 L196 100 L150 120 L170 170 L118 148 L100 196 L82 148 L30 170 L50 120 L4 100 L50 80 L30 30 L82 52Z" fill="#fff8e7" stroke="#3b2a1e" stroke-width="6" stroke-linejoin="round"/></svg>`, 1900, 'inset:0');
+    d.append(Object.assign(document.createElement('div'), {className:'fx fx-actor', innerHTML:memberHTML(member())}));
+    word('バリーン！'); sfx('crash'); sceneFx('flash');
+  },
+  kyodai(){ actor('p-kyodai', member(), '', 1900); setTimeout(() => { word('ででーん！'); sfx('boing'); }, 500); },
+  run(){
+    const ms = shuffle(PARTY).slice(0, 3); const list = ms.length ? ms : [null, null, null];
+    list.forEach((m, i) => setTimeout(() => { actor('p-run', m, i === 0 ? `<div class="say">わーい！</div>` : '', 2000); sfx('pop'); }, i * 260));
+  },
+  manga(){
+    fxAdd('manga', '', 1400); actor('p-manga', member(), '', 1400); word(pick(['ドーン！！', 'ガーン！！', 'ズギャーン！']), 'manga-word');
+    sfx('crash');
+  },
+  hyokko(){ actor('p-hyokko', member(), `<div class="say">${pick(['ばあ！', 'みーつけた！', 'えへへ'])}</div>`, 1800); sfx('pop'); },
+  kuru(){ actor('p-kuru', member(), '', 1800); sfx('whoosh2'); word('くるくる〜！'); },
+  pyon(){ actor('p-pyon', member(), '', 1900); [0, 475, 950, 1425].forEach(t => setTimeout(() => sfx('pop'), t)); },
+  buni(){ actor('p-buni', member(), '', 1700); word('ぶにゅ〜ん'); sfx('boing'); },
+  hanage(){
+    const r = $('enemy').getBoundingClientRect();
+    if(!r.width) return PATTERNS.tobi();
+    fxAdd('hanage', `<svg viewBox="0 0 40 400" preserveAspectRatio="none" width="44" height="100%"><path d="M20 0 C36 30 4 50 20 80 C36 110 4 130 20 160 C36 190 4 210 20 240 C36 270 4 290 20 320 C34 345 6 365 20 400" fill="none" stroke="#111" stroke-width="5" stroke-linecap="round"/></svg>`,
+      1600, `--x:${r.left + r.width / 2}px;--h:${r.top + r.height * .3}px`);
+    replay($('enemy'), 'yank'); setTimeout(() => $('enemy').classList.remove('yank'), 1600);
+    word('はなげ しんけん！？'); sfx('whoosh2'); setTimeout(() => sfx('boing'), 700);
+  },
+  ufo(){ fxAdd('ufo', '🛸', 2000); fxAdd('beam', '', 2000); actor('p-ufo', member(), '', 2000); sfx('ufo'); setTimeout(() => word('ただいま〜'), 1500); },
+  parade(){
+    const ms = shuffle(PARTY).slice(0, 5); const list = ms.length ? ms : [null, null, null];
+    const w = 100 / list.length;
+    list.forEach((m, i) => setTimeout(() => { const a = actor('p-parade', m, '', 2200); a.style.left = (w * i + w / 2) + '%'; a.style.marginLeft = 'min(-14vw,-75px)'; }, i * 120));
+    word('みんな しゅうごう！'); sfx('fanfare');
+  },
+};
+const NORMAL = ['tobi', 'yaburi', 'kyodai', 'run', 'manga', 'hyokko', 'kuru', 'pyon', 'buni', 'hanage', 'ufo'];
+let lastP = '';
+function reward(combo, finalHit){
+  sceneFx('pulse');
+  let key;
+  if(combo >= 5 && combo % 5 === 0) key = 'parade';                       // 5れんぞく ごとに みんな しゅうごう
+  else { const pool = NORMAL.filter(k => k !== lastP && !(finalHit && k === 'hanage')); key = pick(pool); }
+  lastP = key; PATTERNS[key]();
+  confetti(combo >= 5 ? 46 : combo >= 3 ? 28 : 14);
+  if(combo >= 3){ shock(38); sceneFx('flash'); }
+  const gain = 10 + Math.min(combo, 5) * 2;
+  B.coins += gain; save.coins = (save.coins || 0) + gain; Save.store();
+  fxAdd('coinfly', '', 1000).textContent = `+${gain} 🪙`;
+  setTimeout(() => { showCoins(); replay($('coins'), 'bump'); sfx('coin'); }, 900);
+}
+function showCoins(){ $('coins').textContent = `🪙 ${save.coins || 0}`; }
 
 /* ---- 花火（ボスは30秒） ---- */
 let fwRun = 0;
