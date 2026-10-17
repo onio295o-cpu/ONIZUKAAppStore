@@ -428,7 +428,6 @@ a.btn{text-decoration:none}
 
 <script src="chars/precure.js"></script>
 <script src="chars/ng.js"></script>
-<script src="chars/whip.js"></script>
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
 <script src="volleyball/story.js"></script>
@@ -1085,9 +1084,8 @@ function bigShow(done){
   showDone = done;
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
-  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip'].filter(k => k !== S.lastShow)); S.lastShow = kind;
+  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix'].filter(k => k !== S.lastShow)); S.lastShow = kind;
   if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, 6700)); return; }
-  if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
   const bb = kind === 'crew' && bobobo(pick(BB_MOVES), 4600);
@@ -1095,22 +1093,8 @@ function bigShow(done){
   keys.forEach((k, i) => showTimers.push(setTimeout(() => { CRAZY[k](PATTERNS); confetti(24); shock(45); sceneFx('flash'); }, bb ? 4700 : 500 + i * 1900)));
   showTimers.push(setTimeout(endShow, 6300));
 }
-// キュアホイップ：ショーの中で 大きく 登場（キャラと いっしょに わちゃわちゃ）
-function whipShow(){
-  const h = document.getElementById('whipHost');
-  if(!h || !window.WhipActor) return false;
-  h.style.display = 'block';
-  word(t('おかしの まほう！', 'おかしの まほう！'));
-  WhipActor.play('magic'); sfx('fanfare');
-  const d = fxAdd('bb-big', '', 6200); crew(d, rnd(2, 3));
-  [2200, 3800].forEach((ms, i) => showTimers.push(setTimeout(() => WhipActor.play(pick(['dance', 'twirl', 'jump', 'victory'])), ms)));
-  showTimers.push(setTimeout(() => WhipActor.startRandom(), 4800));
-  return true;
-}
 function endShow(){
   showTimers.forEach(clearTimeout); showTimers = []; bbStop();
-  const wh = document.getElementById('whipHost'); if(wh) wh.style.display = 'none';
-  if(window.WhipActor) WhipActor.stopRandom();
   document.body.classList.remove('upside', 'jelly', 'shake');
   $('showveil').classList.add('hide'); $('fxl').innerHTML = '';
   const d = showDone; showDone = null; d && d();
