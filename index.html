@@ -428,6 +428,7 @@ a.btn{text-decoration:none}
 
 <script src="chars/precure.js"></script>
 <script src="chars/ng.js"></script>
+<script src="chars/whip.js"></script>
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
 <script src="volleyball/story.js"></script>
@@ -1080,12 +1081,21 @@ const CRAZY = {
   jelly(){ document.body.classList.add('jelly'); word('ぐにゃ〜ん！'); sfx('boing'); setTimeout(() => document.body.classList.remove('jelly'), 1900); },
 };
 let showTimers = [], showDone = null;
+// キュアホイップ：大きく 登場して パーツごとに 動く（まわりに キャラも わちゃわちゃ）
+function whipShow(){
+  if(!window.WhipCharacter) return false;
+  const d = fxAdd('bb-big', '', 6300);
+  WhipCharacter.show(d, [['pose', 2.0], ['wave', 2.0], ['dance', 2.2]]);
+  word(t('おかしの まほう！', 'おかしの まほう！')); sfx('fanfare'); crew(d, rnd(2, 3));
+  return true;
+}
 function bigShow(done){
   showDone = done;
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
-  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix'].filter(k => k !== S.lastShow)); S.lastShow = kind;
+  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip'].filter(k => k !== S.lastShow)); S.lastShow = kind;
   if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, 6700)); return; }
+  if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
   const bb = kind === 'crew' && bobobo(pick(BB_MOVES), 4600);
