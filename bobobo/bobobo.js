@@ -113,6 +113,8 @@ class BoboboRig{
  let topgrad=ctx.createLinearGradient(0,0,0,50);topgrad.addColorStop(0,'rgba(2,4,15,.45)');topgrad.addColorStop(1,'rgba(2,4,15,0)');ctx.fillStyle=topgrad;ctx.fillRect(0,0,w,50);
  }
  drawShadow(ctx,p){const s=this.scale()*this.cameraZoom;const ground=this.h*.88;ctx.save();ctx.translate(this.w/2+p.x*s,ground+3);ctx.scale(1+Math.max(0,-p.y/550),1);ctx.fillStyle=`rgba(0,0,0,${clamp(.30+p.y/1400,.07,.4)})`;ctx.beginPath();ctx.ellipse(0,0,125*s,20*s,0,0,2*PI);ctx.fill();ctx.restore()}
+ // 鼻の画面位置（CSS px、キャンバス左上基準）
+ nosePoint(){const ctx=this.ctx,p=this.pose||DEFAULT;if(!ctx)return null;ctx.save();this.setupModel(ctx,p);ctx.translate(250,517);ctx.rotate(p.torso*PI/180);ctx.translate(-250,-517);ctx.translate(...coords.head);ctx.rotate(p.head*PI/180);ctx.translate(-coords.head[0],-coords.head[1]);const m=ctx.getTransform();ctx.restore();const q=new DOMPoint(250,172).matrixTransform(m);const d=this.dpr||1;return {x:q.x/d,y:q.y/d}}
  scale(){return Math.min(this.w/630,this.h/1450,.60)}
  // Returns model -> screen transform for on-character attack effects.
  setupModel(ctx,p,shake=0){const s=this.scale()*this.cameraZoom;const ground=this.h*.88;let x=this.w/2+p.x*s,y=ground+p.y*s;ctx.translate(x+shake*sin(performance.now()*.071),y+shake*cos(performance.now()*.054));ctx.scale(s*p.sx,s*p.sy);ctx.translate(-250,-1250);ctx.translate(250,525);ctx.rotate(p.rot*PI/180);ctx.translate(-250,-525);}
