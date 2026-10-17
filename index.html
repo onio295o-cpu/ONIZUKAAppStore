@@ -254,6 +254,8 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .hg-speed{position:absolute;inset:-25%;z-index:6;pointer-events:none;opacity:0;transition:opacity .2s;background:repeating-conic-gradient(rgba(255,255,255,0) 0 5deg,rgba(255,255,255,.55) 5deg 6deg);-webkit-mask-image:radial-gradient(circle,transparent 28%,#000 70%);mask-image:radial-gradient(circle,transparent 28%,#000 70%);animation:hgSpd .12s steps(2) infinite}
 .hg.speed .hg-speed{opacity:1}
 @keyframes hgSpd{to{transform:rotate(4deg)}}
+.hg-gulp{position:absolute;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;background:radial-gradient(#ffd0dc,#ff6b9a);border:3px solid #5a3900;z-index:5;animation:hgGulp .6s ease-out both;pointer-events:none}
+@keyframes hgGulp{0%{transform:scale(.2)}45%{transform:scale(1.25)}100%{transform:scale(.1);opacity:0}}
 .hg.glitch .hg-cam{animation:hgGl .18s steps(2) 3}
 @keyframes hgGl{0%{transform:translate(6px,-3px);filter:hue-rotate(90deg)}100%{transform:translate(-6px,3px);filter:hue-rotate(-90deg)}}
 @keyframes wJump{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-55%) rotate(360deg)}}
@@ -947,7 +949,7 @@ function crew(d, n){
 const NG = window.NG_IMAGES || {};
 function hanage(kind){
   if(!window.BoboboAnimator || !NG.g_angry) return false;
-  const D = 6600, isG = kind === 'g';
+  const D = kind === 'g' ? 7800 : 6600, isG = kind === 'g';
   const d = fxAdd('hg', `<div class="hg-grid"></div><div class="hg-cam"><div class="hg-bb"></div><div class="hg-t in"><img alt=""></div><canvas class="hg-hair"></canvas></div><div class="hg-speed"></div>
     <div class="hg-hud"><div>ボーボボ<div class="hg-hp"><i></i></div></div><span class="hg-vs">VS</span><div class="r">${isG ? 'ジャイアン' : 'のび太'}<div class="hg-hp"><i class="hp2"></i></div></div></div><div class="hg-combo"></div><div class="hg-scan"></div>`, D);
   const cam = d.querySelector('.hg-cam'), host = d.querySelector('.hg-bb'), tg = d.querySelector('.hg-t'), img = tg.querySelector('img'), cv = d.querySelector('.hg-hair');
@@ -961,7 +963,7 @@ function hanage(kind){
   const glitch = () => { d.classList.remove('glitch'); void d.offsetWidth; d.classList.add('glitch'); };
   pose(isG ? 'g_angry' : 'n_run');
   // はなげ（キャンバス）：はなから 相手へ のびる
-  let hair = null;   // {from, k0, anchor}
+  let hair = null, suck = null;   // {from, k0, anchor}
   const x = cv.getContext('2d');
   (function loop(now){
     if(!d.isConnected) return; requestAnimationFrame(loop);
@@ -970,6 +972,13 @@ function hanage(kind){
     x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
     const np = r.nosePoint(); if(!hair || !np) return;
     const nx = host.offsetLeft + np.x, ny = host.offsetTop + np.y;
+    if(suck){   // 鼻へ すいこむ：毎フレーム 今の 鼻の 位置へ 近づけて、だんだん 小さく・速く
+      const u = Math.min(1, (now - suck.t0) / suck.dur), e = u * u * (.4 + .6 * u), w = Math.sin(e * Math.PI);
+      const cx = suck.x0 + (nx - suck.x0) * e, cy = suck.y0 + (ny - suck.y0) * e, s = Math.max(.02, 1 - .98 * e);
+      tg.style.left = (cx - tg.offsetWidth / 2) + 'px'; tg.style.top = (cy - tg.offsetHeight / 2) + 'px';
+      tg.style.transform = `rotate(${e * 540}deg) scale(${s * (1 - .35 * w)},${s * (1 + .5 * w)})`;
+      if(u >= 1 && !suck.done){ suck.done = true; tg.style.opacity = 0; suck.onDone(nx, ny); }
+    }
     const tx = tg.offsetLeft + tg.offsetWidth / 2, ty = tg.offsetTop + tg.offsetHeight * (hair.anchor ?? .45);
     const k = Math.min(1, (now - hair.t0) / 380) * (hair.out ? Math.max(0, 1 - (now - hair.out) / 300) : 1);
     for(let i = 0; i < hair.n; i++){
@@ -991,13 +1000,17 @@ function hanage(kind){
     T(1650, () => { hair = {t0:performance.now(), n:9}; fxw('シュルルル！', 'left:30%;top:24%'); sfx('whoosh2'); });
     T(2150, () => { tg.classList.add('wrap', 'shake'); pose('g_tilt'); say('t', 'ぐえ〜っ！<br>くすぐったい〜！'); hit(12); hp(60); sfx('hit'); glitch(); });
     T(3250, () => { say('b', 'いただきまーす！', true); });
-    T(3500, () => { const np = r.nosePoint() || {x:0, y:0}; tg.classList.remove('shake'); tg.classList.add('spin'); d.classList.add('speed');
-      tg.style.left = (host.offsetLeft + np.x - tg.offsetWidth / 2) + 'px'; tg.style.top = (host.offsetTop + np.y - tg.offsetHeight * .45) + 'px'; tg.style.transform = 'scale(.06)';
-      hair.anchor = .45; fxw('ズボボボボ！', 'right:4%;top:24%'); sfx('boing'); hit(30); hp(20); });
-    T(4350, () => { tg.style.opacity = 0; hair.out = performance.now(); d.classList.remove('speed'); big('ごっくん！'); sfx('pop'); });
-    T(4950, () => say('b', '……ちょっと しょっぱい。'));
-    T(5350, () => { tg.style.transition = 'none'; tg.classList.remove('wrap'); pose('g_daze'); tg.style.left = '30%'; tg.style.top = '20%';
-      void tg.offsetWidth; tg.style.transition = ''; tg.style.opacity = 1; tg.style.transform = 'scale(.7) translate(140%, -120%) rotate(720deg)'; fxw('ぽんっ！', 'left:20%;top:30%'); sfx('boing');
+    T(3500, () => { tg.classList.remove('shake', 'spin', 'in'); tg.style.transition = 'none'; tg.style.transformOrigin = '50% 50%'; d.classList.add('speed');
+      hair.anchor = .5; fxw('ズボボボボ！', 'right:4%;top:24%'); sfx('boing'); hit(30); hp(20);
+      suck = {t0:performance.now(), dur:1500, x0:tg.offsetLeft + tg.offsetWidth / 2, y0:tg.offsetTop + tg.offsetHeight / 2,
+        onDone:(nx, ny) => { hair.out = performance.now(); d.classList.remove('speed'); const g = document.createElement('div'); g.className = 'hg-gulp'; g.style.cssText = `left:${nx}px;top:${ny}px`; cam.append(g); setTimeout(() => g.remove(), 900); big('ごっくん！'); sfx('pop'); }};
+    });
+    T(5700, () => say('b', '……ちょっと しょっぱい。'));
+    T(6100, () => { suck = null; tg.style.transition = 'none'; tg.classList.remove('wrap'); pose('g_daze'); tg.style.transformOrigin = '50% 50%';
+      const np = r.nosePoint() || {x:0, y:0};   // 鼻の 中から ぽんっと 出てくる
+      tg.style.left = (host.offsetLeft + np.x - tg.offsetWidth / 2) + 'px'; tg.style.top = (host.offsetTop + np.y - tg.offsetHeight / 2) + 'px'; tg.style.transform = 'scale(.05)';
+      void tg.offsetWidth; tg.style.transition = 'left .7s cubic-bezier(.2,1.3,.4,1),top .7s cubic-bezier(.2,1.3,.4,1),transform .7s ease-out'; tg.style.opacity = 1;
+      tg.style.left = '52%'; tg.style.top = '12%'; tg.style.transform = 'rotate(720deg) scale(.75)'; fxw('ぽんっ！', 'left:20%;top:30%'); sfx('boing');
       say('t', 'はなの なか<br>カラオケ ルーム だった…', false, 'right:3%;top:52%'); });
   }else{
     T(250, () => say('t', 'ドラえも〜ん！<br>たすけて〜！'));
@@ -1009,7 +1022,7 @@ function hanage(kind){
       tg.style.top = '-40%'; tg.style.left = '40%'; tg.style.transform = 'scale(.5)'; fxw('ビヨヨ〜ン！', 'left:24%;top:40%'); sfx('boing'); hit(99); hp(0); });
     T(5100, () => { d.classList.remove('speed'); say('t', 'ママ〜！<br>きょうの ごはん なに〜！？', false, 'left:22%;top:12%'); });
   }
-  T(5800, () => { big('K.O.!'); sfx('boom'); glitch(); confetti(20); });
+  T(isG ? 6700 : 5800, () => { big('K.O.!'); sfx('boom'); glitch(); confetti(20); });
   setTimeout(() => { r.destroy(); bbLive = bbLive.filter(v => v !== r); }, D);
   return true;
 }
@@ -1107,7 +1120,7 @@ function bigShow(done){
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
   const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip'].filter(k => k !== S.lastShow)); S.lastShow = kind;
-  if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, 6700)); return; }
+  if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, kind === 'hg-g' ? 7800 : 6700)); return; }
   if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
