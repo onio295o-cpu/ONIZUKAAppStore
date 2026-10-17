@@ -1,0 +1,850 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>名駅18 バス時刻表</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f6efdf;
+    --bg-alt: #efe4cb;
+    --card: #fffcf4;
+    --text: #2b2519;
+    --text-dim: #8c8168;
+    --dep: #1d4e89;
+    --dep-soft: #dce7f4;
+    --dest: #2f8f5c;
+    --dest-soft: #ddf0e3;
+    --border: #e6d9b8;
+    --past: #cabf9f;
+    --shadow: 0 2px 10px rgba(60, 45, 10, 0.08);
+    --radius: 18px;
+    --font-display: "Space Grotesk", "Zen Kaku Gothic New", sans-serif;
+    --font-body: "Zen Kaku Gothic New", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1710;
+      --bg-alt: #241f16;
+      --card: #262119;
+      --text: #f2e9d8;
+      --text-dim: #a89a7c;
+      --dep: #7fb0f2;
+      --dep-soft: #253850;
+      --dest: #6fcf9a;
+      --dest-soft: #203a2c;
+      --border: #3c3324;
+      --past: #574e38;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 16px;
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    background: var(--bg);
+    background-image: radial-gradient(circle at 100% 0%, var(--bg-alt) 0%, transparent 55%);
+    color: var(--text);
+    font-family: var(--font-body);
+  }
+  .sticky-header {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 20;
+    background: var(--bg);
+    margin: -16px -16px 0;
+    padding: 16px 16px 10px;
+    box-shadow: 0 8px 12px -8px rgba(60, 45, 10, 0.15);
+  }
+  .app-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .bus-mark {
+    flex: 0 0 auto;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: var(--dep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bus-mark svg { width: 20px; height: 20px; }
+  h1 {
+    font-family: var(--font-display);
+    font-size: 19px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.01em;
+  }
+  .subtitle {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 2px 0 20px 44px;
+  }
+  .section-label {
+    font-size: 12px;
+    font-weight: 700;
+    margin: 4px 2px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-label > span:first-child {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: var(--dep-soft);
+    color: var(--dep);
+  }
+  .section-label.dest > span:first-child {
+    background: var(--dest-soft);
+    color: var(--dest);
+  }
+  .edit-link {
+    font-size: 12px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .tabs-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+  .tabs-row.no-margin { margin-bottom: 0; }
+  .tab-btn {
+    flex: 0 0 auto;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    text-align: center;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: transform 0.1s;
+  }
+  .tab-btn:active { transform: scale(0.96); }
+  .tab-btn.active {
+    background: var(--dep);
+    color: #fff;
+    border-color: var(--dep);
+  }
+  .tab-btn.dest-active {
+    background: var(--dest);
+    color: #fff;
+    border-color: var(--dest);
+  }
+  .tab-x {
+    opacity: 0.65;
+    font-weight: 700;
+    padding-left: 2px;
+  }
+  .tab-x:hover { opacity: 1; }
+  .no-stops-msg {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 10px 2px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 18px;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .next-card {
+    background: linear-gradient(135deg, var(--dep) 0%, #123963 100%);
+    color: #fff;
+    border: none;
+    position: relative;
+    overflow: hidden;
+    margin-top: 16px;
+  }
+  .next-card::after {
+    content: "";
+    position: absolute;
+    right: -30px;
+    bottom: -30px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+  }
+  .next-label {
+    font-size: 12px;
+    opacity: 0.85;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .next-time {
+    font-family: var(--font-display);
+    font-size: 52px;
+    font-weight: 700;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.01em;
+  }
+  .next-sub {
+    font-size: 13px;
+    margin-top: 10px;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+  .day-type {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    font-weight: 600;
+  }
+  .time-card { padding-bottom: 14px; }
+  .time-grid-scroll {
+    max-width: 284px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    margin: 0 -4px;
+    padding: 4px 4px;
+  }
+  .time-grid {
+    display: flex;
+    gap: 8px;
+  }
+  .time-cell {
+    flex: 0 0 auto;
+    min-width: 58px;
+    padding: 9px 10px;
+    text-align: center;
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .time-cell.past {
+    color: var(--past);
+  }
+  .time-cell.next {
+    background: var(--dep);
+    color: #fff;
+    font-weight: 700;
+  }
+  #map {
+    /* keep Leaflet's high z-index panes from covering the header and sheet */
+    position: relative;
+    z-index: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  #map svg { display: block; width: 100%; height: auto; }
+  .map-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .map-btn {
+    flex: 1;
+    padding: 10px 12px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+  }
+  .map-btn[hidden] { display: none; }
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .footer-note {
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* settings overlay */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30, 22, 8, 0.45);
+    display: flex;
+    align-items: flex-end;
+    z-index: 50;
+  }
+  .overlay[hidden] { display: none; }
+  .sheet {
+    background: var(--card);
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    border-radius: 22px 22px 0 0;
+    padding: 20px;
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+  .sheet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .sheet-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .sheet-close {
+    color: var(--dep);
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .add-row {
+    margin-bottom: 18px;
+  }
+  .add-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .pick-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .pick-chip {
+    padding: 9px 14px;
+    border-radius: 999px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .pick-chip.on { background: var(--dep); border-color: var(--dep); color: #fff; }
+  .pick-chip.on.dest { background: var(--dest); border-color: var(--dest); }
+  .pick-chip.on::before { content: "✓ "; }
+  .sheet-hint {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="sticky-header">
+  <div class="app-header">
+    <div class="bus-mark">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="4" width="18" height="12" rx="3" fill="#fff"/>
+        <rect x="5.5" y="6.3" width="5" height="3.4" rx="0.8" fill="currentColor" style="color: var(--dep)"/>
+        <rect x="13.5" y="6.3" width="5" height="3.4" rx="0.8" fill="currentColor" style="color: var(--dep)"/>
+        <circle cx="7.5" cy="18.5" r="1.6" fill="#fff"/>
+        <circle cx="16.5" cy="18.5" r="1.6" fill="#fff"/>
+      </svg>
+    </div>
+    <h1>名駅18 バス時刻表</h1>
+  </div>
+  <div class="subtitle" id="subtitle">読み込み中…</div>
+
+  <div class="section-label">
+    <span>出発地</span>
+    <span class="edit-link" id="editStopsBtn">＋ バス停を編集</span>
+  </div>
+  <div class="tabs-row" id="departureSelect"></div>
+
+  <div class="section-label dest"><span>目的地</span></div>
+  <div class="tabs-row no-margin" id="destinationSelect"></div>
+</div>
+
+<div class="card next-card">
+  <div class="next-label" id="nextLabel">次のバス</div>
+  <div class="next-time" id="nextTime">--:--</div>
+  <div class="next-sub" id="nextSub"></div>
+</div>
+
+<div class="card time-card">
+  <div class="day-type" id="dayType"></div>
+  <div class="time-grid-scroll" id="timeGridScroll">
+    <div class="time-grid" id="timeGrid"></div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">路線図</div>
+  <div id="map"></div>
+  <div class="map-actions">
+    <a class="map-btn" id="mapDepLink" target="_blank" rel="noopener">📍 出発地を地図で</a>
+    <a class="map-btn" id="mapRouteLink" target="_blank" rel="noopener">🧭 ルートを地図で</a>
+  </div>
+</div>
+
+<div class="footer-note">出典: 名古屋市交通局 市バスGTFS-JPデータ</div>
+
+<div class="overlay" id="overlay" hidden>
+  <div class="sheet">
+    <div class="sheet-header">
+      <div class="sheet-title">バス停を編集</div>
+      <div class="sheet-close" id="closeSheet">閉じる</div>
+    </div>
+    <div class="add-row">
+      <div class="add-label">出発地（路線順）</div>
+      <div class="pick-grid" id="pickDeparture"></div>
+    </div>
+    <div class="add-row">
+      <div class="add-label">目的地（路線順）</div>
+      <div class="pick-grid" id="pickDestination"></div>
+    </div>
+    <div class="sheet-hint">タップで追加、もう一度タップで外せます（✓ が付いているものがタブに表示されます）。</div>
+  </div>
+</div>
+
+<script>
+let DATA = null;
+let selectedDeparture = null;
+let selectedDestination = null;
+let departureStops = []; // candidate stop names for 出発地 tabs
+let destinationStops = []; // candidate stop names for 目的地 tabs
+
+const ALL_STOP_NAMES = [];
+const DIRECTIONS_BY_STOP = {};
+const DEFAULT_STOPS = ["大池町", "水主町"];
+
+
+function dayTypeForDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  const key = `${y}${m}${day}`;
+  if (DATA.holiday_dates.includes(key)) return "日休";
+  const dow = d.getDay();
+  if (dow === 0) return "日休";
+  if (dow === 6) return "土曜";
+  return "平日";
+}
+
+function minutesNow(d) { return d.getHours() * 60 + d.getMinutes(); }
+function toMinutes(hhmm) { const [h, m] = hhmm.split(":").map(Number); return h * 60 + m; }
+
+function saveStops(key, list) {
+  try { localStorage.setItem(key, JSON.stringify(list)); } catch (e) {}
+}
+
+function loadStops(key) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key));
+    if (Array.isArray(raw) && raw.length) return raw.filter(n => ALL_STOP_NAMES.includes(n));
+  } catch (e) {}
+  return DEFAULT_STOPS.slice();
+}
+
+// finds a direction/sequence where `dep` appears before `dest`, and returns
+// the departure stop_id to read the timetable from.
+function resolveTrip(dep, dest) {
+  for (const [dirLabel, seq] of Object.entries(DATA.sequences)) {
+    const depIdx = seq.findIndex(sid => DATA.stops[sid] && DATA.stops[sid].name === dep);
+    const destIdx = seq.findIndex(sid => DATA.stops[sid] && DATA.stops[sid].name === dest);
+    if (depIdx !== -1 && destIdx !== -1 && depIdx < destIdx) {
+      return { dirLabel, seq, depIdx, destIdx, depStopId: seq[depIdx], destStopId: seq[destIdx] };
+    }
+  }
+  return null;
+}
+
+function removeDeparture(name) {
+  if (departureStops.length <= 1) return;
+  departureStops = departureStops.filter(n => n !== name);
+  saveStops("busapp_departures", departureStops);
+  if (selectedDeparture === name) selectedDeparture = departureStops[0];
+  buildAll();
+  render();
+}
+
+function removeDestination(name) {
+  if (destinationStops.length <= 1) return;
+  destinationStops = destinationStops.filter(n => n !== name);
+  saveStops("busapp_destinations", destinationStops);
+  if (selectedDestination === name) {
+    selectedDestination = destinationStops.find(n => n !== selectedDeparture) || null;
+  }
+  buildAll();
+  render();
+}
+
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function svgEl(tag, attrs, text) {
+  const el = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+  if (text != null) el.textContent = text;
+  return el;
+}
+
+// one point per stop name along a direction, averaging stops that share a name
+function routePoints(dirLabel) {
+  const pts = [];
+  for (const sid of DATA.sequences[dirLabel]) {
+    const info = DATA.stops[sid];
+    if (!info) continue;
+    const last = pts[pts.length - 1];
+    if (last && last.name === info.name) {
+      last.lat = (last.lat + info.lat) / 2;
+      last.lon = (last.lon + info.lon) / 2;
+    } else {
+      pts.push({ name: info.name, lat: info.lat, lon: info.lon });
+    }
+  }
+  return pts;
+}
+
+function gmapsPlace(info) {
+  return `https://www.google.com/maps/search/?api=1&query=${info.lat},${info.lon}`;
+}
+
+function renderMap() {
+  const box = document.getElementById("map");
+  box.innerHTML = "";
+
+  const trip = selectedDestination ? resolveTrip(selectedDeparture, selectedDestination) : null;
+  const dirLabel = trip ? trip.dirLabel : Object.keys(DATA.sequences)[0];
+  const pts = routePoints(dirLabel);
+
+  // equirectangular projection fitted into the viewBox
+  const W = 320, H = 300, PAD = 34;
+  const cosLat = Math.cos(35.15 * Math.PI / 180);
+  const xs = pts.map(p => p.lon * cosLat), ys = pts.map(p => p.lat);
+  const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+  const scale = Math.min((W - PAD * 2) / (maxX - minX), (H - PAD * 2) / (maxY - minY));
+  const offX = (W - (maxX - minX) * scale) / 2, offY = (H - (maxY - minY) * scale) / 2;
+  const proj = p => [offX + (p.lon * cosLat - minX) * scale, offY + (maxY - p.lat) * scale];
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "路線図" });
+  const toPath = list => list.map(p => proj(p).map(n => n.toFixed(1)).join(",")).join(" ");
+
+  svg.appendChild(svgEl("polyline", {
+    points: toPath(pts), fill: "none", stroke: "var(--border)", "stroke-width": 6,
+    "stroke-linecap": "round", "stroke-linejoin": "round",
+  }));
+
+  let depI = -1, destI = -1;
+  if (trip) {
+    depI = pts.findIndex(p => p.name === selectedDeparture);
+    destI = pts.findIndex(p => p.name === selectedDestination);
+    svg.appendChild(svgEl("polyline", {
+      points: toPath(pts.slice(depI, destI + 1)), fill: "none", stroke: "var(--dest)", "stroke-width": 6,
+      "stroke-linecap": "round", "stroke-linejoin": "round",
+    }));
+  } else if (selectedDeparture) {
+    depI = pts.findIndex(p => p.name === selectedDeparture);
+  }
+
+  const labels = [];
+  pts.forEach((p, i) => {
+    const [x, y] = proj(p);
+    const isDep = i === depI, isDest = i === destI;
+    const onTrip = trip && i > depI && i < destI;
+    svg.appendChild(svgEl("circle", {
+      cx: x, cy: y, r: isDep || isDest ? 8 : 3.5,
+      fill: isDep ? "var(--dep)" : isDest ? "var(--dest)" : onTrip ? "var(--card)" : "var(--past)",
+      stroke: isDep || isDest ? "#fff" : onTrip ? "var(--dest)" : "none",
+      "stroke-width": isDep || isDest ? 2.5 : 1.5,
+    }));
+    if (isDep) labels.push({ x, y, text: `出発: ${p.name}`, color: "var(--dep)" });
+    else if (isDest) labels.push({ x, y, text: `到着: ${p.name}`, color: "var(--dest)" });
+    else if (i === 0 || i === pts.length - 1) labels.push({ x, y, text: p.name, color: "var(--text-dim)", small: true });
+  });
+
+  labels.forEach(l => {
+    const size = l.small ? 10 : 12;
+    const width = l.text.length * size + 12;
+    // keep the label inside the frame; flip below the dot near the top edge
+    const lx = Math.max(4, Math.min(W - width - 4, l.x - width / 2));
+    const ly = l.y - 14 - size < 4 ? l.y + 12 : l.y - 14 - size;
+    svg.appendChild(svgEl("rect", {
+      x: lx, y: ly, width, height: size + 8, rx: 6,
+      fill: "var(--card)", stroke: "var(--border)",
+    }));
+    svg.appendChild(svgEl("text", {
+      x: lx + width / 2, y: ly + size + 2, "text-anchor": "middle",
+      "font-size": size, "font-weight": 700, fill: l.color,
+    }, l.text));
+  });
+
+  box.appendChild(svg);
+
+  const depLink = document.getElementById("mapDepLink");
+  const routeLink = document.getElementById("mapRouteLink");
+  if (trip) {
+    const depInfo = DATA.stops[trip.depStopId], destInfo = DATA.stops[trip.destStopId];
+    depLink.href = gmapsPlace(depInfo);
+    routeLink.href = `https://www.google.com/maps/dir/?api=1&origin=${depInfo.lat},${depInfo.lon}` +
+      `&destination=${destInfo.lat},${destInfo.lon}&travelmode=transit`;
+    routeLink.hidden = false;
+  } else {
+    const dirs = DIRECTIONS_BY_STOP[selectedDeparture] || [];
+    const info = DATA.stops[findStopId(selectedDeparture, dirs[0])];
+    if (info) depLink.href = gmapsPlace(info);
+    routeLink.hidden = true;
+  }
+}
+
+function findStopId(stopName, direction) {
+  for (const [id, info] of Object.entries(DATA.stops)) {
+    if (info.name === stopName && info.direction === direction) return id;
+  }
+  return null;
+}
+
+function render() {
+  const now = new Date();
+  const dType = dayTypeForDate(now);
+  const nowMin = minutesNow(now);
+
+  document.getElementById("subtitle").textContent =
+    `${DATA.route}系統 ／ ${now.toLocaleDateString("ja-JP", { month: "numeric", day: "numeric", weekday: "short" })}`;
+  document.getElementById("dayType").textContent = `本日のダイヤ: ${dType}`;
+
+  const nextLabel = document.getElementById("nextLabel");
+  const nextTimeEl = document.getElementById("nextTime");
+  const nextSubEl = document.getElementById("nextSub");
+  const grid = document.getElementById("timeGrid");
+
+  if (!selectedDestination) {
+    nextLabel.textContent = "目的地を選んでください";
+    nextTimeEl.textContent = "--:--";
+    nextSubEl.textContent = "マイバス停をもう1件追加すると時刻表が表示されます";
+    grid.innerHTML = "";
+    renderMap();
+    return;
+  }
+
+  const trip = resolveTrip(selectedDeparture, selectedDestination);
+  if (!trip) {
+    nextLabel.textContent = "この組み合わせは運行していません";
+    nextTimeEl.textContent = "--:--";
+    nextSubEl.textContent = "出発地と目的地の順序が路線と逆かもしれません";
+    grid.innerHTML = "";
+    renderMap();
+    return;
+  }
+
+  const info = DATA.stops[trip.depStopId];
+  const times = info.times[dType];
+  let nextIdx = times.findIndex(t => toMinutes(t) >= nowMin);
+
+  if (nextIdx === -1) {
+    nextLabel.textContent = `次のバス（${selectedDeparture} → ${selectedDestination}）`;
+    nextTimeEl.textContent = "--:--";
+    nextSubEl.textContent = "本日の運行は終了しました" + (times.length ? `（始発 ${times[0]}）` : "");
+  } else {
+    const t = times[nextIdx];
+    const diff = toMinutes(t) - nowMin;
+    nextLabel.textContent = `次のバス（${selectedDeparture} → ${selectedDestination}）`;
+    nextTimeEl.textContent = t;
+    nextSubEl.textContent = diff <= 0 ? "まもなく発車" : `あと ${diff} 分`;
+    if (times[nextIdx + 1]) nextSubEl.textContent += ` ／ 次々便 ${times[nextIdx + 1]}`;
+  }
+
+  grid.innerHTML = "";
+  const cells = [];
+  times.forEach((t, i) => {
+    const cell = document.createElement("div");
+    cell.className = "time-cell";
+    if (toMinutes(t) < nowMin) cell.classList.add("past");
+    if (i === nextIdx) cell.classList.add("next");
+    cell.textContent = t;
+    grid.appendChild(cell);
+    cells.push(cell);
+  });
+  // horizontally scroll so 1 previous departure + the next few are in view
+  const scrollBox = document.getElementById("timeGridScroll");
+  const anchorCell = nextIdx > 0 ? cells[nextIdx - 1] : cells[0];
+  if (anchorCell) {
+    const cellLeft = anchorCell.getBoundingClientRect().left - scrollBox.getBoundingClientRect().left + scrollBox.scrollLeft;
+    scrollBox.scrollLeft = Math.max(0, cellLeft - 4);
+  } else {
+    scrollBox.scrollLeft = 0;
+  }
+
+  renderMap();
+}
+
+function makeTab(name, isActive, activeClass, onSelect, onRemove) {
+  const btn = document.createElement("div");
+  btn.className = "tab-btn" + (isActive ? " " + activeClass : "");
+  const label = document.createElement("span");
+  label.textContent = name;
+  btn.appendChild(label);
+  if (onRemove) {
+    const x = document.createElement("span");
+    x.className = "tab-x";
+    x.textContent = "×";
+    x.onclick = (e) => {
+      e.stopPropagation();
+      onRemove(name);
+    };
+    btn.appendChild(x);
+  }
+  btn.onclick = onSelect;
+  return btn;
+}
+
+function buildDepartureTabs() {
+  const row = document.getElementById("departureSelect");
+  row.innerHTML = "";
+  departureStops.forEach(name => {
+    const btn = makeTab(name, name === selectedDeparture, "active", () => {
+      selectedDeparture = name;
+      if (selectedDestination === name) {
+        selectedDestination = destinationStops.find(n => n !== name) || null;
+      }
+      buildAll();
+      render();
+    }, departureStops.length > 1 ? removeDeparture : null);
+    row.appendChild(btn);
+  });
+}
+
+function buildDestinationTabs() {
+  const row = document.getElementById("destinationSelect");
+  row.innerHTML = "";
+  const options = destinationStops.filter(n => n !== selectedDeparture);
+  if (!options.length) {
+    const msg = document.createElement("div");
+    msg.className = "no-stops-msg";
+    msg.textContent = "＋ バス停を編集からもう1件追加してください";
+    row.appendChild(msg);
+    return;
+  }
+  options.forEach(name => {
+    const btn = makeTab(name, name === selectedDestination, "dest-active", () => {
+      selectedDestination = name;
+      buildDestinationTabs();
+      render();
+    }, destinationStops.length > 1 ? removeDestination : null);
+    row.appendChild(btn);
+  });
+}
+
+function buildAll() {
+  buildDepartureTabs();
+  buildDestinationTabs();
+}
+
+function fillPicker(gridId, list, extraClass, onToggle) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = "";
+  ALL_STOP_NAMES.forEach(name => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "pick-chip " + extraClass + (list.includes(name) ? " on" : "");
+    chip.textContent = name;
+    chip.onclick = () => onToggle(name);
+    grid.appendChild(chip);
+  });
+}
+
+function buildSettingsSheet() {
+  fillPicker("pickDeparture", departureStops, "", name => {
+    if (departureStops.includes(name)) {
+      removeDeparture(name);
+    } else {
+      departureStops.push(name);
+      saveStops("busapp_departures", departureStops);
+      buildAll();
+      render();
+    }
+    buildSettingsSheet();
+  });
+  fillPicker("pickDestination", destinationStops, "dest", name => {
+    if (destinationStops.includes(name)) {
+      removeDestination(name);
+    } else {
+      destinationStops.push(name);
+      saveStops("busapp_destinations", destinationStops);
+      if (!selectedDestination && name !== selectedDeparture) selectedDestination = name;
+      buildAll();
+      render();
+    }
+    buildSettingsSheet();
+  });
+}
+
+function init(data) {
+  DATA = data;
+  // list stops in route order (名古屋駅 → 名鉄神宮前), then any stragglers
+  const firstDir = Object.keys(DATA.sequences)[0];
+  const ordered = DATA.sequences[firstDir].map(sid => DATA.stops[sid]).filter(Boolean)
+    .concat(Object.values(DATA.stops));
+  for (const info of ordered) {
+    if (!ALL_STOP_NAMES.includes(info.name)) ALL_STOP_NAMES.push(info.name);
+  }
+  for (const info of Object.values(DATA.stops)) {
+    if (!DIRECTIONS_BY_STOP[info.name]) DIRECTIONS_BY_STOP[info.name] = [];
+    if (!DIRECTIONS_BY_STOP[info.name].includes(info.direction)) {
+      DIRECTIONS_BY_STOP[info.name].push(info.direction);
+    }
+  }
+
+  departureStops = loadStops("busapp_departures");
+  destinationStops = loadStops("busapp_destinations");
+  selectedDeparture = departureStops[0];
+  selectedDestination = destinationStops.find(n => n !== selectedDeparture) || null;
+
+  buildAll();
+  buildSettingsSheet();
+  render();
+  setInterval(render, 15000);
+
+  document.getElementById("editStopsBtn").onclick = () => {
+    buildSettingsSheet();
+    document.getElementById("overlay").hidden = false;
+  };
+  document.getElementById("closeSheet").onclick = () => {
+    document.getElementById("overlay").hidden = true;
+  };
+  document.getElementById("overlay").onclick = (e) => {
+    if (e.target.id === "overlay") document.getElementById("overlay").hidden = true;
+  };
+}
+
+fetch("timetable.json")
+  .then(r => r.json())
+  .then(init)
+  .catch(err => {
+    document.getElementById("subtitle").textContent = "データの読み込みに失敗しました: " + err;
+  });
+</script>
+</body>
+</html>
