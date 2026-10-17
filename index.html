@@ -818,7 +818,7 @@ function nextQuestion(){
     b.onclick = () => answer(b, v);
     box.append(b);
   });
-  speak(`${p.a} ${WORD[p.op]} ${p.b} は？`);
+  speak(`${p.a} ${WORD[p.op]} ${p.b} わ？`);   // 読み上げでは「は」を「ハ」と読むので「わ」
 }
 function answer(btn, v){
   if(!S || S.locked || btn.disabled) return;
@@ -1102,7 +1102,7 @@ $('showSkip').onclick = endShow;
 function finalReward(){
   const id = S.id;
   const after = () => { if(S && S.id === id) result(); };
-  word(t('ぜんぶ せいかい！', '全問 正解！')); sfx('win'); confetti(40);
+  word(S.firstOk >= TOTAL ? t('ぜんぶ せいかい！', '全問 正解！') : t('12もん クリア！', '12問 クリア！')); sfx('win'); confetti(40);
   setTimeout(() => {
     if(S && S.id === id && playStory(after)) return;
     fireworks(15000); showDone = after; $('showveil').classList.remove('hide');
