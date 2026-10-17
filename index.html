@@ -286,6 +286,7 @@ img.pose.funny.fb{animation:fbFunny .9s ease-in-out infinite;filter:hue-rotate(2
 a.btn{text-decoration:none}
 #study .eq{font-size:clamp(2.2rem,11.5vw,3.6rem);white-space:nowrap}
 .btn.ghost{white-space:nowrap}
+.btn.nochar{min-height:56px;font-size:1rem;background:#fff1b8;margin-top:12px}
 </style>
 </head>
 <body>
@@ -299,6 +300,7 @@ a.btn{text-decoration:none}
       <button class="btn a5" data-age="5">5歳<small>足し算</small></button>
       <button class="btn a6" data-age="6">6歳<small>足し算・九九・割り算・筆算</small></button>
     </div>
+    <button class="btn nochar hide" id="noChar" data-go="party">📁 キャラ画像を 読み込むと キャラが 出てきます</button>
     <div class="subrow"><button class="btn" data-go="party">🤝 キャラ</button><button class="btn" data-go="settings">⚙️ 設定</button></div>
   </div>
 </section>
@@ -476,7 +478,7 @@ const MENUS = {
   6: [{type:'add200', ic:'➕', name:'足し算（200まで）'}, {type:'mul', ic:'✖️', name:'九九（かけ算）'}, {type:'div', ic:'➗', name:'割り算'},
       {type:'mix', ic:'🌈', name:'ミックス'}, {type:'h22', ic:'✏️', name:'筆算（2けた＋2けた）'}, {type:'h32', ic:'📝', name:'筆算（3けた＋2けた）'}],
 };
-const TOTAL = 12, BIG_EVERY = 4;
+const TOTAL = 12, BIG_EVERY = 3;
 const Save = {
   load(){ try{ return JSON.parse(localStorage.getItem('sansu-party')) || {}; }catch(e){ return {}; } },
   store(){ try{ localStorage.setItem('sansu-party', JSON.stringify(save)); }catch(e){} },
@@ -622,6 +624,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { sfx('tap
 document.querySelectorAll('[data-age]').forEach(b => b.onclick = () => { sfx('tap'); AGE = +b.dataset.age; show('menu'); });
 
 function renderHome(){
+  $('noChar').classList.toggle('hide', PARTY.length > 0);
   const ps = shuffle(PARTY).slice(0, 2);
   $('homeStage').innerHTML = ps.map(imgOf).join('');
 }
@@ -874,7 +877,6 @@ function finalReward(){
   const after = () => { if(S && S.id === id) result(); };
   word(t('ぜんぶ せいかい！', '全問 正解！')); sfx('win'); confetti(40);
   setTimeout(() => {
-    if(CAN_YT){ playClip(pick(BIG_CLIPS), after); return; }
     fireworks(15000); showDone = after; $('showveil').classList.remove('hide');
     const keys = shuffle(Object.keys(CRAZY));
     for(let i = 0; i < 7; i++) showTimers.push(setTimeout(() => { CRAZY[keys[i % keys.length]](PATTERNS); confetti(20); }, i * 2000));
