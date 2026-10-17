@@ -99,7 +99,7 @@ window.WhipMotions = (function(){
 
 // キュアホイップ：パーツを 関節で 動かす（作成・再生の 入口）
 window.WhipCharacter = {
-  show(wrap, seq){
+  show(wrap, seq, speed = 1){   // speed < 1 で ゆっくり
     const st = document.createElement('div'); st.className = 'wh-stage';
     const inn = document.createElement('div'); inn.className = 'wh-inner';
     st.append(inn); wrap.append(st);
@@ -111,7 +111,7 @@ window.WhipCharacter = {
       inn.style.transform = `translateX(${(W - 540 * s) / 2}px) scale(${s})`;
       let el = (now - t0) / 1000, name = 'idle', lt = el;
       for(const [n, dur] of seq){ if(el < dur){ name = n; break; } el -= dur; lt = el; }
-      const f = M[name](lt);
+      const f = M[name](lt * speed);
       rig.setRoot(f.root); rig.set(f.p);
       requestAnimationFrame(frame);
     };
