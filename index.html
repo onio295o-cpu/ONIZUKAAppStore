@@ -203,7 +203,7 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .cheer{position:relative;height:20vh;min-height:120px;flex-shrink:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 4%}
 /* ChaosCharacter（もらった モジュール） */
 .chaos-stage{position:relative;width:100%;height:100%;min-height:320px;overflow:hidden;isolation:isolate}.chaos-actor{position:absolute;left:50%;bottom:4%;width:min(34vw,180px);transform:translateX(-50%);transform-origin:50% 92%;will-change:transform;user-select:none;touch-action:manipulation}.chaos-actor img{display:block;width:100%;height:auto;pointer-events:none}.chaos-actor[data-motion="idle"]{animation:chaos-idle 2.6s ease-in-out infinite}.chaos-actor[data-motion="dance"]{animation:chaos-dance .42s ease-in-out 9 alternate}.chaos-actor[data-motion="jump"]{animation:chaos-jump .65s ease-in-out 4}.chaos-actor[data-motion="spin"]{animation:chaos-spin 1.1s ease-in-out 2}.chaos-actor[data-motion="fall"]{animation:chaos-fall 2.5s ease-in-out 1}.chaos-actor[data-motion="shake"]{animation:chaos-shake .12s linear 20}.chaos-actor[data-motion="bow"]{animation:chaos-bow 1.4s ease-in-out 2}.chaos-actor[data-motion="vanish"]{animation:chaos-vanish 2.8s ease-in-out 1}.chaos-actor[data-motion="charge"]{animation:chaos-charge 2.8s ease-in-out 1}.chaos-actor[data-motion="sleep"]{animation:chaos-sleep 4s ease-in-out 1}.chaos-actor[data-motion="slide"]{animation:chaos-slide 2.5s ease-in-out 1}.chaos-actor[data-motion="victory"]{animation:chaos-victory 2.4s ease-in-out 1}.chaos-bubble{position:absolute;z-index:2;left:50%;top:8%;transform:translateX(-50%);max-width:85%;padding:9px 14px;border:2px solid #222;border-radius:16px;background:#fff;color:#111;font:bold 16px/1.3 system-ui,sans-serif;text-align:center;box-shadow:3px 4px 0 #222;opacity:0;transition:opacity .16s;pointer-events:none}.chaos-bubble.is-visible{opacity:1}@keyframes chaos-idle{0%,100%{transform:translateX(-50%) rotate(-1deg)}50%{transform:translateX(-50%) translateY(-5px) rotate(1deg)}}@keyframes chaos-dance{0%{transform:translateX(-50%) rotate(-15deg) translateY(0)}100%{transform:translateX(-50%) rotate(15deg) translateY(-24px)}}@keyframes chaos-jump{0%,100%{transform:translateX(-50%) translateY(0) scaleY(1)}20%{transform:translateX(-50%) scaleY(.88)}55%{transform:translateX(-50%) translateY(-90px) rotate(7deg)}}@keyframes chaos-spin{0%{transform:translateX(-50%) rotate(0)}100%{transform:translateX(-50%) rotate(360deg)}}@keyframes chaos-fall{0%,10%{transform:translateX(-50%) rotate(0)}42%,75%{transform:translateX(-50%) translateY(35px) rotate(84deg)}100%{transform:translateX(-50%) rotate(0)}}@keyframes chaos-shake{0%,100%{transform:translateX(calc(-50% - 8px)) rotate(-4deg)}50%{transform:translateX(calc(-50% + 8px)) rotate(4deg)}}@keyframes chaos-bow{0%,100%{transform:translateX(-50%) rotate(0)}50%{transform:translateX(-50%) scaleY(.55) rotate(4deg)}}@keyframes chaos-vanish{0%,100%{transform:translateX(-50%) scale(1);opacity:1}30%,65%{transform:translateX(-50%) scale(.02);opacity:0}}@keyframes chaos-charge{0%,100%{transform:translateX(-50%) scale(1)}40%{transform:translateX(-50%) scale(1.17) rotate(-8deg)}60%{transform:translateX(-50%) scale(.9) rotate(12deg)}75%{transform:translateX(-50%) scale(.8)}}@keyframes chaos-sleep{0%,100%{transform:translateX(-50%) rotate(0)}35%,70%{transform:translateX(-50%) rotate(17deg) translateY(10px)}}@keyframes chaos-slide{0%,100%{transform:translateX(-50%)}40%{transform:translateX(calc(-50% - 65px)) rotate(-12deg)}75%{transform:translateX(calc(-50% + 65px)) rotate(12deg)}}@keyframes chaos-victory{0%,100%{transform:translateX(-50%) scale(1)}30%{transform:translateX(-50%) translateY(-30px) scale(1.12)}60%{transform:translateX(-50%) rotate(14deg) scale(1.12)}}@media(prefers-reduced-motion:reduce){.chaos-actor{animation:none!important}}
-.cheer .chaos-stage{min-height:0;height:100%;width:48%;overflow:visible}
+.cheer .chaos-stage{min-height:0;height:100%;flex:1;overflow:visible}
 .cheer .chaos-actor{width:auto;height:100%;bottom:0}
 .cheer .chaos-actor img{height:100%;width:auto;max-width:none;object-fit:contain}
 .cheer .chaos-bubble{top:-14%;font:800 .95rem/1.25 var(--font);border:3px solid var(--ink);box-shadow:0 3px 0 var(--ink);white-space:nowrap;max-width:none}
@@ -287,6 +287,9 @@ a.btn{text-decoration:none}
 #study .eq{font-size:clamp(2.2rem,11.5vw,3.6rem);white-space:nowrap}
 .btn.ghost{white-space:nowrap}
 .btn.nochar{min-height:56px;font-size:1rem;background:#fff1b8;margin-top:12px}
+.chars .c{position:relative}
+.chars .cn{width:100%;font:inherit;font-size:.8rem;text-align:center;border:2px solid var(--ink2);border-radius:8px;padding:2px;background:#fff;color:var(--ink)}
+.chars .del{position:absolute;top:-8px;right:-8px;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;border:3px solid var(--ink);font-size:.9rem;line-height:1}
 </style>
 </head>
 <body>
@@ -337,7 +340,8 @@ a.btn{text-decoration:none}
     <div class="hdr"><button class="btn ghost" data-go="home">← 戻る</button><h2>キャラ</h2><span class="sp"></span></div>
     <div class="chars" id="charList"></div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
-      <label class="btn">📁 画像を 読み込む<input type="file" id="charFiles" accept="image/*" multiple hidden></label>
+      <label class="btn">📁 画像を 読み込む<input type="file" id="charFiles" accept="image/*,.zip,application/zip" multiple hidden></label>
+      <p class="note" id="loadMsg">画像ファイルや ZIPを まとめて 選べます。背景は 自動で 消します。</p>
       <a class="btn sub" href="cutout.html">✂️ 画像を 切り抜く</a>
       <p class="note">ファイル名の 最後に「_喜ぶ」「_驚く」「_攻撃」「_変顔」を つけると、その ポーズで 登場します（例：キュアハート_喜ぶ.png）。<br>ポーズの 画像が ない ときは、通常の 画像を 動かして 表情を 出します。</p>
     </div>
@@ -576,6 +580,8 @@ const CharDB = {
     }catch(e){ res(null); } }); },
   async all(){ const d = await this.open(); if(!d) return [];
     return new Promise(res => { try{ const q = d.transaction('chars').objectStore('chars').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }catch(e){ res([]); } }); },
+  async del(key){ const d = await this.open(); if(!d) return;
+    return new Promise(res => { try{ const t = d.transaction('chars', 'readwrite'); t.objectStore('chars').delete(key); t.oncomplete = t.onerror = res; }catch(e){ res(); } }); },
   async put(rec){ const d = await this.open(); if(!d) return;
     return new Promise(res => { try{ const t = d.transaction('chars', 'readwrite'); t.objectStore('chars').put(rec); t.oncomplete = t.onerror = res; }catch(e){ res(); } }); },
 };
@@ -583,14 +589,66 @@ CharDB.all().then(rs => rs.forEach(r => r.data && addMember(r.name, r.data, r.po
 try{ const r = indexedDB.open('tashizan-chars', 1); r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath:'name'});   // 前の版で 読み込んだ 画像も つかう
   r.onsuccess = () => { try{ const q = r.result.transaction('chars').objectStore('chars').getAll(); q.onsuccess = () => (q.result || []).forEach(x => x.data && addMember(x.name, x.data)); }catch(e){} }; }catch(e){}
 FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, 'キャラクター/' + f, pose); });
-document.getElementById('charFiles').onchange = async e => {
-  for(const f of [...e.target.files]){
-    const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.onerror = () => r(null); fr.readAsDataURL(f); });
-    if(!data) continue;
-    const {name, pose} = parseName(f.name); addMember(name, data, pose); await CharDB.put({key:name + '|' + pose, name, pose, data});
+/* ---- 読み込み：画像ファイル・ZIP（中の画像を ぜんぶ）に 対応。背景が ある 画像は 自動で 切り抜く ---- */
+const IMG_RE = /\.(png|jpe?g|gif|webp)$/i, GENERIC = /^(character|image|img|chara|キャラ)\d*$/i;
+function loadScript(src){ return new Promise((res, rej) => { const x = document.createElement('script'); x.src = src; x.onload = res; x.onerror = rej; document.head.append(x); }); }
+const blobURL = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.onerror = () => r(null); fr.readAsDataURL(b); });
+// ふちから つながっている「ふちと 同じような 色」を 透明に する（チェック模様や 単色の 背景に 強い）
+async function autoCut(src){
+  const img = await new Promise(r => { const i = new Image(); i.onload = () => r(i); i.onerror = () => r(null); i.src = src; });
+  if(!img) return src;
+  const k = Math.min(1, 700 / Math.max(img.naturalWidth, img.naturalHeight));
+  const W = Math.round(img.naturalWidth * k), H = Math.round(img.naturalHeight * k);
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d'); x.drawImage(img, 0, 0, W, H);
+  const id = x.getImageData(0, 0, W, H), p = id.data, n = W * H;
+  let transparent = 0; for(let i = 0; i < W; i++) if(p[i * 4 + 3] < 20) transparent++;
+  if(transparent > W * .5) return src;                                // もう 透明な 画像は そのまま
+  const pal = [];                                                      // ふちの 色を あつめる
+  const addPal = i => { const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2]; if(!pal.some(q => Math.abs(q[0] - r) + Math.abs(q[1] - g) + Math.abs(q[2] - b) < 30)) pal.push([r, g, b]); };
+  for(let i = 0; i < W; i += 3){ addPal(i); addPal((H - 1) * W + i); }
+  for(let i = 0; i < H; i += 3){ addPal(i * W); addPal(i * W + W - 1); }
+  // ふちが 白〜うすい灰色ばかり（チェック模様など）なら「明るい灰色」を まとめて 背景と みなす
+  const light = i => { const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2]; return Math.min(r, g, b) > 165 && Math.max(r, g, b) - Math.min(r, g, b) < 22; };
+  let lb = 0, bt = 0; for(let i = 0; i < W; i += 2){ bt += 2; lb += light(i) + light((H - 1) * W + i); }
+  const lightBg = lb / bt > .6;
+  if(pal.length > 12 && !lightBg) return src;                          // 背景が ごちゃごちゃ なら さわらない
+  const near = i => { if(lightBg && light(i)) return true; const r = p[i * 4], g = p[i * 4 + 1], b = p[i * 4 + 2]; return pal.length <= 12 && pal.some(q => Math.abs(q[0] - r) + Math.abs(q[1] - g) + Math.abs(q[2] - b) < 46); };
+  const seen = new Uint8Array(n), q = new Int32Array(n); let h = 0, t = 0;
+  const push = i => { if(!seen[i] && near(i)){ seen[i] = 1; q[t++] = i; } };
+  for(let i = 0; i < W; i++){ push(i); push((H - 1) * W + i); }
+  for(let i = 0; i < H; i++){ push(i * W); push(i * W + W - 1); }
+  while(h < t){ const i = q[h++], xx = i % W, yy = (i / W) | 0;
+    if(xx > 0) push(i - 1); if(xx < W - 1) push(i + 1); if(yy > 0) push(i - W); if(yy < H - 1) push(i + W); }
+  for(let i = 0; i < n; i++) if(seen[i]) p[i * 4 + 3] = 0;
+  for(let yy = 1; yy < H - 1; yy++) for(let xx = 1; xx < W - 1; xx++){ const i = yy * W + xx;  // ふちを なめらかに
+    if(!seen[i] && (seen[i - 1] || seen[i + 1] || seen[i - W] || seen[i + W])) p[i * 4 + 3] = 150; }
+  x.putImageData(id, 0, 0);
+  return c.toDataURL('image/png');
+}
+async function importImage(fileName, blob, fallbackName){
+  let {name, pose} = parseName(fileName.split('/').pop());
+  if(GENERIC.test(name) && fallbackName) name = fallbackName;
+  const raw = await blobURL(blob); if(!raw) return;
+  const data = await autoCut(raw);
+  addMember(name, data, pose); await CharDB.put({key:name + '|' + pose, name, pose, data});
+}
+async function importFiles(files){
+  const msg = $('loadMsg'); let count = 0;
+  for(const f of files){
+    if(/\.zip$/i.test(f.name)){
+      msg.textContent = 'ZIPを ひらいています…';
+      try{
+        if(!window.JSZip) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
+        const zip = await JSZip.loadAsync(f), base = parseName(f.name).name.replace(/[_-]?(assets?|images?|pack)$/i, '').replace(/^\d+[-_]/, '');
+        for(const e of Object.values(zip.files)) if(!e.dir && IMG_RE.test(e.name) && !/__MACOSX/.test(e.name)){
+          await importImage(e.name, await e.async('blob'), base); count++; }
+      }catch(err){ msg.textContent = 'ZIPを ひらけませんでした。画像を そのまま 選んでください。'; }
+    }else if(IMG_RE.test(f.name) || /^image\//.test(f.type)){ await importImage(f.name, f); count++; }
   }
-  e.target.value = '';
-};
+  msg.textContent = count ? `${count}まい 読み込みました！` : '画像が 見つかりませんでした。';
+}
+document.getElementById('charFiles').onchange = async e => { const fs = [...e.target.files]; e.target.value = ''; await importFiles(fs); };
 const heroes = () => PARTY.filter(m => !isVillain(m));
 const villains = () => PARTY.filter(isVillain);
 const imgOf = (m, pose = 'normal') => {
@@ -643,8 +701,13 @@ function renderParty(){
   l.innerHTML = PARTY.length ? '' : '<p class="note" style="grid-column:1/-1">まだ キャラが いません。<br>画像を 読み込んでください。</p>';
   PARTY.forEach(m => {
     const d = document.createElement('div'); d.className = 'panel c';
-    d.innerHTML = `<img src="${m.src}" alt=""><div class="cn"></div><div class="slots">${Object.keys(POSES).map(k => `<span class="${m.poses[k] ? 'on' : ''}">${POSES[k]}</span>`).join('')}</div>`;
-    d.querySelector('.cn').textContent = m.name; l.append(d);
+    d.innerHTML = `<img src="${m.src}" alt=""><input class="cn" aria-label="なまえ"><div class="slots">${Object.keys(POSES).map(k => `<span class="${m.poses[k] ? 'on' : ''}">${POSES[k]}</span>`).join('')}</div><button class="del" aria-label="けす">×</button>`;
+    const inp = d.querySelector('.cn'); inp.value = m.name;
+    inp.onchange = async () => { const nn = inp.value.trim(); if(!nn || nn === m.name) return;
+      for(const [pose, data] of Object.entries(m.poses)){ await CharDB.del(m.name + '|' + pose); await CharDB.put({key:nn + '|' + pose, name:nn, pose, data}); }
+      m.name = nn; renderParty(); };
+    d.querySelector('.del').onclick = async () => { for(const pose of Object.keys(m.poses)) await CharDB.del(m.name + '|' + pose); PARTY.splice(PARTY.indexOf(m), 1); renderParty(); };
+    l.append(d);
   });
 }
 function renderSettings(){ document.querySelectorAll('[data-set]').forEach(x => x.classList.toggle('on', !!save[x.dataset.set])); }
@@ -659,7 +722,7 @@ const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.
 function startStudy(type){
   S = {id:Math.random(), type, n:0, first:true, firstOk:0, misses:0, locked:false};
   buildScene(pick(['bg-meadow', 'bg-forest', 'bg-sky', 'bg-desert']));
-  const cs = shuffle(PARTY.filter(m => !isVillain(m))).slice(0, 2);
+  const cs = shuffle(PARTY).slice(0, 3);
   $('cheer').innerHTML = ''; S.chars = cs.map(m => {
     const st = document.createElement('div'); $('cheer').append(st);
     const c = ChaosCharacter.create({stage:st, image:m.src, alt:m.name});
