@@ -2,468 +2,331 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
-<title>たしざんあそび</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>さんすうクエスト</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#fff7d6;--ink:#4a3b2a;--pink:#ff7aa8;--blue:#4cb8ff;--green:#5fd068;--yellow:#ffc933}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
-  body{margin:0;min-height:100vh;background:linear-gradient(#fff7d6,#ffe6f1) fixed;color:var(--ink);
-    font-family:"Hiragino Maru Gothic ProN","Yu Gothic","Meiryo",sans-serif;
-    display:flex;justify-content:center}
-  #app{width:100%;max-width:640px;padding:16px;display:flex;flex-direction:column;gap:14px;text-align:center}
-  h1{margin:8px 0 0;font-size:clamp(1.6rem,7vw,2.2rem);color:var(--pink);white-space:nowrap}
-  .sub{margin:0;font-size:1.2rem}
-  .btn{border:none;border-radius:24px;font:inherit;font-weight:bold;color:#fff;cursor:pointer;
-    box-shadow:0 6px 0 rgba(0,0,0,.18);transition:transform .08s}
-  .btn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.18)}
-  .age{display:block;width:100%;font-size:2rem;padding:20px;margin:10px 0}
-  .age small{display:block;font-size:1rem;font-weight:normal}
-  .a4{background:var(--green)}.a5{background:var(--blue)}.a6{background:var(--pink)}
-  .top{display:flex;justify-content:space-between;align-items:center;font-size:1.3rem}
-  .home{background:var(--yellow);font-size:1.1rem;padding:10px 16px;color:var(--ink)}
-  .stars{font-size:1.4rem}
-  .bar{height:14px;background:#fff;border-radius:7px;overflow:hidden;border:2px solid var(--ink)}
-  .bar i{display:block;height:100%;background:var(--green);width:0;transition:width .3s}
-  .card{background:#fff;border-radius:28px;padding:18px 10px;box-shadow:0 6px 0 rgba(0,0,0,.1)}
-  .eq{font-size:3.4rem;font-weight:bold;letter-spacing:.05em}
-  .eq .q{color:var(--pink)}
-  .pics{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px;font-size:2.2rem;min-height:60px}
-  .grp{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;max-width:42%}
-  .plus{font-size:2.6rem;font-weight:bold}
-  .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .choice{font-size:3rem;padding:18px 0;background:var(--blue)}
-  .choice.ng{background:#bbb;transform:scale(.92)}
-  .choice.ok{background:var(--green)}
-  #msg{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
-  .big{font-size:5rem}
-  .hide{display:none!important}
-  .mascot .brow{opacity:0}
-  .mascot{display:none;justify-content:center;align-items:flex-end;gap:8px;margin-top:6px}
-  .mascot.on{display:flex}
-  .mascot .mc{width:auto;height:150px;animation:bounce .6s infinite alternate;filter:drop-shadow(0 5px 3px rgba(0,0,0,.2))}
-  .mascot .say{background:#fff;border:3px solid var(--ink);border-radius:18px;padding:6px 12px;font-weight:bold;font-size:1.1rem;margin-bottom:60px}
-  #stage{position:fixed;inset:0;z-index:50;overflow:hidden;background:linear-gradient(#6ec9ff,#d9f4ff 62%)}
-  #sky span{position:absolute;transition:opacity 1s}
-  #sky .sun{right:6%;top:6%;font-size:3.6rem;animation:spin 20s linear infinite}
-  #sky .cloud{font-size:3.4rem;opacity:.9;animation:drift 18s linear infinite}
-  #sky .c1{top:30%;left:-15%}#sky .c2{top:44%;left:-15%;font-size:2.4rem;animation-duration:26s;animation-delay:-10s}
-  #sky .c3{top:52%;left:-15%;font-size:2.8rem;animation-duration:22s;animation-delay:-4s}
-  @keyframes drift{to{transform:translateX(120vw)}}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  #stage.space #sky span{opacity:0}
-  #spacebg{position:absolute;inset:0;opacity:0;transition:opacity 1s;
-    background:radial-gradient(#fff 1px,transparent 2px) 0 0/38px 38px,radial-gradient(#ffe 1.5px,transparent 2px) 19px 19px/53px 53px,#0b0b30}
-  #stage.space #spacebg{opacity:1}
-  #park{position:absolute;left:0;right:0;bottom:0;height:30%;background:linear-gradient(#7fdc62,#4fb847);transition:opacity 1s;font-size:4.5rem;
-    border-top:6px solid #5ccd4a}
-  #stage.space #park{opacity:0}
-  #park span{position:absolute;bottom:55%;transform-origin:50% 100%;animation:sway 3s ease-in-out infinite alternate}
-  #park .path{position:absolute;left:30%;right:30%;bottom:0;height:34%;background:#e9d29a;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.8}
-  @keyframes sway{to{transform:rotate(4deg)}}
-  .t1{left:4%}.t2{right:5%}.t5{left:20%;font-size:3rem!important;bottom:62%!important}
-  .t3{left:30%;bottom:70%!important;font-size:2rem}.t4{right:28%;bottom:62%!important;font-size:2.2rem}.t6{left:8%;bottom:20%!important;font-size:1.8rem}
-  #planets span{position:absolute;font-size:3.2rem;opacity:0;transition:opacity 1s;animation:float 3s ease-in-out infinite}
-  #stage.space #planets span{opacity:1}
-  @keyframes float{50%{transform:translateY(-14px) rotate(8deg)}}
+/* ================= デザインシステム ================= */
+:root{
+  --night:#141a3d; --panel:rgba(16,20,52,.88); --line:#fff;
+  --gold:#ffcf3f; --gold2:#e89a00; --ink:#2b2140;
+  --red:#ff5a6e; --green:#46d47a; --blue:#4fb6ff;
+  --r:18px; --font:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Yu Gothic",sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%}
+body{font-family:var(--font);font-weight:800;color:#fff;background:var(--night);overflow:hidden}
+button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
+.hide{display:none!important}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.wrap{width:100%;max-width:520px;height:100%;display:flex;flex-direction:column;padding:max(12px,env(safe-area-inset-top)) 16px 16px;position:relative}
 
-  /* ---- キャスト ---- */
-  #cast{position:absolute;inset:0;pointer-events:none}
-  .actor{position:absolute;bottom:20%;left:50%;width:180px;margin-left:-90px;z-index:2;
-    transition:left .5s ease-out,opacity .3s}
-  .actor.off-l{left:-30%!important;opacity:0}
-  .actor.off-r{left:130%!important;opacity:0}
-  .actor .body{position:relative;display:block;transform-origin:50% 100%}
-  .actor .fb{display:block;margin:0 auto;filter:drop-shadow(0 6px 4px rgba(0,0,0,.25))}
-  .actor img.pic{display:block;margin:0 auto;height:200px;width:auto;max-width:180px;object-fit:contain;filter:drop-shadow(0 6px 4px rgba(0,0,0,.3))}
-  img.card{border:5px solid #fff;border-radius:18px;object-fit:cover!important;background:#fff;box-shadow:0 6px 0 rgba(0,0,0,.18)}
-  .actor.top{top:0;bottom:auto;width:220px;margin-left:-110px;left:50%;z-index:1;
-    transform:translateY(-110%);transition:transform .6s ease-out}
-  .actor.top.show{transform:none}
-  .actor.top.defeated{transform:translateY(-130%) rotate(40deg);transition:transform .9s ease-in}
-  .actor.top .fb{width:220px;height:auto}
-  .actor.top img.pic{height:auto;width:220px;max-height:280px;object-fit:cover;max-width:none;border-radius:22px;box-shadow:0 6px 0 rgba(0,0,0,.25)}
-  .actor .hair{position:absolute;left:50%;width:40px;height:0;overflow:hidden;transition:height .6s ease-in}
-  .emo{position:absolute;top:-8px;right:-4px;font-size:2.6rem;opacity:0;z-index:3}
-  .emo.on{opacity:1;animation:pop .35s infinite alternate}
-  .actor .brow{opacity:0}.actor.angry .brow{opacity:1}
-  .mouth{transform-box:fill-box;transform-origin:center}
-  .fx-shake{animation:shake .25s infinite}
-  .fx-shake .mouth{animation:yell .25s infinite alternate}
-  @keyframes yell{from{transform:scaleY(.5)}to{transform:scale(1.2,1.4)}}
-  .fx-jump{animation:jump .45s infinite}
-  @keyframes jump{50%{transform:translateY(-34px)}}
-  .fx-laugh{animation:laugh .3s infinite alternate}
-  @keyframes laugh{from{transform:rotate(-7deg) scale(1)}to{transform:rotate(7deg) scale(1.07)}}
-  .fx-cry{animation:cry .5s infinite alternate;transform-origin:50% 100%}
-  @keyframes cry{from{transform:rotate(-4deg) translateY(0)}to{transform:rotate(4deg) translateY(6px)}}
-  .fx-hit{transform:rotate(-22deg) translateX(-24px);transition:transform .08s}
-  .fx-dance{animation:dance .5s infinite alternate}
-  @keyframes dance{from{transform:rotate(-9deg) translateY(0)}to{transform:rotate(9deg) translateY(-18px)}}
-  .fx-run{animation:runbob .22s infinite alternate}
-  @keyframes runbob{to{transform:translateY(-10px) rotate(4deg)}}
-  .fx-zap{animation:zap .12s infinite alternate}
-  @keyframes zap{from{filter:brightness(1)}to{filter:brightness(2.4) saturate(.3);transform:translateX(5px)}}
-  .fx-grow{transform:scale(1.25)}
-  .fx-spin{animation:spinb .7s linear infinite}
-  @keyframes spinb{to{transform:rotate(360deg)}}
-  /* ---- アニメらしい動き：ため／伸び縮み／余韻／息づかい／影 ---- */
-  .actor{transition:left .65s cubic-bezier(.34,1.45,.64,1),opacity .3s;--sp:1}
-  .actor::after{content:"";position:absolute;left:50%;bottom:-8px;width:120px;height:18px;margin-left:-60px;border-radius:50%;
-    background:radial-gradient(rgba(0,0,0,.28),rgba(0,0,0,0) 70%);z-index:-1;transform-origin:center}
-  .actor.top::after,#stage.space .actor::after{display:none}
-  .actor .body{transform-origin:50% 100%;animation:breathe calc(2.4s*var(--sp)) ease-in-out infinite}
-  @keyframes breathe{0%,100%{transform:scale(1,1) skewX(0)}50%{transform:scale(1.015,1.035) skewX(-1deg)}}
-  .actor .body.rise{animation:none!important}
-  .actor.enter .body{animation:hopin .55s cubic-bezier(.3,.7,.4,1) both}
-  @keyframes hopin{0%{transform:translateY(-60px) scale(.9,1.1)}60%{transform:translateY(0) scale(1.12,.86)}80%{transform:scale(.96,1.05)}100%{transform:none}}
-  .fx-jump{animation:jump2 calc(.62s*var(--sp)) cubic-bezier(.3,0,.3,1) infinite!important}
-  @keyframes jump2{0%{transform:scale(1,1)}15%{transform:scale(1.14,.84)}40%{transform:translateY(-46px) scale(.9,1.12)}60%{transform:translateY(-50px) scale(1,1)}85%{transform:translateY(0) scale(1.12,.86)}100%{transform:scale(1,1)}}
-  .actor[data-fx=jump]::after{animation:shadowjump calc(.62s*var(--sp)) cubic-bezier(.3,0,.3,1) infinite}
-  @keyframes shadowjump{40%,60%{transform:scale(.55);opacity:.5}}
-  .fx-run{animation:run2 calc(.3s*var(--sp)) ease-in-out infinite alternate!important}
-  @keyframes run2{from{transform:rotate(6deg) translateY(0) scale(1.04,.96)}to{transform:rotate(9deg) translateY(-14px) scale(.97,1.04)}}
-  .fx-dance{animation:dance2 calc(.8s*var(--sp)) ease-in-out infinite!important}
-  @keyframes dance2{0%,100%{transform:rotate(-8deg) skewX(4deg) scale(1,1)}25%{transform:translateY(-16px) scale(.95,1.07)}50%{transform:rotate(8deg) skewX(-4deg) scale(1,1)}75%{transform:translateY(-16px) scale(.95,1.07)}}
-  .fx-laugh{animation:laugh2 calc(.36s*var(--sp)) ease-in-out infinite alternate!important}
-  @keyframes laugh2{from{transform:rotate(-5deg) scale(1.03,.97)}to{transform:rotate(5deg) scale(.98,1.04) translateY(-6px)}}
-  .fx-shake{animation:shake2 calc(.22s*var(--sp)) linear infinite!important}
-  @keyframes shake2{0%,100%{transform:translateX(0) skewX(0)}25%{transform:translateX(-7px) skewX(4deg) scale(1.03,.97)}75%{transform:translateX(7px) skewX(-4deg) scale(1.03,.97)}}
-  .fx-cry{animation:cry2 calc(.7s*var(--sp)) ease-in-out infinite!important}
-  @keyframes cry2{0%,100%{transform:rotate(-3deg) scale(1,.97)}50%{transform:rotate(3deg) scale(.98,1.01) translateY(4px)}}
-  .fx-hit{animation:hit2 .5s cubic-bezier(.2,.9,.3,1.4) forwards!important;transition:none}
-  @keyframes hit2{0%{transform:none}20%{transform:translateX(-30px) rotate(-26deg) scale(1.1,.85)}60%{transform:translateX(-18px) rotate(-14deg)}100%{transform:translateX(-22px) rotate(-18deg)}}
-  .fx-spin{animation:spin2 calc(.9s*var(--sp)) cubic-bezier(.5,0,.5,1) infinite!important}
-  @keyframes spin2{0%{transform:rotateY(0) scale(1,1)}50%{transform:rotateY(180deg) translateY(-20px) scale(.9,1.1)}100%{transform:rotateY(360deg)}}
-  .fx-grow{animation:grow2 .8s cubic-bezier(.3,1.6,.5,1) forwards!important}
-  @keyframes grow2{0%{transform:scale(1)}40%{transform:scale(.85,1.15)}100%{transform:scale(1.22)}}
-  .fx-zap{animation:zap2 .1s steps(2) infinite!important}
-  @keyframes zap2{0%{filter:brightness(1);transform:translateX(-4px)}100%{filter:brightness(2.6) saturate(.2);transform:translateX(4px) scale(1.03)}}
-  #fw{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;display:none}
-  #stage.fw #fw{display:block}
-  #stage.fw{background:radial-gradient(#2a1450,#05030f)}
-  #stage.fw #sky,#stage.fw #park{opacity:0}
-  #pow{position:absolute;top:32%;left:50%;transform:translateX(-50%);font-size:clamp(1.4rem,7.5vw,2.6rem);font-weight:900;color:#ff3b3b;
-    -webkit-text-stroke:2px #fff;paint-order:stroke fill;z-index:4;opacity:0;white-space:nowrap}
-  #pow.on{animation:powpop .9s forwards}
-  @keyframes powpop{0%{opacity:0;transform:translateX(-50%) scale(.3)}25%{opacity:1;transform:translateX(-50%) scale(1.3)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
-  #bubble{position:absolute;bottom:3%;left:50%;z-index:3;transform:translateX(-50%);width:max-content;max-width:88vw;
-    background:#fff;border:4px solid var(--ink);border-radius:22px;padding:6px 18px 8px;font-size:1.7rem;font-weight:bold;text-align:center;
-    box-shadow:0 6px 0 rgba(0,0,0,.15)}
-  #bubble .nm{display:block;font-size:1rem;color:#8a5a00;letter-spacing:.05em}
-  #clip{position:absolute;inset:0;z-index:5;background:#000;display:flex;align-items:center;justify-content:center}
-  #clip iframe{width:100%;aspect-ratio:16/9;border:0}
-  .drop{position:absolute;z-index:4;font-size:1.5rem;filter:sepia(1) saturate(7) hue-rotate(8deg);opacity:0;animation:dropfall 1.2s ease-in forwards}
-  @keyframes dropfall{0%{opacity:1;transform:translateY(0)}100%{opacity:1;transform:translateY(var(--dy))}}
-  #skip{position:absolute;top:10px;right:10px;z-index:6;font-size:.9rem;padding:6px 12px;background:rgba(0,0,0,.45);box-shadow:none}
-  .hs{display:grid;grid-template-columns:repeat(4,64px);justify-content:center;gap:4px 6px;
-    font-size:3rem;font-weight:bold;font-variant-numeric:tabular-nums}
-  .hs div{height:64px;display:flex;align-items:center;justify-content:center}
-  .hs .cy{height:30px;font-size:1.5rem;color:var(--pink)}
-  .hs .ln{height:6px;background:var(--ink);border-radius:3px;grid-column:1 / -1}
-  .hs .bx{border:4px dashed #bbb;border-radius:14px;color:var(--green)}
-  .hs .bx.on{border-color:var(--pink);background:#fff0f5}
-  .hs .bx.off{border:none}
-  .msgbox{min-height:2.2rem;font-size:1.7rem;font-weight:bold}
-  .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
-  .pad .btn{font-size:2.2rem;padding:16px 0;background:var(--blue)}
-  @keyframes pop{0%{transform:scale(.6)}60%{transform:scale(1.15)}100%{transform:scale(1)}}
-  .pop{animation:pop .4s}
-  @keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
-  .shake{animation:shake .3s}
+/* 背景 */
+.bg-night{background:radial-gradient(circle at 20% 15%,#3b3f9e 0,transparent 40%),radial-gradient(circle at 80% 30%,#5b2f86 0,transparent 45%),linear-gradient(#141a3d,#0b0e26)}
+.stars::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.8;
+  background:radial-gradient(1.5px 1.5px at 10% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 30% 70%,#fff,transparent),radial-gradient(2px 2px at 55% 30%,#fff,transparent),
+  radial-gradient(1.5px 1.5px at 75% 60%,#fff,transparent),radial-gradient(2px 2px at 90% 15%,#fff,transparent),radial-gradient(1.5px 1.5px at 45% 85%,#fff,transparent),
+  radial-gradient(1.5px 1.5px at 85% 85%,#fff,transparent),radial-gradient(2px 2px at 20% 50%,#fff,transparent);animation:twinkle 4s ease-in-out infinite alternate}
+@keyframes twinkle{to{opacity:.35}}
+.bg-meadow{background:linear-gradient(#7fd0ff 0,#c9efff 52%,#7dd36a 52%,#4fae4c 100%)}
+.bg-forest{background:linear-gradient(#5fbf8a 0,#c4f0c8 52%,#3f9a4c 52%,#25693a 100%)}
+.bg-desert{background:linear-gradient(#ffb36b 0,#ffe3a8 52%,#f0c06a 52%,#d39a45 100%)}
+.bg-sky{background:linear-gradient(#4f6bff 0,#b8a8ff 52%,#ffffff 52%,#d9d4ff 100%)}
+.bg-cave{background:linear-gradient(#2b1d4f 0,#5a3d8f 52%,#3a2a5c 52%,#22183a 100%)}
+.bg-volcano{background:linear-gradient(#5a1430 0,#c4442c 52%,#4a2a2a 52%,#2a1616 100%)}
+.bg-ice{background:linear-gradient(#8fb8ff 0,#e2f0ff 52%,#cfe8ff 52%,#9cc4ef 100%)}
+.bg-castle{background:linear-gradient(#22264f 0,#6b5fa8 52%,#6a6a7a 52%,#3d3d4c 100%)}
+
+/* パネル・ボタン */
+.panel{background:var(--panel);border:4px solid var(--line);border-radius:var(--r);box-shadow:0 0 0 4px rgba(0,0,0,.35),0 10px 24px rgba(0,0,0,.35)}
+.btn{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;border-radius:16px;padding:14px 18px;font-size:1.25rem;
+  color:var(--ink);background:linear-gradient(#fff6c8,var(--gold));box-shadow:0 6px 0 var(--gold2),0 10px 16px rgba(0,0,0,.3);transition:transform .06s}
+.btn:active{transform:translateY(5px);box-shadow:0 1px 0 var(--gold2),0 4px 8px rgba(0,0,0,.3)}
+.btn.sub{background:linear-gradient(#e9f4ff,#9fd1ff);box-shadow:0 6px 0 #3f88c9,0 10px 16px rgba(0,0,0,.3)}
+.btn.sub:active{box-shadow:0 1px 0 #3f88c9}
+.btn.ghost{background:rgba(0,0,0,.25);color:#fff;box-shadow:none;border:3px solid rgba(255,255,255,.7);padding:6px 12px;font-size:1rem}
+.btn:disabled{filter:grayscale(1) brightness(.75)}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.8rem;background:rgba(0,0,0,.3)}
+.title-logo{font-size:clamp(2.6rem,12vw,3.8rem);line-height:1.05;text-align:center;margin:0;
+  background:linear-gradient(#fff9d6,#ffcf3f 55%,#ff9a1f);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 4px 0 #7a3b00) drop-shadow(0 8px 14px rgba(0,0,0,.4))}
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:48px}
+.hdr h2{margin:0;font-size:clamp(.95rem,4.6vw,1.25rem);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 3px 0 rgba(0,0,0,.45);text-align:center;flex:1}
+.hdr .sp{width:80px}
+.starline{color:var(--gold);letter-spacing:1px;text-shadow:0 2px 0 rgba(0,0,0,.45)}
+
+/* ================= ホーム ================= */
+#home .wrap{justify-content:space-between}
+.home-stage{flex:1;display:flex;align-items:center;justify-content:center;gap:10px;min-height:200px}
+.home-stage .hero{width:130px;animation:bob 1.6s ease-in-out infinite}
+.home-stage .hero img{width:100%;max-height:200px;object-fit:contain;filter:drop-shadow(0 6px 4px rgba(0,0,0,.4))}
+.home-stage .enemy{width:120px;animation:bob 1.3s ease-in-out infinite reverse}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.menu{display:flex;flex-direction:column;gap:14px}
+
+/* ================= コース・ステージ ================= */
+.list{flex:1;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:8px 4px 12px;align-content:start}
+.course{padding:12px 8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:4px;transition:transform .08s}
+.course:active{transform:scale(.97)}
+.course .ic{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;border:3px solid #fff}
+.course .nm{font-size:.9rem;line-height:1.25;word-break:keep-all}
+.path{flex:1;display:flex;flex-direction:column-reverse;justify-content:space-around;align-items:center;padding:16px 0}
+.node{width:84px;height:84px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.6rem;
+  background:linear-gradient(#fff6c8,var(--gold));color:var(--ink);box-shadow:0 6px 0 var(--gold2),0 0 0 5px #fff,0 10px 18px rgba(0,0,0,.35)}
+.node small{font-size:.75rem;color:#8a5600;letter-spacing:1px}
+.node.boss{width:104px;height:104px;background:linear-gradient(#ffd0d6,var(--red));box-shadow:0 6px 0 #a3283a,0 0 0 5px #fff,0 10px 18px rgba(0,0,0,.35)}
+.node.lock{background:#8a8a99;box-shadow:0 6px 0 #555,0 0 0 5px #ccc;color:#eee}
+.node:nth-child(odd){transform:translateX(-56px)}.node:nth-child(even){transform:translateX(56px)}
+.node.now{animation:nodepulse 1s ease-in-out infinite}
+@keyframes nodepulse{50%{box-shadow:0 6px 0 var(--gold2),0 0 0 9px #fff,0 0 24px 8px rgba(255,230,120,.9)}}
+
+/* ================= バトル ================= */
+#battle .wrap{gap:12px}
+.arena{position:relative;height:34vh;min-height:210px;flex-shrink:0;border-radius:var(--r);overflow:hidden;border:4px solid #fff;box-shadow:0 0 0 4px rgba(0,0,0,.35);background:inherit}
+.arena::after{content:"";position:absolute;left:0;right:0;bottom:0;height:28%;background:linear-gradient(transparent,rgba(0,0,0,.18))}
+.enemy-box{position:absolute;right:6%;top:6%;width:46%;max-width:200px;text-align:center;z-index:1}
+.enemy-box .enemy{width:100%;margin-top:4px;filter:drop-shadow(0 8px 6px rgba(0,0,0,.3));animation:bob 1.4s ease-in-out infinite;transform-origin:50% 100%}
+.enemy-box .enemy.hit{animation:hit .45s}
+.enemy-box .enemy.attack{animation:eatk .5s}
+.enemy-box .enemy.down{animation:down .9s forwards}
+@keyframes hit{0%,100%{filter:none;transform:none}20%{filter:brightness(3);transform:translateX(14px) scale(1.06,.94)}50%{transform:translateX(-8px)}}
+@keyframes eatk{40%{transform:translateX(-40%) scale(1.12)}}
+@keyframes down{30%{filter:brightness(3);transform:scale(1.2,.8)}100%{transform:scale(0) rotate(30deg);opacity:0}}
+.ename{font-size:.85rem;text-shadow:0 2px 0 rgba(0,0,0,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;margin-bottom:3px}
+.hpbar{height:14px;border-radius:99px;background:rgba(0,0,0,.5);border:2px solid #fff;overflow:hidden}
+.hpbar i{display:block;height:100%;background:linear-gradient(#9cff9c,#2fbf4f);transition:width .4s}
+.hpbar.low i{background:linear-gradient(#ffb3b3,#ff4a4a)}
+.hero-box{position:absolute;left:5%;bottom:6%;width:36%;max-width:150px;z-index:2}
+.hero-box img,.hero-box svg{display:block;width:100%;max-height:24vh;object-fit:contain;filter:drop-shadow(0 6px 4px rgba(0,0,0,.35));animation:bob 1.8s ease-in-out infinite}
+.hero-box.atk{animation:dash .55s cubic-bezier(.3,.6,.4,1)}
+@keyframes dash{0%{transform:none}35%{transform:translateX(110%) translateY(-20%) scale(1.1)}100%{transform:none}}
+.hero-box.hurt{animation:hurt .45s}
+@keyframes hurt{30%{transform:translateX(-14px) rotate(-6deg);filter:brightness(1.6) saturate(.3)}}
+.slash{position:absolute;right:12%;top:22%;width:40%;pointer-events:none;opacity:0;z-index:3}
+.slash.on{animation:slash .4s ease-out}
+@keyframes slash{0%{opacity:1;transform:scale(.4) rotate(-30deg)}60%{opacity:1}100%{opacity:0;transform:scale(1.3) rotate(10deg)}}
+.dmg{position:absolute;right:16%;top:18%;font-size:2.2rem;color:#fff;-webkit-text-stroke:3px #c4002b;paint-order:stroke fill;pointer-events:none;opacity:0;z-index:4;white-space:nowrap}
+.dmg.on{animation:dmg .8s ease-out}
+@keyframes dmg{0%{opacity:0;transform:translateY(10px) scale(.6)}20%{opacity:1;transform:translateY(0) scale(1.3)}100%{opacity:0;transform:translateY(-40px)}}
+.combo{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:1.5rem;color:var(--gold);-webkit-text-stroke:3px #7a3b00;paint-order:stroke fill;opacity:0;white-space:nowrap;z-index:4}
+.combo.on{animation:cpop .8s ease-out forwards}
+@keyframes cpop{0%{opacity:0;transform:translateX(-50%) scale(.4)}40%{opacity:1;transform:translateX(-50%) scale(1.25)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
+.qwin{padding:16px 14px 10px;text-align:center;position:relative}
+.qcount{position:absolute;top:-15px;left:14px;font-size:.85rem;background:var(--gold);color:var(--ink);padding:2px 10px;border-radius:99px;border:3px solid #fff}
+.eq{font-size:clamp(2.2rem,11vw,3.2rem);letter-spacing:.03em;font-variant-numeric:tabular-nums;line-height:1.2}
+.eq .q{color:var(--gold)}
+.pics{display:flex;align-items:center;justify-content:center;gap:6px;font-size:1.5rem}
+.pics .grp{display:flex;flex-wrap:wrap;justify-content:center;max-width:44%}
+.hint{min-height:1.5em;font-size:1rem;color:#bfe3ff;margin-top:4px}
+.hint .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;margin-top:4px;font-size:1rem;letter-spacing:2px}
+.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:auto}
+.answers .btn{font-size:clamp(2rem,10vw,2.8rem);padding:16px 0}
+.answers .btn.ng{animation:shake .35s;filter:grayscale(1) brightness(.6)}
+.answers .btn.ok{background:linear-gradient(#d4ffd9,var(--green));box-shadow:0 6px 0 #1f8a45}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.hs{display:grid;grid-template-columns:repeat(4,50px);justify-content:center;gap:2px 6px;font-size:2.3rem;font-variant-numeric:tabular-nums}
+.hs div{height:50px;display:flex;align-items:center;justify-content:center}
+.hs .cy{height:22px;font-size:1.2rem;color:var(--red)}
+.hs .ln{height:5px;background:#fff;border-radius:3px;grid-column:1/-1}
+.hs .bx{border:3px dashed rgba(255,255,255,.5);border-radius:12px;color:var(--green)}
+.hs .bx.on{border:3px solid var(--gold);background:rgba(255,207,63,.15)}
+.hs .bx.off{border:none}
+.hs .bx.ng{animation:shake .35s}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:auto}
+.pad .btn{font-size:1.8rem;padding:10px 0}
+
+/* リザルト */
+.overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(5,7,25,.72)}
+.result{width:min(92vw,420px);padding:22px 18px;text-align:center;position:relative;z-index:2}
+.result h2{margin:0 0 4px;font-size:2rem;color:var(--gold);text-shadow:0 3px 0 #7a3b00}
+.bigstars{font-size:3.2rem;letter-spacing:6px;margin:4px 0}
+.bigstars span{display:inline-block;opacity:.25;filter:grayscale(1)}
+.bigstars span.on{opacity:1;filter:none;animation:starin .5s cubic-bezier(.3,1.8,.5,1) both}
+@keyframes starin{0%{transform:scale(0) rotate(-90deg)}100%{transform:none}}
+.party{display:flex;justify-content:center;gap:6px;height:120px;margin:6px 0}
+.party img,.party svg{height:100%;max-width:33%;object-fit:contain;animation:dance .6s ease-in-out infinite alternate;filter:drop-shadow(0 4px 3px rgba(0,0,0,.4))}
+.party img:nth-child(2){animation-delay:-.2s}.party img:nth-child(3){animation-delay:-.4s}
+@keyframes dance{from{transform:rotate(-8deg) translateY(0)}to{transform:rotate(8deg) translateY(-12px)}}
+.result .row{display:flex;gap:10px;margin-top:14px}.result .row .btn{flex:1}
+#fw{position:fixed;inset:0;width:100%;height:100%;z-index:30;pointer-events:none;display:none}
+
+/* なかま・せってい */
+.chars{flex:1;overflow:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:8px 4px;align-content:start}
+.chars .c{padding:6px;text-align:center;font-size:.72rem;line-height:1.2}
+.chars img{width:100%;height:90px;object-fit:contain}
+.setting{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;font-size:1.1rem;margin-top:12px}
+.toggle{width:64px;height:36px;border-radius:99px;background:#666;position:relative;transition:background .2s}
+.toggle::after{content:"";position:absolute;top:4px;left:4px;width:28px;height:28px;border-radius:50%;background:#fff;transition:left .2s}
+.toggle.on{background:var(--green)}.toggle.on::after{left:32px}
+.note{font-size:.85rem;font-weight:500;opacity:.85;line-height:1.5;text-align:center}
+a.btn{text-decoration:none}
 </style>
 </head>
 <body>
-<div id="app">
 
-  <section id="home">
-    <h1>🍎 たしざんあそび 🍌</h1>
-    <p class="sub">いくつ かな？ えらんでね！</p>
-    <button class="btn age a4" data-lv="4">4さい<small>1〜5 の たしざん</small></button>
-    <button class="btn age a5" data-lv="5">5さい<small>10 までの たしざん</small></button>
-    <button class="btn age a6" data-lv="6">6さい<small>200 までの たしざん・くく・わりざん</small></button>
-    <label class="btn age" style="background:#2fb3a3;font-size:1.4rem;padding:14px;cursor:pointer">📁 キャラ画像を よみこむ<small id="charCount">この端末に ほぞん（はじめに 1かいだけ）</small><input type="file" id="charFiles" accept="image/*" multiple style="display:none"></label>
-    <button class="btn age" style="background:#9b6bff" id="toH">✏️ ひっさん<small>2けた・3けた の たしざん</small></button>
-    <a class="btn age" style="background:#ff9f43;text-decoration:none;font-size:1.4rem;padding:14px" href="cutout.html">✂️ キャラ きりぬき<small>画像の はいけいを けして ふちどり</small></a>
-    <div class="mascot"><span class="say">いっしょに<br>がんばろー！<br>ハッピー！</span></div>
-  </section>
-
-  <section id="hmode" class="hide">
-    <h1>✏️ ひっさん</h1>
-    <p class="sub">どれを やる？</p>
-    <button class="btn age a4" data-h="22">2けた ＋ 2けた</button>
-    <button class="btn age a5" data-h="32">3けた ＋ 2けた</button>
-    <button class="btn age a6" data-h="mix">🌈 まぜまぜ</button>
-    <button class="btn home" id="hmodeBack">← もどる</button>
-  </section>
-
-  <section id="hgame" class="hide">
-    <div class="top">
-      <button class="btn home" id="hback">← もどる</button>
-      <span class="stars" id="hstars">⭐ 0</span>
+<section id="home" class="screen bg-night stars">
+  <div class="wrap">
+    <div style="text-align:center;margin-top:4vh">
+      <h1 class="title-logo">さんすう<br>クエスト</h1>
+      <div class="starline" id="totalStars" style="margin-top:10px"></div>
     </div>
-    <div class="bar"><i id="hprog"></i></div>
-    <div class="card" style="margin-top:14px">
-      <div class="hs" id="hs"></div>
+    <div class="home-stage"><div class="hero" data-hero></div><div class="enemy" data-enemy="200"></div></div>
+    <div class="menu">
+      <button class="btn" data-go="courses" style="font-size:1.6rem;padding:18px">▶ ぼうけんに でる</button>
+      <div style="display:flex;gap:12px">
+        <button class="btn sub" data-go="party" style="flex:1">🤝 なかま</button>
+        <button class="btn sub" data-go="settings" style="flex:1">⚙️ せってい</button>
+      </div>
     </div>
-    <div id="hmsg" class="msgbox"></div>
-    <div class="pad" id="pad"></div>
-  </section>
+  </div>
+</section>
 
-  <section id="mode" class="hide">
-    <h1>6さい</h1>
-    <p class="sub">なにを やる？（たしざんは 200 まで）</p>
-    <button class="btn age a4" data-op="add">➕ たしざん</button>
-    <button class="btn age a5" data-op="mul">✖️ かけざん（くく）</button>
-    <button class="btn age a6" data-op="div">➗ わりざん</button>
-    <button class="btn age" style="background:var(--yellow);color:var(--ink)" data-op="mix">🌈 ぜんぶ まぜまぜ</button>
-    <button class="btn home" id="modeBack">← もどる</button>
-  </section>
+<section id="courses" class="screen bg-night stars hide">
+  <div class="wrap">
+    <div class="hdr"><button class="btn ghost" data-go="home">← もどる</button><h2>どこへ いく？</h2><span class="sp"></span></div>
+    <div class="list" id="courseList"></div>
+  </div>
+</section>
 
-  <section id="game" class="hide">
-    <div class="top">
-      <button class="btn home" id="back">← もどる</button>
-      <span class="stars" id="stars">⭐ 0</span>
+<section id="stages" class="screen hide">
+  <div class="wrap">
+    <div class="hdr"><button class="btn ghost" data-go="courses">← もどる</button><h2 id="stageTitle"></h2><span class="sp"></span></div>
+    <div class="path" id="stagePath"></div>
+  </div>
+</section>
+
+<section id="battle" class="screen bg-night hide">
+  <div class="wrap">
+    <div class="hdr"><button class="btn ghost" id="flee">🏃 にげる</button><h2 id="bTitle"></h2><span class="sp chip" id="bCombo" style="text-align:center"></span></div>
+    <div class="arena" id="arena">
+      <div class="enemy-box">
+        <div class="ename" id="eName"></div>
+        <div class="hpbar" id="hpbar"><i id="hpfill"></i></div>
+        <div class="enemy" id="enemy"></div>
+      </div>
+      <div class="hero-box" id="heroBox"></div>
+      <svg class="slash" id="slash" viewBox="0 0 100 100"><path d="M10 80 Q50 50 92 12" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M18 88 Q55 58 96 26" stroke="#ffe46b" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
+      <div class="dmg" id="dmg"></div>
+      <div class="combo" id="comboFx"></div>
     </div>
-    <div class="bar"><i id="prog"></i></div>
-    <div class="card" style="margin-top:14px">
+    <div class="panel qwin">
+      <span class="qcount" id="qcount"></span>
       <div class="pics" id="pics"></div>
       <div class="eq" id="eq"></div>
+      <div class="hs hide" id="hs"></div>
+      <div class="hint" id="hint"></div>
     </div>
-    <div id="msg"></div>
-    <div class="choices" id="choices"></div>
-    <div class="mascot"><span class="say">せいかいすると<br>いいこと あるよ♪</span></div>
-  </section>
-
-  <section id="end" class="hide">
-    <div class="big">🎉</div>
-    <h1>よくできました！</h1>
-    <p class="sub" id="result"></p>
-    <button class="btn age a4" id="again">もういっかい</button>
-    <button class="btn age a5" id="toHome">さいしょへ</button>
-  </section>
-</div>
-
-<div id="stage" class="hide">
-  <div id="sky"><span class="sun">☀️</span><span class="cloud c1">☁️</span><span class="cloud c2">☁️</span><span class="cloud c3">☁️</span></div>
-  <div id="spacebg"></div>
-  <div id="park">
-    <span class="t1">🌳</span><span class="t2">🌳</span><span class="t5">🌲</span><span class="t3">🌷</span><span class="t4">🌻</span><span class="t6">🌼</span>
-    <i class="path"></i>
+    <div class="answers" id="answers"></div>
+    <div class="pad hide" id="pad"></div>
   </div>
-  <div id="planets"><span style="left:12%;top:18%">🪐</span><span style="left:76%;top:30%">🌙</span><span style="left:30%;top:55%">☄️</span><span style="left:70%;top:60%">👽</span><span style="left:50%;top:10%">⭐</span></div>
-  <div id="cast"></div>
-  <div id="bubble" class="hide"></div>
-  <canvas id="fw"></canvas>
-  <div id="pow"></div>
-  <div id="clip" class="hide"></div>
-  <button id="skip" class="btn">スキップ ▶▶</button>
-</div>
+</section>
 
+<section id="party" class="screen bg-night stars hide">
+  <div class="wrap">
+    <div class="hdr"><button class="btn ghost" data-go="home">← もどる</button><h2>なかま</h2><span class="sp"></span></div>
+    <div class="chars" id="charList"></div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+      <label class="btn">📁 画像を よみこむ<input type="file" id="charFiles" accept="image/*" multiple hidden></label>
+      <a class="btn sub" href="cutout.html">✂️ 画像を きりぬく</a>
+      <p class="note">よみこんだ 画像は この端末に ほぞんされ、バトルで いっしょに たたかいます。</p>
+    </div>
+  </div>
+</section>
 
-</div>
+<section id="settings" class="screen bg-night stars hide">
+  <div class="wrap">
+    <div class="hdr"><button class="btn ghost" data-go="home">← もどる</button><h2>せってい</h2><span class="sp"></span></div>
+    <div class="panel setting">🔊 こうかおん<button class="toggle" data-set="sound"></button></div>
+    <div class="panel setting">🗣 よみあげ<button class="toggle" data-set="voice"></button></div>
+    <button class="btn ghost" id="resetSave" style="margin-top:20px">⭐ きろくを けす</button>
+  </div>
+</section>
+
+<div id="overlay" class="overlay hide"><div class="panel result" id="resultBox"></div></div>
+<canvas id="fw"></canvas>
 
 <script>
-const TOTAL = 10;
-const LEVELS = {
-  4: {max:5,  sum:5,  pics:true},
-  5: {max:9,  sum:10, pics:true},
-  6: {max:150, sum:200, pics:false}
+/* ================================================================
+   1) ロジック（画面から独立）：問題生成・選択肢・ヒント・星
+   ================================================================ */
+const rnd = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick = a => a[rnd(0, a.length - 1)];
+const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
+const SYM = {add:'＋', mul:'×', div:'÷'}, WORD = {add:'たす', mul:'かける', div:'わる'};
+
+const Logic = {
+  gen(type){
+    if(type === 'mix') type = pick(['add200', 'mul', 'div']);
+    let a, b;
+    switch(type){
+      case 'add4':   do{ a = rnd(1, 5); b = rnd(1, 5); }while(a + b > 5);  return {op:'add', a, b, ans:a + b, max:5, pics:true};
+      case 'add5':   do{ a = rnd(1, 9); b = rnd(1, 9); }while(a + b > 10); return {op:'add', a, b, ans:a + b, max:10, pics:true};
+      case 'add200': do{ a = rnd(11, 150); b = rnd(11, 100); }while(a + b > 200);
+                     return {op:'add', a, b, ans:a + b, max:200, near:[-10, 10, -1, 1, -2, 2]};
+      case 'mul':    a = rnd(1, 9); b = rnd(1, 9);
+                     return {op:'mul', a, b, ans:a * b, max:81, nearAbs:[a * (b + 1), a * (b - 1), (a + 1) * b, (a - 1) * b]};
+      case 'div':  { b = rnd(2, 9); const q = rnd(1, 9); return {op:'div', a:b * q, b, ans:q, max:9}; }
+      case 'h22':    a = rnd(10, 99); b = rnd(10, 99); return {op:'add', a, b, ans:a + b, hissan:true};
+      case 'h32':    a = rnd(100, 899); b = rnd(10, 99); return {op:'add', a, b, ans:a + b, hissan:true};
+    }
+  },
+  choices(p){
+    const set = new Set([p.ans]), ok = w => Number.isInteger(w) && w >= 0 && w <= p.max && w !== p.ans;
+    const cand = [...(p.nearAbs || []), ...(p.near || []).map(d => p.ans + d)].filter(ok);
+    for(let g = 0; set.size < 3 && g < 200; g++){
+      const w = cand.length && Math.random() < .75 ? pick(cand) : p.ans + rnd(-3, 3);
+      if(ok(w)) set.add(w);
+    }
+    for(let w = 0; set.size < 3; w++) if(ok(w)) set.add(w);
+    return shuffle([...set]);
+  },
+  hint(p){
+    if(p.op === 'add' && p.pics) return {text:'ひとつずつ かぞえて みよう！', dots:[p.a, p.b]};
+    if(p.op === 'add'){ const t = p.b - p.b % 10, o = p.b % 10;
+      return {text:o && t ? `${p.a} ＋ ${t} ＝ ${p.a + t}、そこに ${o} を たそう` : '10の まとまりで かんがえよう'}; }
+    if(p.op === 'mul') return p.a * p.b <= 30 ? {text:`${p.a}こ が ${p.b}れつ`, grid:[p.a, p.b]} : {text:`${p.a} × ${p.b - 1} ＝ ${p.a * (p.b - 1)}、そこに ${p.a} を たそう`};
+    if(p.op === 'div') return {text:`${p.b} × □ ＝ ${p.a}　□ は いくつ？`};
+  },
+  digit:(x, p) => Math.floor(x / 10 ** p) % 10,
+  carries(a, b){ const c = [0]; for(let p = 0; p < 3; p++) c[p + 1] = Math.floor((Logic.digit(a, p) + Logic.digit(b, p) + c[p]) / 10); return c; },
+  stars:misses => misses === 0 ? 3 : misses <= 2 ? 2 : 1,
 };
-const ITEMS = ['🍎','🍌','🍓','🐶','🐱','🚗','🌸','🐟','🍪','⚽'];
-const PRAISE = ['すごい！','せいかい！','てんさい！','やったね！','かしこい！'];
 
-const $ = id => document.getElementById(id);
-const show = id => ['home','mode','game','hgame','hmode','end'].forEach(s => $(s).classList.toggle('hide', s !== id));
-const rnd = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+/* ================================================================
+   2) ゲームデータ：コース・ステージ・保存
+   ================================================================ */
+const COURSES = [
+  {id:'k4',   type:'add4',   name:'はじめての たしざん', age:'4さい',   icon:'🌱', bg:'bg-meadow',  hue:110, enemy:'くさ'},
+  {id:'k5',   type:'add5',   name:'10までの たしざん',   age:'5さい',   icon:'🌻', bg:'bg-forest',  hue:45,  enemy:'もり'},
+  {id:'a200', type:'add200', name:'200までの たしざん',  age:'6さい',   icon:'🏜', bg:'bg-desert',  hue:25,  enemy:'すな'},
+  {id:'mul',  type:'mul',    name:'くくの とう',         age:'6さい',   icon:'🗼', bg:'bg-sky',     hue:255, enemy:'そら'},
+  {id:'div',  type:'div',    name:'わりざんの どうくつ', age:'6さい',   icon:'💎', bg:'bg-cave',    hue:290, enemy:'やみ'},
+  {id:'mix',  type:'mix',    name:'まぜまぜ かざん',     age:'6さい',   icon:'🌋', bg:'bg-volcano', hue:5,   enemy:'ほのお'},
+  {id:'h22',  type:'h22',    name:'ひっさんの こおり',   age:'ひっさん', icon:'❄️', bg:'bg-ice',    hue:195, enemy:'こおり'},
+  {id:'h32',  type:'h32',    name:'ひっさんの おしろ',   age:'ひっさん', icon:'🏰', bg:'bg-castle', hue:330, enemy:'まおう'},
+];
+const STAGES = 5, Q_NORMAL = 5, Q_BOSS = 7;
+const Save = {
+  load(){ try{ return JSON.parse(localStorage.getItem('sansu-quest')) || {}; }catch(e){ return {}; } },
+  store(){ try{ localStorage.setItem('sansu-quest', JSON.stringify(save)); }catch(e){} },
+};
+const save = Object.assign({stars:{}, sound:true, voice:true}, Save.load());
+const starsOf = (c, s) => save.stars[c + '-' + s] || 0;
+const unlocked = (c, s) => s === 1 || starsOf(c, s - 1) > 0;
+const totalStars = () => Object.values(save.stars).reduce((x, y) => x + y, 0);
 
-let lastRun, lv, op, n, score, cur, locked, miss;
-const SYM = {add:'＋', mul:'×', div:'÷'};
-const WORD = {add:'たす', mul:'かける', div:'わる'};
-
-function speak(t, pitch){
-  try{
-    if(!('speechSynthesis' in window)) return;
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(t);
-    u.lang = 'ja-JP'; u.rate = .9; u.pitch = pitch || 1.2;
-    speechSynthesis.speak(u);
-  }catch(e){}
-}
-
-function start(level, o){
-  okCount = 0; lv = level; op = o || 'add'; lastRun = () => start(level, o); n = 0; score = 0;
-  show('game'); next();
-}
-
-function next(){
-  if(n >= TOTAL) return finish();
-  const L = LEVELS[lv];
-  const kind = (lv === 6 && op === 'mix') ? ['add','mul','div'][rnd(0,2)] : op;
-  let a, b, ans, max = L.sum;
-  if(kind === 'add'){
-    do{
-      a = rnd(lv === 6 ? 11 : 1, L.max); b = rnd(lv === 6 ? 11 : 1, lv === 6 ? 100 : L.max);
-    }while(a + b > L.sum);
-    ans = a + b;
-  }else if(kind === 'mul'){
-    a = rnd(1, 9); b = rnd(1, 9); ans = a * b; max = 81;
-  }else{
-    b = rnd(2, 9); ans = rnd(1, 9); a = b * ans; max = 9;
-  }
-  cur = {a, b, kind, ans};
-  locked = false; miss = 0;
-  $('msg').textContent = '';
-  $('prog').style.width = (n / TOTAL * 100) + '%';
-  $('stars').textContent = '⭐ ' + score;
-
-  const item = ITEMS[rnd(0, ITEMS.length - 1)];
-  $('pics').innerHTML = (L.pics && kind === 'add')
-    ? `<div class="grp">${item.repeat(a)}</div><span class="plus">＋</span><div class="grp">${item.repeat(b)}</div>`
-    : '';
-  $('eq').innerHTML = `${a} ${SYM[kind]} ${b} ＝ <span class="q">？</span>`;
-  speak(`${a} ${WORD[kind]} ${b} は？`);
-
-  const set = new Set([ans]);
-  const near = (kind === 'add' && lv === 6) ? [ans-10, ans+10, ans-1, ans+1, ans-2, ans+2] : kind === 'mul' ? [a*(b+1), a*(b-1), (a+1)*b, (a-1)*b] : [];
-  while(set.size < 3){
-    let w = near.length && Math.random() < .8 ? near[rnd(0, near.length - 1)] : ans + rnd(-3, 3);
-    if(w >= 0 && w <= max && w !== ans) set.add(w);
-    else if(set.size < 3 && Math.random() < .2) set.add(rnd(0, max));
-  }
-  const box = $('choices'); box.innerHTML = '';
-  [...set].sort(() => Math.random() - .5).forEach(v => {
-    const el = document.createElement('button');
-    el.className = 'btn choice'; el.textContent = v;
-    el.onclick = () => answer(el, v, cur.ans);
-    box.appendChild(el);
-  });
-}
-
-function answer(el, v, ans){
-  if(locked) return;
-  if(v === ans){
-    locked = true;
-    el.classList.add('ok','pop');
-    if(miss === 0) score++;
-    const p = PRAISE[rnd(0, PRAISE.length - 1)];
-    $('msg').textContent = '🎉 ' + p;
-    $('eq').innerHTML = `${cur.a} ${SYM[cur.kind]} ${cur.b} ＝ <span class="q">${ans}</span>`;
-    $('stars').textContent = '⭐ ' + score;
-    n++; sfx('ding');
-    setTimeout(() => reaction(next), 700);
-  }else{
-    miss++;
-    el.classList.add('ng','shake');
-    el.disabled = true;
-    $('msg').textContent = 'おしい！ もういちど！'; sfx('miss');
-    speak('おしい、もういちど');
-  }
-}
-
-function finish(){
-  $('prog').style.width = '100%';
-  if(score === TOTAL && !finish.played){ finish.played = true; return perfectShow(finish); }
-  finish.played = false;
-  show('end');
-  const s = '⭐'.repeat(score) || '🌱';
-  $('result').innerHTML = `${TOTAL}もん ちゅう ${score}もん いっぱつで せいかい！<br><span style="font-size:2rem">${s}</span>`;
-  speak('よくできました！');
-}
-
-document.querySelectorAll('.age[data-lv]').forEach(btn => {
-  btn.onclick = () => +btn.dataset.lv === 6 ? show('mode') : start(+btn.dataset.lv);
-});
-document.querySelectorAll('.age[data-op]').forEach(btn => {
-  btn.onclick = () => start(6, btn.dataset.op);
-});
-$('modeBack').onclick = () => show('home');
-$('back').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
-$('again').onclick = () => lastRun();
-$('toHome').onclick = () => show('home');
-
-/* ---------- ひっ算 ---------- */
-let hType, hA, hB, hAns, hDig, hCarry, hPos, hMiss, hLocked;
-const dg = (x, p) => Math.floor(x / 10 ** p) % 10;
-
-function hStart(t){
-  hType = t; n = 0; score = 0; okCount = 0; lastRun = () => hStart(t);
-  show('hgame'); hNext();
-}
-
-function hNext(){
-  if(n >= TOTAL) return finish();
-  const kind = hType === 'mix' ? (rnd(0, 1) ? '22' : '32') : hType;
-  if(kind === '22'){ hA = rnd(10, 99); hB = rnd(10, 99); }
-  else { hA = rnd(100, 899); hB = rnd(10, 99); }
-  hAns = hA + hB;
-  hDig = String(hAns).length;
-  hCarry = [0];
-  for(let p = 0; p < 3; p++) hCarry[p + 1] = Math.floor((dg(hA, p) + dg(hB, p) + hCarry[p]) / 10);
-  hPos = 0; hMiss = 0; hLocked = false;
-  $('hprog').style.width = (n / TOTAL * 100) + '%';
-  $('hstars').textContent = '⭐ ' + score;
-  $('hmsg').textContent = 'いちの くらいから！';
-
-  // 列 i: 0=百 1=十 2=一（左から）
-  let h = '<div class="cy"></div>';
-  for(let i = 0; i < 3; i++) h += `<div class="cy" id="cy${i}"></div>`;
-  h += '<div></div>' + [0,1,2].map(i => `<div>${hA >= 10 ** (2 - i) ? dg(hA, 2 - i) : ''}</div>`).join('');
-  h += '<div>＋</div>' + [0,1,2].map(i => `<div>${hB >= 10 ** (2 - i) ? dg(hB, 2 - i) : ''}</div>`).join('');
-  h += '<div class="ln"></div><div></div>';
-  for(let i = 0; i < 3; i++) h += `<div class="bx ${2 - i >= hDig ? 'off' : ''}" id="bx${i}"></div>`;
-  $('hs').innerHTML = h;
-  hMark();
-  speak(`${hA} たす ${hB}。 いちのくらいから たしてね`);
-}
-
-function hMark(){
-  for(let i = 0; i < 3; i++) $('bx' + i).classList.toggle('on', 2 - i === hPos && hPos < hDig);
-}
-
-function hPress(d){
-  if(hLocked) return;
-  const box = $('bx' + (2 - hPos));
-  if(d === dg(hAns, hPos)){
-    box.textContent = d;
-    const c = hCarry[hPos + 1];
-    if(c && hPos + 1 < hDig){
-      $('cy' + (2 - hPos - 1)).textContent = c;
-      $('hmsg').textContent = `くりあがり ${c}！`;
-    }else $('hmsg').textContent = 'そのちょうし！';
-    hPos++;
-    if(hPos >= hDig){
-      hLocked = true;
-      document.querySelectorAll('.bx.on').forEach(e => e.classList.remove('on'));
-      if(hMiss === 0) score++;
-      const p = PRAISE[rnd(0, PRAISE.length - 1)];
-      $('hmsg').textContent = '🎉 ' + p;
-      $('hstars').textContent = '⭐ ' + score;
-      n++; sfx('ding');
-      setTimeout(() => reaction(hNext), 700);
-    }else hMark();
-  }else{
-    hMiss++;
-    box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
-    $('hmsg').textContent = 'おしい！ もういちど！'; sfx('miss');
-    speak('おしい、もういちど');
-  }
-}
-
-$('pad').innerHTML = [1,2,3,4,5,6,7,8,9,0].map(d => `<button class="btn" data-d="${d}">${d}</button>`).join('');
-$('pad').onclick = e => { const b = e.target.closest('[data-d]'); if(b) hPress(+b.dataset.d); };
-$('toH').onclick = () => show('hmode');
-$('hmodeBack').onclick = () => show('home');
-$('hback').onclick = () => { try{speechSynthesis.cancel()}catch(e){} show('home'); };
-document.querySelectorAll('.age[data-h]').forEach(btn => btn.onclick = () => hStart(btn.dataset.h));
-
-/* ---------- 効果音（WebAudio・ファイル不要） ---------- */
+/* ================================================================
+   3) 音と声
+   ================================================================ */
 let AC;
 function sfx(kind){
+  if(!save.sound) return;
   try{
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if(AC.state === 'suspended') AC.resume();
     const t = AC.currentTime;
-    const tone = (f, d, type = 'sine', v = .25, t0 = 0, f2) => {
+    const tone = (f, d, type = 'sine', v = .22, t0 = 0, f2) => {
       const o = AC.createOscillator(), g = AC.createGain();
       o.type = type; o.frequency.setValueAtTime(f, t + t0);
       if(f2) o.frequency.exponentialRampToValueAtTime(f2, t + t0 + d);
@@ -477,454 +340,314 @@ function sfx(kind){
       s.buffer = buf; f.type = type; f.frequency.value = fq; g.gain.value = v;
       s.connect(f).connect(g).connect(AC.destination); s.start(t + t0);
     };
-    if(kind === 'ding'){ tone(880, .25, 'sine', .22); tone(1320, .35, 'sine', .2, .12); }
-    else if(kind === 'miss'){ tone(220, .25, 'triangle', .2, 0, 140); }
-    else if(kind === 'slap'){ noise(.12, 2500, .8, 0, 'highpass'); tone(160, .15, 'square', .25, 0, 60); }
-    else if(kind === 'whoosh'){ noise(.8, 900, .5); }
-    else if(kind === 'boom'){ tone(140, .5, 'sawtooth', .35, 0, 35); noise(.4, 400, .6); }
-    else if(kind === 'boing'){ tone(300, .35, 'sine', .3, 0, 700); }
-    else if(kind === 'happy'){ [660, 880, 1100, 1320].forEach((f, i) => tone(f, .2, 'triangle', .18, i * .09)); }
+    ({
+      tap:  () => tone(660, .06, 'triangle', .12),
+      slash:() => { noise(.18, 3000, .5, 0, 'highpass'); tone(900, .12, 'sawtooth', .08, 0, 300); },
+      hit:  () => { tone(180, .2, 'square', .18, 0, 60); noise(.12, 600, .5); },
+      crit: () => { tone(1200, .1, 'square', .12); tone(1600, .2, 'square', .12, .08); },
+      miss: () => tone(240, .3, 'triangle', .2, 0, 120),
+      hurt: () => { noise(.15, 300, .5); tone(120, .2, 'sawtooth', .15, 0, 70); },
+      down: () => { tone(500, .5, 'sawtooth', .15, 0, 60); noise(.5, 500, .4); },
+      win:  () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .25, 'triangle', .18, i * .11)),
+      star: () => tone(1400, .15, 'sine', .16, 0, 2000),
+      boom: () => { tone(110, .5, 'sawtooth', .25, 0, 30); noise(.5, 350, .5); },
+    })[kind]?.();
   }catch(e){}
 }
-
-/* ---------- 全問正解のごほうび（30秒動画） ---------- */
-function perfectShow(after){
-  const id = ++stageId, st = $('stage'), t0 = Date.now();
-  resetStage(); st.classList.add('fw');
-  const end = () => { if(id !== stageId) return; stageId++; st.onclick = null; resetStage(); st.classList.add('hide'); after(); };
-  st.onclick = () => { if(Date.now() - t0 > 900) end(); };
-  showPow('🏆 ぜんもん せいかい！ 🏆'); sfx('boom');
-  // なかま みんなで おどる
-  const hs = shuffle(ready().filter(c => !c.villain)).slice(0, 5), slots = [12, 31, 50, 69, 88];
-  hs.forEach((c, i) => { mkActor('p' + i, c); const el = EL['p' + i]; el.classList.remove('off-r'); el.classList.add('enter'); el.style.left = slots[i] + '%'; el.style.zIndex = 2; });
-  setTimeout(() => hs.forEach((c, i) => { if(id === stageId) fx('p' + i, pick(['dance', 'jump', 'laugh', 'spin'])); }), 700);
-  // 花火（キャンバス）
-  const cv = $('fw'), x = cv.getContext('2d'); cv.width = innerWidth; cv.height = innerHeight;
-  const parts = []; let last = 0, booms = 0;
-  const burst = () => {
-    const cx = cv.width * (.15 + Math.random() * .7), cy = cv.height * (.1 + Math.random() * .45), hue = rnd(0, 360), n = rnd(50, 90);
-    for(let i = 0; i < n; i++){ const a = Math.PI * 2 * i / n, v = 2 + Math.random() * 4.5;
-      parts.push({x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 60 + rnd(0, 40), hue: hue + rnd(-20, 20)}); }
-    if(booms++ % 2 === 0) sfx('boom');
-  };
-  const tick = ts => {
-    if(id !== stageId) return;
-    if(ts - last > 380){ last = ts; burst(); if(Math.random() < .4) burst(); }
-    x.globalCompositeOperation = 'destination-out'; x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(0, 0, cv.width, cv.height);
-    x.globalCompositeOperation = 'lighter';
-    for(let i = parts.length - 1; i >= 0; i--){
-      const p = parts[i]; p.x += p.vx; p.y += p.vy; p.vy += .06; p.vx *= .985; p.vy *= .985; p.life--;
-      if(p.life <= 0){ parts.splice(i, 1); continue; }
-      x.fillStyle = `hsla(${p.hue},100%,${55 + p.life / 4}%,${Math.min(1, p.life / 40)})`;
-      x.beginPath(); x.arc(p.x, p.y, 2.6, 0, 7); x.fill();
-    }
-    requestAnimationFrame(tick);
-  };
-  requestAnimationFrame(tick);
-  const msgs = ['🏆 ぜんもん せいかい！ 🏆', '🎆 ドッカーーン！ 🎆', '✨ てんさい！ ✨', '🎉 おめでとう！ 🎉', '💥 だいばくはつ！ 💥'];
-  msgs.forEach((m, i) => setTimeout(() => { if(id === stageId){ showPow(m); sfx(i % 2 ? 'happy' : 'boom'); } }, i * 6000));
-  setTimeout(end, 30000);
+function speak(t){
+  if(!save.voice) return;
+  try{ speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance(t); u.lang = 'ja-JP'; u.rate = .95; u.pitch = 1.3; speechSynthesis.speak(u); }catch(e){}
 }
 
-/* ---------- ごほうびシーン ---------- */
-// 動画クリップ（YouTube の公式チャンネル）。who はそのキャラの変身シーン、kind:'waza' は必殺技
-const CLIPS = [
-  {id:'l-PoXgn2kCk', start:57, end:64, who:'キュアアルカナ'},                       // 名探偵プリキュア！ キュアアルカナ 変身シーン（69秒）
-  {id:'QwExFKxU5ok', start:62, end:69, who:'キュアエクレール'},                     // キュアエクレール 変身シーン（75秒）
-  {id:'ANZ2qYtKdMA', start:104, end:111, who:['キュアアンサー','キュアミスティック']}, // キュアアンサー＆キュアミスティック 変身シーン（116秒）
-  {id:'aLIKtTHpn1c', start:4, end:11, who:'キュアハート'},                          // キュアハート 10周年メッセージ（15秒）
-  {id:'FtyzmWfGhcs', start:36, end:43, kind:'waza'},                                // プリキュア！アルカナホワイトリリー！（48秒）
-  {id:'_w_XpbkFhDc', start:51, end:58, kind:'waza'},                                // プリキュア！フライング・スペクトル！（64秒）
-  {id:'2pDtyVGAN5c', start:40, end:47, kind:'waza'},                                // プリキュア！スターディテクティブ！（53秒）
-  {id:'cg2RJr8eXOk', start:56, end:63, kind:'waza'},                                // プリキュア！フライング・インフィニティ！（68秒）
-];
-// 全問正解のごほうび（30秒）：オープニング主題歌（ノンテロップ）
-const PERFECT_CLIPS = [
-  {id:'gri5qHqXjMg', start:0, end:30},   // 名探偵プリキュア！ オープニング
-  {id:'wfB-OvWKCvc', start:0, end:30},   // わんだふるぷりきゅあ！ オープニング
-];
-const SCENE_MAX = 10000;                  // 1回のごほうびは10秒まで
-const clipFor = name => CLIPS.find(c => [].concat(c.who || []).includes(name));
-const wazaClip = () => pick(CLIPS.filter(c => c.kind === 'waza'));
+/* ================================================================
+   4) 絵：ゆうしゃ（ほし）・スライム・なかま画像
+   ================================================================ */
+function heroSVG(){
+  return `<svg viewBox="0 0 160 160"><defs><radialGradient id="hgr" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fffbd0"/><stop offset="1" stop-color="#ffb400"/></radialGradient></defs>
+  <rect x="118" y="28" width="10" height="70" rx="4" fill="#dfe8ff" stroke="#3a4a7a" stroke-width="4" transform="rotate(25 123 63)"/>
+  <rect x="104" y="86" width="34" height="9" rx="4" fill="#ffcf3f" stroke="#7a4d00" stroke-width="3" transform="rotate(25 121 90)"/>
+  <path d="M80 10 L98 55 L148 58 L110 90 L122 140 L80 113 L38 140 L50 90 L12 58 L62 55Z" fill="url(#hgr)" stroke="#b86e00" stroke-width="6" stroke-linejoin="round"/>
+  <ellipse cx="68" cy="78" rx="6" ry="9" fill="#3b2a00"/><ellipse cx="94" cy="78" rx="6" ry="9" fill="#3b2a00"/>
+  <circle cx="70" cy="75" r="2.2" fill="#fff"/><circle cx="96" cy="75" r="2.2" fill="#fff"/>
+  <path d="M70 94 Q81 104 92 94" stroke="#3b2a00" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="58" cy="92" r="6" fill="#ff8aa0" opacity=".6"/><circle cx="104" cy="92" r="6" fill="#ff8aa0" opacity=".6"/></svg>`;
+}
+let eid = 0;
+function enemySVG(hue, boss){
+  const id = 'eg' + (++eid), d = `hsl(${hue},60%,25%)`;
+  return `<svg viewBox="0 0 200 190"><defs><radialGradient id="${id}" cx="35%" cy="30%" r="75%">
+    <stop offset="0" stop-color="hsl(${hue},90%,82%)"/><stop offset=".6" stop-color="hsl(${hue},75%,55%)"/><stop offset="1" stop-color="hsl(${hue},70%,36%)"/></radialGradient></defs>
+  ${boss ? `<path d="M62 56 L70 20 L88 42 L100 12 L112 42 L130 20 L138 56Z" fill="#ffcf3f" stroke="#7a4d00" stroke-width="5" stroke-linejoin="round"/><circle cx="100" cy="32" r="6" fill="#ff4a6a"/>` : ''}
+  <path d="M28 168 Q16 118 55 78 Q100 20 145 78 Q184 118 172 168 Q100 182 28 168Z" fill="url(#${id})" stroke="${d}" stroke-width="6"/>
+  <ellipse cx="72" cy="72" rx="18" ry="10" fill="#fff" opacity=".55" transform="rotate(-35 72 72)"/>
+  <ellipse cx="78" cy="118" rx="12" ry="15" fill="#fff" stroke="${d}" stroke-width="3"/><ellipse cx="122" cy="118" rx="12" ry="15" fill="#fff" stroke="${d}" stroke-width="3"/>
+  <circle cx="81" cy="121" r="6" fill="#1b1030"/><circle cx="119" cy="121" r="6" fill="#1b1030"/>
+  <path d="M62 98 L90 106 M138 98 L110 106" stroke="${d}" stroke-width="6" stroke-linecap="round"/>
+  <path d="M80 146 Q100 158 120 146" stroke="${d}" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M86 149 l4 8 4 -6 M106 150 l4 7 4 -8" fill="#fff" stroke="${d}" stroke-width="2"/></svg>`;
+}
+const ENEMY_NAMES = ['スライム', 'プルン', 'ドロロン', 'ポヨン'];
 
-// 登場キャラ一覧（「キャラクター」フォルダの画像）。わるもの は villain:true（宇宙・対決シーンに出ます）
-// nose は わるもの の鼻の位置（画像の幅・高さに対する割合）
-const ROSTER = [
-  {name:'キュアハート',       img:'キャラクター/キュアハート.png'},
-  {name:'キュアダイヤモンド', img:'キャラクター/キュアダイヤモンド (1).png'},
-  {name:'キュアロゼッタ',     img:'キャラクター/キュアロゼった.png'},
-  {name:'キュアエース',       img:'キャラクター/image_main05 (1).png'},
-  {name:'キュアエース',       img:'キャラクター/キュアエース.jpeg'},
-  {name:'キュアアルカナ',     img:'キャラクター/キュアあるかな.png'},
-  {name:'キュアアンサー',     img:'キャラクター/キュアアンサー.png'},
-  {name:'キュアエクレール',   img:'キャラクター/キュアエクレール.png'},
-  {name:'キュアフローラ',     img:'キャラクター/キュアフローラ.png'},
-  {name:'キュアマーメイド',   img:'キャラクター/キュアマーメイド.png'},
-  {name:'キュアミスティック', img:'キャラクター/キュアミススティック.png'},
-];
-const DEFAULT_VOICE = [2, 1.15], VILLAIN_VOICE = [.6, .9], DEFAULT_NOSE = {x:.5, y:.6};
-const SLOT = {L:22, A:38, C:50, B:62, R:78};          // 立ち位置（％）
-let okCount = 0, stageId = 0, clipTok = 0, lastScene = '';
-let EL = {}, CH = {};                                  // いまのシーンの役（a,b,c,v）→ 要素／キャラ
-
-const GAGS = ['だめーーー！','なんでよーーー！','あーーー！','ひどいよー！','うえーん！','わたしの せいじゃないよー！','せいかいって なにさー！','やめてよーーー！'];
-const CHEERS = ['せいかい！ すごーい！','やったね！ だいせいかい！','すごいすごい！ ハッピー！','てんさいだね！ キラキラ！'];
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const pick = a => a[rnd(0, a.length - 1)];
-const shuffle = a => a.map(v => [Math.random(), v]).sort((x, y) => x[0] - y[0]).map(v => v[1]);
-
-// 画像が読み込めたキャラだけ使う。同じ名前の .png（きりぬき済み）や .gif があればそちらを優先
-// この端末に よみこんだ キャラ画像（IndexedDB）。ファイル名がそのまま名前になる
+// なかま：この端末に保存した画像（IndexedDB）＋「キャラクター」フォルダの画像
+const FOLDER = ['キュアハート.png','キュアダイヤモンド (1).png','キュアロゼった.png','image_main05 (1).png','キュアあるかな.png',
+  'キュアアンサー.png','キュアエクレール.png','キュアフローラ.png','キュアマーメイド.png','キュアミススティック.png'];
+const PARTY = [];
+const nameOf = f => f.replace(/\.[^.]+$/, '').replace(/\s*\(\d+\)$/, '').trim();
+function addMember(name, src){
+  const i = new Image();
+  i.onload = () => { if(!PARTY.some(m => m.name === name)){ PARTY.push({name, src}); renderParty(); renderHomeHero(); } };
+  i.src = src;
+}
 const CharDB = {
   open(){ return this.p = this.p || new Promise(res => {
     try{ const r = indexedDB.open('tashizan-chars', 1);
-      r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath: 'name'});
+      r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath:'name'});
       r.onsuccess = () => res(r.result); r.onerror = () => res(null);
-    }catch(e){ res(null); }
-  }); },
+    }catch(e){ res(null); } }); },
   async all(){ const d = await this.open(); if(!d) return [];
-    return new Promise(res => { const q = d.transaction('chars').objectStore('chars').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); },
+    return new Promise(res => { try{ const q = d.transaction('chars').objectStore('chars').getAll(); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }catch(e){ res([]); } }); },
   async put(rec){ const d = await this.open(); if(!d) return;
     return new Promise(res => { try{ const t = d.transaction('chars', 'readwrite'); t.objectStore('chars').put(rec); t.oncomplete = t.onerror = res; }catch(e){ res(); } }); },
 };
-const nameOf = f => f.replace(/\.[^.]+$/, '').replace(/\s*\(\d+\)$/, '').replace(/[_-]+/g, ' ').trim()
-  .replace('キュアあるかな', 'キュアアルカナ').replace('キュアロゼった', 'キュアロゼッタ').replace('キュアミススティック', 'キュアミスティック')
-  .replace(/^image main05$/, 'キュアエース');
-function addLocal(rec){
-  if(ROSTER.some(c => c.local && c.name === rec.name)) return;
-  ROSTER.unshift({name: rec.name, img: rec.data, local: true, png: rec.png});
-  const c = ROSTER[0], i = new Image();
-  i.onload = () => { c.ok = true; refreshMascots(); updateCount(); }; i.src = c.img;
-}
-function updateCount(){
-  const n = ROSTER.filter(c => c.local && c.ok).length;
-  const el = document.getElementById('charCount'); if(el && n) el.textContent = `${n}人 よみこみずみ（たすと ふえるよ）`;
-}
-CharDB.all().then(rs => rs.filter(r => r.data).forEach(addLocal));
+CharDB.all().then(rs => rs.forEach(r => r.data && addMember(r.name, r.data)));
+FOLDER.forEach(f => addMember(nameOf(f), 'キャラクター/' + f));
 document.getElementById('charFiles').onchange = async e => {
   for(const f of [...e.target.files]){
-    // 画像は文字（dataURL）にして保存（ファイルで開いたページでも保存できるように）
     const data = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.onerror = () => r(null); fr.readAsDataURL(f); });
     if(!data) continue;
-    const rec = {name: nameOf(f.name), data, png: /\.(png|gif)$/i.test(f.name)};
-    addLocal(rec); await CharDB.put(rec);
+    const name = nameOf(f.name); addMember(name, data); await CharDB.put({name, data});
   }
   e.target.value = '';
 };
+const heroHTML = () => PARTY.length ? `<img src="${pick(PARTY).src}" alt="">` : heroSVG();
 
-ROSTER.forEach(c => {
-  const b = c.img.replace(/\.[^.]+$/, ''), tries = [...new Set([b + '.png', b + '.gif', c.img])];
-  const next = () => {
-    if(!tries.length) return;
-    const p = tries.shift(), i = new Image();
-    i.onload = () => { c.img = p; c.ok = true; refreshMascots(); };
-    i.onerror = next; i.src = p;
-  };
-  next();
-});
-const ready = () => { const seen = new Set(); return ROSTER.filter(c => c.ok && !seen.has(c.name) && seen.add(c.name)); };
+/* ================================================================
+   5) 画面
+   ================================================================ */
+const $ = id => document.getElementById(id);
+const SCREENS = ['home', 'courses', 'stages', 'battle', 'party', 'settings'];
+function show(id){
+  SCREENS.forEach(s => $(s).classList.toggle('hide', s !== id));
+  ({home:renderHome, courses:renderCourses, party:renderParty, settings:renderSettings})[id]?.();
+}
+document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { sfx('tap'); show(b.dataset.go); });
 
-// ホーム／ゲーム画面の応援キャラ（ランダム）
-function refreshMascots(){
-  const hs = ready().filter(c => !c.villain);
-  document.querySelectorAll('.mascot').forEach(m => {
-    m.classList.toggle('on', hs.length > 0);
-    if(!hs.length || m.querySelector('.mc')) return;
-    const c = pick(hs), i = new Image(); i.src = c.img; i.className = 'mc' + ((c.local ? c.png : /\.(png|gif)$/i.test(c.img)) ? '' : ' card'); m.prepend(i);
+function renderHomeHero(){ document.querySelectorAll('[data-hero]').forEach(h => h.innerHTML = heroHTML()); }
+function renderHome(){
+  renderHomeHero();
+  document.querySelectorAll('[data-enemy]').forEach(e => e.innerHTML = enemySVG(+e.dataset.enemy, false));
+  $('totalStars').textContent = `⭐ ${totalStars()} / ${COURSES.length * STAGES * 3}`;
+}
+function renderCourses(){
+  $('courseList').innerHTML = '';
+  COURSES.forEach(c => {
+    let st = 0; for(let s = 1; s <= STAGES; s++) st += starsOf(c.id, s);
+    const el = document.createElement('button'); el.className = 'panel course';
+    el.innerHTML = `<div class="ic ${c.bg}">${c.icon}</div><span class="chip">${c.age}</span><div class="nm">${c.name}</div><div class="starline">⭐ ${st}/${STAGES * 3}</div>`;
+    el.onclick = () => { sfx('tap'); openCourse(c); };
+    $('courseList').append(el);
   });
 }
-
-function mkActor(k, c){
-  const el = document.createElement('div');
-  el.className = 'actor off-r' + (k === 'v' ? ' villain' : '');
-  const b = document.createElement('div'); b.className = 'body';
-  const emo = document.createElement('span'); emo.className = 'emo'; b.append(emo);
-  const img = new Image(); img.className = 'pic' + ((c.local ? c.png : /\.(png|gif)$/i.test(c.img)) ? '' : ' card'); img.src = c.img; b.prepend(img);
-  el.append(b);
-  if(k === 'v') el.insertAdjacentHTML('beforeend',
-    '<div class="hair"><svg viewBox="0 0 40 400" preserveAspectRatio="none" width="40" height="100%"><path d="M20 0 C34 30 6 50 20 80 C34 110 6 130 20 160 C34 190 6 210 20 240 C34 270 6 290 20 320 C30 345 10 365 20 400" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/></svg></div>');
-  el.style.setProperty('--sp', (0.88 + Math.random() * .3).toFixed(2));   // 動きの速さに個体差
-  $('cast').append(el); EL[k] = el; CH[k] = c;
+let course = null;
+function openCourse(c){
+  course = c;
+  $('stages').className = 'screen ' + c.bg;
+  $('stageTitle').textContent = c.icon + ' ' + c.name;
+  const p = $('stagePath'); p.innerHTML = '';
+  let now = 0;
+  for(let s = 1; s <= STAGES; s++) if(unlocked(c.id, s)) now = s;
+  for(let s = 1; s <= STAGES; s++){
+    const n = document.createElement('button'), lock = !unlocked(c.id, s), boss = s === STAGES, st = starsOf(c.id, s);
+    n.className = 'node' + (boss ? ' boss' : '') + (lock ? ' lock' : '') + (s === now && !st ? ' now' : '');
+    n.innerHTML = lock ? '🔒' : `${boss ? '👑' : s}<small>${'★'.repeat(st)}${'☆'.repeat(3 - st)}</small>`;
+    n.onclick = () => { if(lock){ sfx('miss'); return; } sfx('tap'); startBattle(c, s); };
+    p.append(n);
+  }
+  show('stages');
 }
-const body = k => EL[k].querySelector('.body');
-function fx(k, name){ const b = body(k); EL[k].classList.remove('enter'); b.className = 'body' + (name ? ' fx-' + name : ''); EL[k].dataset.fx = name || ''; void b.offsetWidth; }
-function emo(k, t){ const e = body(k).querySelector('.emo'); e.textContent = t || ''; e.classList.toggle('on', !!t); }
-function showPow(t){ const p = $('pow'); p.textContent = t; p.classList.remove('on'); void p.offsetWidth; p.classList.add('on'); }
-const CAN_YT = /^https?:/.test(location.protocol);
-function playClip(clip = wazaClip()){
-  if(!CAN_YT){ showPow('✨ひっさつわざ！✨'); sfx('boom'); return sleep(2500); }
-  const tok = ++clipTok, box = $('clip');
-  box.innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.id}?autoplay=1&start=${clip.start}&end=${clip.end}&playsinline=1&rel=0&modestbranding=1" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
-  box.classList.remove('hide');
-  return sleep((clip.end - clip.start + 1) * 1000).then(() => { if(tok === clipTok){ box.classList.add('hide'); box.innerHTML = ''; } });
+function renderParty(){
+  const l = $('charList');
+  l.innerHTML = PARTY.length ? '' : '<p class="note" style="grid-column:1/-1">まだ なかまが いません。<br>画像を よみこんでね。</p>';
+  PARTY.forEach(m => { const d = document.createElement('div'); d.className = 'panel c'; d.innerHTML = `<img src="${m.src}" alt=""><div></div>`; d.lastChild.textContent = m.name; l.append(d); });
 }
+function renderSettings(){ document.querySelectorAll('[data-set]').forEach(t => t.classList.toggle('on', !!save[t.dataset.set])); }
+document.querySelectorAll('[data-set]').forEach(t => t.onclick = () => { save[t.dataset.set] = !save[t.dataset.set]; Save.store(); renderSettings(); sfx('tap'); });
+$('resetSave').onclick = () => { if(confirm('ほしの きろくを ぜんぶ けしますか？')){ save.stars = {}; Save.store(); sfx('tap'); } };
 
-// 声が終わるまで待つ（声が出せない環境でも止まらないよう保険のタイマー付き）
-function speakDone(t, pitch, rate){
-  return new Promise(res => {
-    let fin = false; const end = () => { if(!fin){ fin = true; res(); } };
-    setTimeout(end, 1500 + t.length * 400);
-    try{
-      if(!('speechSynthesis' in window)) return;
-      speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(t);
-      u.lang = 'ja-JP'; u.rate = rate; u.pitch = pitch;
-      u.onend = u.onerror = end;
-      speechSynthesis.speak(u);
-    }catch(e){}
+/* ================================================================
+   6) バトル：正解＝こうげき、まちがい＝ヒント、HP0でクリア
+   ================================================================ */
+let B = null;
+const later = (fn, ms) => { const id = B && B.id; setTimeout(() => { if(B && B.id === id) fn(); }, ms); };   // にげたら 予約を 止める
+const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
+function startBattle(c, s){
+  const boss = s === STAGES;
+  B = {id:Math.random(), c, s, boss, total:boss ? Q_BOSS : Q_NORMAL, misses:0, combo:0, maxCombo:0, done:0};
+  B.hp = B.total;
+  $('battle').className = 'screen ' + c.bg;
+  $('bTitle').textContent = boss ? '👑 ボス バトル' : `ステージ ${s}`;
+  $('eName').textContent = boss ? `${c.enemy}の キング` : `${c.enemy}の ${pick(ENEMY_NAMES)}`;
+  const en = $('enemy'); en.className = 'enemy'; en.innerHTML = enemySVG(c.hue + (s - 1) * 14, boss);
+  $('heroBox').className = 'hero-box'; $('heroBox').innerHTML = heroHTML();
+  $('answers').innerHTML = ''; $('eq').innerHTML = ''; $('pics').innerHTML = ''; $('hint').textContent = '';
+  updateHp(); updateCombo();
+  show('battle');
+  speak(boss ? 'ボスが あらわれた！' : 'モンスターが あらわれた！');
+  later(nextQuestion, 800);
+}
+$('flee').onclick = () => { B = null; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); openCourse(course); };
+function updateHp(){
+  const r = B.hp / B.total; $('hpfill').style.width = (r * 100) + '%';
+  $('hpbar').classList.toggle('low', r <= .34);
+  $('qcount').textContent = `もんだい ${Math.min(B.done + 1, B.total)} / ${B.total}`;
+}
+function updateCombo(){ $('bCombo').textContent = B.combo >= 2 ? `🔥${B.combo}` : ''; }
+
+function nextQuestion(){
+  const p = B.p = Logic.gen(B.c.type);
+  B.first = true; B.locked = false;
+  $('hint').innerHTML = '';
+  updateHp();
+  const item = pick(['🍎', '🍓', '🍩', '⭐', '🐟', '🍪', '🌸', '🎈']);
+  $('pics').innerHTML = p.pics ? `<div class="grp">${item.repeat(p.a)}</div><span>＋</span><div class="grp">${item.repeat(p.b)}</div>` : '';
+  const hs = !!p.hissan;
+  $('eq').classList.toggle('hide', hs); $('hs').classList.toggle('hide', !hs);
+  $('answers').classList.toggle('hide', hs); $('pad').classList.toggle('hide', !hs);
+  if(hs){ renderHissan(); speak(`${p.a} たす ${p.b}。 いちの くらいから`); return; }
+  $('eq').innerHTML = `${p.a} ${SYM[p.op]} ${p.b} ＝ <span class="q">？</span>`;
+  const box = $('answers'); box.innerHTML = '';
+  Logic.choices(p).forEach(v => {
+    const b = document.createElement('button'); b.className = 'btn'; b.textContent = v;
+    b.onclick = () => answer(b, v);
+    box.append(b);
   });
+  speak(`${p.a} ${WORD[p.op]} ${p.b} は？`);
 }
-
-function resetStage(){
-  clipTok++;
-  $('stage').className = '';
-  $('cast').innerHTML = ''; EL = {}; CH = {};
-  $('stage').querySelectorAll('.drop').forEach(e => e.remove());
-  $('pow').className = ''; $('pow').textContent = '';
-  $('clip').classList.add('hide'); $('clip').innerHTML = '';
-  $('bubble').classList.add('hide');
+function answer(btn, v){
+  if(!B || B.locked || btn.disabled) return;
+  if(v === B.p.ans){
+    B.locked = true; btn.classList.add('ok');
+    $('eq').innerHTML = `${B.p.a} ${SYM[B.p.op]} ${B.p.b} ＝ <span class="q">${B.p.ans}</span>`;
+    attack();
+  }else{ btn.disabled = true; btn.classList.add('ng'); wrong(); }
 }
-function endStage(done){
-  const st = $('stage');
-  st.onclick = null; resetStage(); st.classList.add('hide');
-  done();
-}
-
-/* ---- シーン：cast は役（a,b,c=なかま  v=わるもの）と立ち位置、steps は順番の演技 ----
-   w:しゃべる役  t:セリフ（{a}{b}{c}{v} は名前）  fx:動き  emo:絵文字  pow:大きな文字  sfx:効果音  mv:移動  o:[[役,動き,絵文字]] */
-const SCENES = [
-  {id:'cheer', cast:{a:'C'}, steps:[
-    {w:'a', t:() => pick(CHEERS), fx:'dance', emo:'✨', pow:'せいかい！✨', sfx:'happy'},
-    {w:'a', t:'つぎも がんばろうね！', fx:'jump'}]},
-  {id:'henshin', cast:{a:'C'}, steps:[
-    {w:'a', t:'みててね！ へんしーん！', fx:'spin', sfx:'whoosh', clip:'self'},
-    {w:'a', t:'{a}、さんじょう！ せいかい おめでとう！', fx:'grow', emo:'✨', pow:'キラキラーン！✨', sfx:'happy'}]},
-  {id:'slap', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:() => pick(GAGS), fx:'shake', emo:'💢', sfx:'boing'},
-    {w:'b', t:'もう！ {a}ったら わがまま いっちゃ だめー！ ぷんぷん！', fx:'shake', emo:'💢', o:[['a','','']]},
-    {w:'b', mv:'A', fx:'run', ms:450},
-    {w:'b', t:'えいっ！ ビンタ！', fx:'jump', emo:'', pow:'パチーン！💥', sfx:'slap', o:[['a','hit','💫']]},
-    {w:'a', t:'いたーい！ ごめんなさーい！', fx:'cry', emo:'💦'},
-    {w:'b', t:'わかれば よろしい！ せいかい おめでとう！', mv:'R', fx:'dance', emo:'✨', sfx:'happy', o:[['a','laugh','']]}]},
-  {id:'comfort', cast:{a:'C', b:'R'}, steps:[
-    {w:'a', t:'うえーん！ もんだいが むずかしいよー！', fx:'cry', emo:'💦'},
-    {w:'b', t:'だいじょうぶ！ いっしょに がんばろう！', mv:'B', fx:'jump'},
-    {w:'a', t:'ぐすん… うん！ ありがとう {b}！', fx:'laugh', emo:'', sfx:'happy'},
-    {w:'b', t:'えがおが いちばん！', fx:'dance', emo:'✨'}]},
-  {id:'waza', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:'せいかいの ごほうびに ひっさつわざを みせちゃうよ！', fx:'jump', emo:'✨'},
-    {w:'b', t:'わーい！ みたい みたい！', fx:'dance', clip:'waza'},
-    {w:'a', t:'どうだった？ だいせいかい！', fx:'grow', emo:'✨', pow:'⭐キマった！⭐', sfx:'happy', o:[['b','jump','❤️']]}]},
-  {id:'party', cast:{a:'L', b:'C', c:'R'}, steps:[
-    {w:'a', t:'せいかい おめでとう！', fx:'jump', emo:'✨', pow:'🎉おめでとう🎉', sfx:'happy', o:[['b','jump',''],['c','jump','']]},
-    {w:'b', t:'やったー！ ぱんぱかぱーん！', fx:'dance', emo:'🎊'},
-    {w:'c', t:'みんなで おいわいだよー！', fx:'dance', emo:'🎊', o:[['a','dance',''],['b','dance','']]}]},
-  {id:'teampose', cast:{a:'L', b:'C', c:'R'}, steps:[
-    {w:'a', t:'みんな いくよー！', fx:'jump', sfx:'whoosh'},
-    {w:'b', t:'せーの！', fx:'jump', o:[['a','jump',''],['c','jump','']]},
-    {w:'c', t:'きめポーズ！ だいせいかい！', fx:'grow', emo:'✨', pow:'⭐きまった！⭐', sfx:'happy', o:[['a','grow','✨'],['b','grow','✨']]}]},
-  {id:'laughall', cast:{a:'L', b:'C', c:'R'}, steps:[
-    {w:'b', t:'わっはっはっは！', fx:'laugh', sfx:'boing'},
-    {w:'a', t:'あははは！ おなかいたーい！', fx:'laugh'},
-    {w:'c', t:'うふふ！ たのしいね！', fx:'laugh', emo:'✨', pow:'😂😂😂', sfx:'happy', o:[['a','laugh',''],['b','laugh','']]}]},
-  {id:'dance', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:'ルンルン！ いっしょに おどろうよー！', fx:'dance', emo:'🎵', sfx:'happy'},
-    {w:'b', t:'いいね！ ハッピー ダンス！', mv:'B', fx:'dance', emo:'✨', pow:'♪ルンルン♪', o:[['a','dance','🎵']]},
-    {w:'a', t:'くるくる まわるよー！', fx:'spin'},
-    {w:'b', t:'あははは！ たのしー！', fx:'laugh', o:[['a','laugh','']]}]},
-  {id:'chase', cast:{b:'L', a:'A'}, steps:[
-    {w:'a', t:'わーっ！ {b}が おいかけてくるー！', mv:'R', fx:'run', emo:'💦'},
-    {w:'b', t:'まてまてー！ つかまえるぞー！', mv:'B', fx:'run', emo:'💢'},
-    {w:'a', t:'あっ！', mv:'B', fx:'hit', pow:'ゴツン！💥', sfx:'slap', o:[['b','hit','💫']]},
-    {w:'b', t:'いてて… あははは！', fx:'laugh', emo:'', sfx:'happy', o:[['a','laugh','']]}]},
-  {id:'gift', cast:{a:'L', b:'R'}, steps:[
-    {w:'b', t:'はい！ ごほうびの プレゼント！', mv:'A', fx:'jump', emo:'🎁'},
-    {w:'a', t:'ええっ！ ほんとうに！？ ありがとう！', fx:'jump', emo:'✨', sfx:'happy'},
-    {w:'b', t:'えへへ！ ともだちだもん！', fx:'laugh', emo:'❤️', o:[['a','laugh','❤️']]}]},
-  {id:'fight_friends', cast:{a:'L', b:'R'}, steps:[
-    {w:'b', t:'それ わたしの おやつだよー！', mv:'A', fx:'run', emo:'💢'},
-    {w:'a', t:'ちがうもん！ わたしのだもん！', fx:'shake', emo:'💢'},
-    {w:'b', t:'もう！ えいっ！', fx:'jump', pow:'ポカッ！', sfx:'slap', o:[['a','hit','💫']]},
-    {w:'a', t:'いたた… ひどいよー！', fx:'cry', emo:'💦'},
-    {w:'b', t:'ご、ごめんね。はんぶんこ しよう！', fx:'', emo:''},
-    {w:'a', t:'うん！ なかなおり！', fx:'laugh', emo:'✨', sfx:'happy', o:[['b','laugh','❤️']]}]},
-  {id:'harisen', cast:{a:'L', b:'R'}, steps:[
-    {w:'b', t:'{a}の かお、おもしろーい！', fx:'laugh'},
-    {w:'a', t:'しつれいな！ えいっ！', mv:'A', fx:'run', emo:'💢'},
-    {w:'a', t:'おしおき ハリセン！', fx:'jump', emo:'', pow:'ぱこーん！💥', sfx:'slap', o:[['b','hit','💫']]},
-    {w:'b', t:'いてて… まいった まいった！', fx:'cry', emo:'💦'},
-    {w:'a', t:'もう わらわない？ ハッピー！', fx:'dance', emo:'✨', sfx:'happy', o:[['b','laugh','']]}]},
-  {id:'zap', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:'さわったら おこるよー！', fx:'shake', emo:'💢'},
-    {w:'b', t:'いくよー！ キラキラ ビーム！', mv:'B', fx:'run'},
-    {w:'b', t:'えーい！', fx:'zap', pow:'ビリビリ！⚡', sfx:'boom', o:[['a','zap','💫']]},
-    {w:'a', t:'あばばばば！ しびれるー！', fx:'shake'},
-    {w:'b', t:'ごめんね！ ちから いれすぎちゃった！', fx:'jump'},
-    {w:'a', t:'あははは！ びっくりしたー！', fx:'laugh', sfx:'happy'}]},
-  {id:'rescue', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:'たすけてー！ おとしあなに おちたー！', fx:'cry', emo:'💦'},
-    {w:'b', t:'まかせて！ いま たすけるよ！', mv:'A', fx:'run', sfx:'whoosh'},
-    {w:'b', t:'せーの！ よいしょー！', fx:'jump', pow:'よいしょ！', sfx:'boing', o:[['a','jump','']]},
-    {w:'a', t:'ありがとう {b}！ たすかったよー！', fx:'laugh', emo:'✨', sfx:'happy'}]},
-  {id:'recital', cast:{a:'L', b:'C', c:'R'}, steps:[
-    {w:'b', t:'{b}の リサイタルだよー！ ボエ〜〜！', fx:'shake', emo:'🎵', sfx:'boing'},
-    {w:'a', t:'み、みみがー！ うるさーい！', fx:'shake', emo:'💦'},
-    {w:'c', t:'ぷっ… ちょっと おもしろいかも！', fx:'laugh'},
-    {w:'b', t:'もっと うたっちゃうよー！', fx:'dance', emo:'🎵', o:[['a','laugh',''],['c','laugh','']], sfx:'happy'}]},
-  {id:'spinshow', cast:{a:'C'}, steps:[
-    {w:'a', t:'くるくる まわっちゃうよー！', fx:'spin', sfx:'whoosh'},
-    {w:'a', t:'め、めが まわったー！ あははは！', fx:'laugh', emo:'💫', pow:'ぐるぐる〜', sfx:'boing'}]},
-  {id:'hug', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:'{b}、だーいすき！', mv:'A', fx:'jump', emo:'❤️'},
-    {w:'b', t:'わたしもー！ なかよし！', mv:'B', fx:'jump', emo:'❤️', sfx:'happy', pow:'💕なかよし💕'},
-    {w:'a', t:'ずーっと ともだちだよ！', fx:'dance', emo:'✨', o:[['b','dance','✨']]}]},
-  {id:'jumpcontest', cast:{a:'L', b:'R'}, steps:[
-    {w:'a', t:'どっちが たかく とべるか しょうぶだよ！', fx:'shake'},
-    {w:'b', t:'まけないよー！ それー！', fx:'jump', sfx:'boing', o:[['a','jump','']]},
-    {w:'a', t:'ひきわけ！ あははは！', fx:'laugh', emo:'✨', sfx:'happy', o:[['b','laugh','✨']]}]},
-  {id:'vs_villain', cast:{a:'L', v:'R'}, steps:[
-    {w:'v', t:'わっはっは！ じゃまを してやるぞー！', fx:'shake', emo:'💢', sfx:'whoosh'},
-    {w:'a', t:'そうは させない！ ひっさつわざ！', mv:'A', fx:'jump', clip:'waza'},
-    {w:'a', t:'えーい！', fx:'jump', pow:'キラキラ！✨', sfx:'boom', o:[['v','hit','💫']]},
-    {w:'v', t:'ひえーーー！ おぼえてろよー！', fx:'spin'},
-    {w:'a', t:'やっつけたよ！ せいかい おめでとう！', fx:'dance', emo:'✨', sfx:'happy'}]},
-  {id:'tickle', cast:{v:'R', a:'L'}, steps:[
-    {w:'v', t:'こちょこちょ こうげきだー！', mv:'B', fx:'run', emo:'💢'},
-    {w:'a', t:'あははは！ くすぐったーい！ やめてー！', fx:'laugh', sfx:'boing'},
-    {w:'v', t:'ふははは！ まいったか！', fx:'dance'},
-    {w:'a', t:'へんなのー！ あははは！', fx:'laugh', emo:'✨', sfx:'happy'}]},
-  {id:'villain_dance', cast:{v:'C', a:'L', b:'R'}, steps:[
-    {w:'v', t:'へんてこ ダンスだー！ ふりふり！', fx:'dance', emo:'🎵', sfx:'boing'},
-    {w:'a', t:'へんなダンス！ あははは！', fx:'laugh', o:[['b','laugh','']]},
-    {w:'v', t:'もっと へんに なるぞー！ くるくるー！', fx:'spin'},
-    {w:'b', t:'おなか いたーい！', fx:'laugh', emo:'✨', sfx:'happy', o:[['v','dance','']]}]},
-];
-const SPACE = {id:'space'};
-
-// 使えるキャラの数に合わせてシーンを選び、役にキャラを割りあてる
-function chooseScene(){
-  const seenName = new Set();
-  const heroes = shuffle(ready().filter(c => !c.villain)).filter(c => !seenName.has(c.name) && seenName.add(c.name)), vils = shuffle(ready().filter(c => c.villain));
-  const fits = sc => { const ks = Object.keys(sc.cast); return ks.filter(k => k !== 'v').length <= heroes.length && (!ks.includes('v') || vils.length); };
-  let pool;
-  if(window.FORCE_SCENE) pool = [...SCENES, SPACE].filter(s => s.id === window.FORCE_SCENE);
-  else{
-    pool = SCENES.filter(s => fits(s) && s.id !== lastScene);
-    if(heroes.length && vils.length && lastScene !== 'space') pool.push(SPACE);
+function wrong(){
+  B.misses++; B.first = false; B.combo = 0; updateCombo();
+  sfx('miss'); later(() => sfx('hurt'), 150);
+  replay($('enemy'), 'attack'); replay($('heroBox'), 'hurt');
+  const h = Logic.hint(B.p);
+  if(h){
+    let html = `💡 ${h.text}`;
+    if(h.dots) html += `<div class="dots">${'●'.repeat(h.dots[0])}　<span style="color:var(--gold)">${'●'.repeat(h.dots[1])}</span></div>`;
+    if(h.grid) html += `<div class="dots" style="flex-direction:column;align-items:center">${Array.from({length:h.grid[1]}, () => `<div>${'●'.repeat(h.grid[0])}</div>`).join('')}</div>`;
+    $('hint').innerHTML = html;
   }
-  if(!pool.length) return null;
-  const sc = pick(pool), map = {};
-  const keys = sc === SPACE ? ['a', 'b', 'v'] : Object.keys(sc.cast);
-  let i = 0;
-  for(const k of keys){ const c = k === 'v' ? vils[0] : heroes[i++]; if(c) map[k] = c; }
-  return {sc, map};
+  speak('おしい！ ヒントを みてね');
+}
+function attack(){
+  if(B.first){ B.combo++; B.maxCombo = Math.max(B.maxCombo, B.combo); }
+  updateCombo();
+  const crit = B.first && B.combo >= 3;
+  replay($('heroBox'), 'atk'); sfx('slash');
+  later(() => {
+    replay($('slash'), 'on'); replay($('enemy'), 'hit');
+    const dm = $('dmg'); dm.textContent = crit ? 'クリティカル！' : pick(['ズバッ！', 'ドカッ！', 'バシッ！']);
+    dm.style.fontSize = crit ? '1.7rem' : ''; replay(dm, 'on');
+    if(crit){ const cf = $('comboFx'); cf.textContent = `🔥 ${B.combo} コンボ！`; replay(cf, 'on'); sfx('crit'); }
+    sfx('hit');
+    B.hp--; B.done++; updateHp();
+    speak(pick(['せいかい！', 'すごい！', 'やったね！', 'その ちょうし！']));
+  }, 250);
+  later(() => { $('comboFx').classList.remove('on'); B.hp <= 0 ? defeat() : nextQuestion(); }, 1250);
 }
 
-async function reaction(done){
-  okCount++;
-  const id = ++stageId, alive = () => id === stageId;
-  resetStage();
-  const t0 = Date.now(), st = $('stage');
-  st.onclick = () => { if(alive() && Date.now() - t0 > 900){ stageId++; endStage(done); } };
-  setTimeout(() => { if(alive()){ stageId++; endStage(done); } }, SCENE_MAX);   // 10秒で おわり
-  const bub = $('bubble');
-  const say = async (t, k) => {
-    if(!alive()) return false;
-    const c = CH[k];
-    t = t.replace(/\{([abcv])\}/g, (m, x) => CH[x] ? CH[x].name : '');
-    bub.textContent = '';
-    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = c.name; bub.append(nm);
-    bub.append(document.createTextNode(t));
-    const [p, r] = c.voice || (c.villain ? VILLAIN_VOICE : DEFAULT_VOICE);
-    await Promise.all([speakDone(t, p, r), sleep(900)]);
-    return alive();
+/* ---- ひっ算（一のくらいから1けたずつ） ---- */
+function renderHissan(){
+  const p = B.p, D = String(p.ans).length;
+  p.dig = D; p.pos = 0; p.car = Logic.carries(p.a, p.b);
+  const d = (x, i) => x >= 10 ** (2 - i) ? Logic.digit(x, 2 - i) : '';
+  let h = '<div class="cy"></div>' + [0, 1, 2].map(i => `<div class="cy" id="cy${i}"></div>`).join('');
+  h += '<div></div>' + [0, 1, 2].map(i => `<div>${d(p.a, i)}</div>`).join('');
+  h += '<div>＋</div>' + [0, 1, 2].map(i => `<div>${d(p.b, i)}</div>`).join('');
+  h += '<div class="ln"></div><div></div>' + [0, 1, 2].map(i => `<div class="bx ${2 - i >= D ? 'off' : ''}" id="bx${i}"></div>`).join('');
+  $('hs').innerHTML = h; markBox();
+  $('hint').textContent = 'いちの くらいから たそう！';
+}
+function markBox(){ for(let i = 0; i < 3; i++) $('bx' + i).classList.toggle('on', 2 - i === B.p.pos && B.p.pos < B.p.dig); }
+$('pad').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => `<button class="btn" data-d="${d}">${d}</button>`).join('');
+$('pad').onclick = e => {
+  const b = e.target.closest('[data-d]'); if(!b || !B || B.locked || !B.p || !B.p.hissan) return;
+  const p = B.p, d = +b.dataset.d, box = $('bx' + (2 - p.pos));
+  if(d === Logic.digit(p.ans, p.pos)){
+    sfx('tap'); box.textContent = d;
+    const c = p.car[p.pos + 1];
+    $('hint').textContent = c && p.pos + 1 < p.dig ? `くりあがり ${c}！` : 'その ちょうし！';
+    if(c && p.pos + 1 < p.dig) $('cy' + (1 - p.pos)).textContent = c;
+    p.pos++;
+    markBox();
+    if(p.pos >= p.dig){ B.locked = true; attack(); }
+  }else{
+    replay(box, 'ng'); wrong();
+    const da = Logic.digit(p.a, p.pos), db = Logic.digit(p.b, p.pos), c = p.car[p.pos];
+    $('hint').textContent = `💡 ${da} ＋ ${db}${c ? ' ＋ ' + c : ''} の いちばん みぎの かず`;
+  }
+};
+
+/* ---- たおした → リザルト ---- */
+function defeat(){
+  B.locked = true; replay($('enemy'), 'down'); sfx('down');
+  later(result, 950);
+}
+function result(){
+  const st = Logic.stars(B.misses), key = B.c.id + '-' + B.s;
+  save.stars[key] = Math.max(st, save.stars[key] || 0); Save.store();
+  const c = B.c, s = B.s, boss = B.boss, hasNext = s < STAGES;
+  const party = shuffle(PARTY).slice(0, 3).map(m => `<img src="${m.src}" alt="">`).join('') || heroSVG();
+  $('resultBox').innerHTML = `<h2>${boss ? 'ボス げきは！' : 'ステージ クリア！'}</h2>
+    <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <div class="party">${party}</div>
+    <div>${B.misses === 0 ? 'ノーミス！ パーフェクト！' : `まちがい ${B.misses}かい`}${B.maxCombo >= 3 ? `<br>🔥 さいだい ${B.maxCombo} コンボ` : ''}</div>
+    <div class="row">${hasNext ? '<button class="btn" id="rNext">つぎへ ▶</button>' : ''}<button class="btn sub" id="rMap">マップ</button></div>`;
+  $('overlay').classList.remove('hide');
+  sfx('win'); speak(boss ? 'ボスを たおした！ すごい！' : 'ステージ クリア！');
+  [...$('resultBox').querySelectorAll('.bigstars span')].forEach((el, i) => { if(i < st) setTimeout(() => { el.classList.add('on'); sfx('star'); }, 400 + i * 350); });
+  if(st === 3 || boss) fireworks(boss ? 30000 : 4000);
+  B = null;
+  const close = () => { stopFireworks(); $('overlay').classList.add('hide'); };
+  if(hasNext) $('rNext').onclick = () => { close(); startBattle(c, s + 1); };
+  $('rMap').onclick = () => { close(); openCourse(c); };
+}
+
+/* ---- 花火（ボスは30秒） ---- */
+let fwRun = 0;
+function fireworks(ms){
+  const run = ++fwRun, cv = $('fw'), x = cv.getContext('2d'), until = performance.now() + ms;
+  cv.width = innerWidth; cv.height = innerHeight; cv.style.display = 'block'; x.clearRect(0, 0, cv.width, cv.height);
+  const parts = []; let last = 0, n = 0;
+  const burst = () => {
+    const cx = cv.width * (.1 + Math.random() * .8), cy = cv.height * (.08 + Math.random() * .35), hue = rnd(0, 360), k = rnd(50, 90);
+    for(let i = 0; i < k; i++){ const a = Math.PI * 2 * i / k, v = 2 + Math.random() * 4.5;
+      parts.push({x:cx, y:cy, vx:Math.cos(a) * v, vy:Math.sin(a) * v, life:60 + rnd(0, 40), hue:hue + rnd(-20, 20)}); }
+    if(n++ % 3 === 0) sfx('boom');
   };
-  const finish = async () => { await sleep(300); if(alive()) endStage(done); };
-  const ch = chooseScene();
-  if(!ch){                                             // キャラ画像がまだ無いとき
-    showPow('せいかい！🎉'); sfx('happy');
-    await sleep(1500); if(alive()) endStage(done); return;
-  }
-  lastScene = ch.sc.id;
-  if(ch.sc !== SPACE && Object.keys(ch.sc.cast).some(k => !ch.map[k])){ showPow('せいかい！🎉'); sfx('happy'); await sleep(1500); if(alive()) endStage(done); return; }
-  for(const k in ch.map) mkActor(k, ch.map[k]);
-  await sleep(60);
-  if(!alive()) return;
-  if(ch.sc === SPACE) return spaceScene({alive, say, finish, st});
-
-  const sc = ch.sc;
-  for(const k in sc.cast){ EL[k].classList.remove('off-r'); EL[k].classList.add('enter'); EL[k].style.left = SLOT[sc.cast[k]] + '%'; }
-  await sleep(450);
-  for(const step of sc.steps){
-    if(!alive()) return;
-    const k = step.w;
-    if(step.mv) EL[k].style.left = SLOT[step.mv] + '%';
-    if(step.fx !== undefined) fx(k, step.fx);
-    if(step.emo !== undefined) emo(k, step.emo);
-    for(const [who, f, e] of step.o || []){ fx(who, f); emo(who, e); }
-    if(step.pow) showPow(step.pow);
-    if(step.sfx) sfx(step.sfx);
-    if(step.t){ if(!await say(typeof step.t === 'function' ? step.t() : step.t, k)) return; }
-    else if(!step.clip) await sleep(step.ms || 700);
-    if(step.clip){ await playClip(step.clip === 'self' ? (clipFor(CH[k].name) || wazaClip()) : wazaClip()); if(!alive()) return; }
-  }
-  return finish();
+  const tick = ts => {
+    if(run !== fwRun) return;
+    if(ts < until && ts - last > 420){ last = ts; burst(); }
+    x.globalCompositeOperation = 'destination-out'; x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(0, 0, cv.width, cv.height);
+    x.globalCompositeOperation = 'lighter';
+    for(let i = parts.length - 1; i >= 0; i--){
+      const p = parts[i]; p.x += p.vx; p.y += p.vy; p.vy += .06; p.vx *= .985; p.vy *= .985;
+      if(--p.life <= 0){ parts.splice(i, 1); continue; }
+      x.fillStyle = `hsla(${p.hue},100%,${55 + p.life / 4}%,${Math.min(1, p.life / 40)})`;
+      x.beginPath(); x.arc(p.x, p.y, 2.6, 0, 7); x.fill();
+    }
+    if(ts < until || parts.length) requestAnimationFrame(tick); else cv.style.display = 'none';
+  };
+  requestAnimationFrame(tick);
 }
+function stopFireworks(){ fwRun++; $('fw').style.display = 'none'; }
 
-// 宇宙：わるもの の鼻毛で宇宙へ → おしっこジャー → なかま がやっつける
-async function spaceScene({alive, say, finish, st}){
-  const a = EL.a, v = EL.v, hair = v.querySelector('.hair'), hasB = !!EL.b;
-  a.classList.remove('off-r'); a.style.left = '50%'; a.style.zIndex = 3;
-  fx('a', 'shake'); emo('a', '💢'); sfx('boing');
-  v.classList.remove('off-r'); v.classList.add('top', 'show');
-  await sleep(500);
-  if(!await say('はなげ こうげきだー！ うちゅうへ いってこーい！', 'v')) return;
-
-  const n = CH.v.nose || DEFAULT_NOSE, W = 220, sR = st.getBoundingClientRect(), aR = a.getBoundingClientRect();
-  const noseY = v.offsetHeight * n.y;
-  v.style.marginLeft = '0'; v.style.left = (aR.left + aR.width / 2 - sR.left - n.x * W) + 'px';
-  hair.style.left = (n.x * W - 20) + 'px'; hair.style.top = noseY + 'px';
-  const dist = aR.top + 10 - sR.top - noseY;
-  hair.style.transition = 'height .4s ease-in'; hair.style.height = dist + 'px';
-  await sleep(450);
-  if(!alive()) return;
-  sfx('whoosh'); fx('a', '');
-  hair.style.transition = 'height 1.2s ease-in-out'; hair.style.height = '160px';
-  const b = body('a'); b.classList.add('rise'); b.style.transition = 'transform 1.2s ease-in-out'; b.style.transformOrigin = '50% 0';
-  b.style.transform = `translateY(${-(dist - 160)}px) rotate(720deg) scale(.6)`;
-  st.classList.add('space');
-  if(!await say('きゃーーー！ たすけてーーー！', 'a')) return;
-
-  const vR = v.getBoundingClientRect(), aR2 = a.getBoundingClientRect();
-  sfx('whoosh'); showPow('ジャーーー！💦');
-  for(let i = 0; i < 16; i++){
-    const d = document.createElement('span'); d.className = 'drop'; d.textContent = '💧';
-    d.style.left = (vR.left + vR.width * n.x - sR.left - 10 + rnd(-16, 16)) + 'px';
-    d.style.top = (vR.top + vR.height * .9 - sR.top) + 'px';
-    d.style.setProperty('--dy', Math.max(40, aR2.top + aR2.height * .4 - vR.top - vR.height * .9) + 'px');
-    d.style.animationDelay = (i * 70) + 'ms';
-    st.append(d);
-  }
-  if(!await say('ひっひっひ！ おしっこ ジャーーー！', 'v')) return;
-  emo('a', '💦');
-  st.querySelectorAll('.drop').forEach(e => e.remove());
-
-  if(hasB){
-    EL.b.classList.remove('off-r'); EL.b.style.left = '78%'; emo('b', '💢');
-    showPow('ドカーン！✨'); sfx('boom');
-    if(!await say('こらー！ {v}！ えーい！', 'b')) return;
-  }else if(!await say('ふははは！ もう あきたぞ！ かえしてやる！', 'v')) return;
-  v.classList.remove('show'); v.classList.add('defeated');
-  b.style.transition = 'transform .7s cubic-bezier(.3,1.6,.5,1)'; b.style.transform = '';
-  hair.style.transition = 'height .8s'; hair.style.height = '0px';
-  st.classList.remove('space');
-  if(hasB) emo('b', '');
-  fx('a', 'laugh'); emo('a', ''); sfx('happy');
-  if(hasB){ fx('b', 'dance'); emo('b', '✨'); }
-  if(!await say('ただいまー！ たすかったよー！', 'a')) return;
-  return finish();
-}
-refreshMascots();
+show('home');
 </script>
 </body>
 </html>
