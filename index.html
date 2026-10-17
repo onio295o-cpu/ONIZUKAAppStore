@@ -212,6 +212,10 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .fx.chaos-big{left:0;right:0;top:12%;height:60vh}
 .fx.bb-big{left:0;right:0;top:13%;bottom:2%;background:none;min-height:0}
 .fx.bb-big .bb-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.fx.dora{inset:0;overflow:hidden;z-index:1;pointer-events:none}
+.dora-mov{position:absolute;left:0;right:0;bottom:6%;height:56%;z-index:1;transition:transform .9s cubic-bezier(.2,1.25,.4,1)}
+.dora-say{position:absolute;left:50%;top:14%;transform:translateX(-50%);background:#fff;border:4px solid var(--ink);border-radius:26px;padding:10px 16px;font:900 1.15rem/1.35 var(--font);color:var(--ink);white-space:nowrap;box-shadow:0 5px 0 var(--ink);z-index:3;animation:hgSay .3s cubic-bezier(.2,1.8,.4,1) both}
+.dora-ring{position:absolute;left:50%;bottom:4%;width:70%;height:10%;transform:translateX(-50%);border-radius:50%;background:radial-gradient(rgba(0,0,0,.25),transparent 70%);z-index:0}
 .crew{position:absolute;inset:0;pointer-events:none;z-index:0}
 .fx.bb-big .bb-canvas,.fx.bb-big .wh-stage{z-index:1}
 .crew .m{position:absolute;bottom:3%;left:var(--x);height:var(--h,38%);aspect-ratio:2/3;translate:-50% 0;animation:var(--a) var(--t,.8s) ease-in-out var(--d,0s) infinite;transform-origin:50% 100%}
@@ -434,6 +438,7 @@ a.btn{text-decoration:none}
 <script src="chars/precure.js"></script>
 <script src="chars/ng.js"></script>
 <script src="chars/cutout.js"></script>
+<script src="chars/dora.js"></script>
 <script src="chars/whip.js"></script>
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
@@ -665,6 +670,10 @@ if(window.NG_IMAGES){   // のび太・ジャイアンも ショーの キャラ
   const N = window.NG_IMAGES;
   [['のび太', {normal:'n_normal', happy:'n_happy', surprised:'n_surprised', funny:'n_funny', attack:'n_attack'}], ['ジャイアン', {normal:'g_normal', happy:'g_happy', surprised:'g_surprised', funny:'g_funny', attack:'g_attack'}]]
     .forEach(([name, ps]) => Object.entries(ps).forEach(([pose, k]) => N[k] && addMember(name, N[k], pose)));
+}
+if(window.DORA_FRAMES){   // ドラえもんも キャラに
+  const D = window.DORA_FRAMES;
+  Object.entries({normal:'t000', happy:'p_laugh', surprised:'p_jump', funny:'p_cry', attack:'p_point'}).forEach(([pose, k]) => D[k] && addMember('ドラえもん', D[k], pose));
 }
 FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, (window.CHAR_IMAGES || {})[f] || 'キャラクター/' + f, pose); });   // 埋めこみ画像（chars/precure.js）を つかう
 /* ---- 読み込み：画像ファイル・ZIP（中の画像を ぜんぶ）に 対応。背景が ある 画像は 自動で 切り抜く ---- */
@@ -1122,6 +1131,22 @@ const CRAZY = {
   jelly(){ document.body.classList.add('jelly'); word('ぐにゃ〜ん！'); sfx('boing'); setTimeout(() => document.body.classList.remove('jelly'), 1900); },
 };
 let showTimers = [], showDone = null;
+// ドラえもん：空から タケコプターで 登場 → くるっと 1周 → いろんな ポーズ
+function doraShow(){
+  if(!window.DoraActor) return false;
+  const d = fxAdd('dora', '<div class="dora-ring"></div><div class="dora-mov"></div>', 7000);
+  const mov = d.querySelector('.dora-mov'); const a = DoraActor.create(mov);
+  mov.style.transition = 'none'; mov.style.transform = 'translateY(-130%)'; a.pose('fly'); void mov.offsetWidth;
+  mov.style.transition = ''; mov.style.transform = 'translateY(0)'; sfx('whoosh2');
+  const say = s => { d.querySelector('.dora-say')?.remove(); const b = document.createElement('div'); b.className = 'dora-say'; b.textContent = s; d.append(b); };
+  const T = (ms, fn) => showTimers.push(setTimeout(() => d.isConnected && fn(), ms));
+  T(1000, () => { sfx('land'); a.pose('wave'); a.turn(1500, 1, () => a.pose('wave')); word('くるりん！'); });
+  T(2700, () => { say(t('やあ！ ぼく ドラえもん！', 'やあ！ ぼく ドラえもん！')); sfx('boing'); });
+  T(3800, () => { a.pose('gadget'); say(pick(['ひみつ どうぐ〜！', 'どら焼き どこ〜？'])); sfx('fanfare'); });
+  T(5000, () => { a.pose(pick(['dance', 'laugh', 'clap'])); crew(d, 2); confetti(20); });
+  T(6100, () => { a.pose('victory'); say(t('すごいね！ そのちょうし！', 'すごいね！ その調子！')); sfx('win'); });
+  return true;
+}
 // キュアホイップ：大きく 登場して パーツごとに 動く（まわりに キャラも わちゃわちゃ）
 function whipShow(){
   if(!window.WhipCharacter) return false;
@@ -1134,9 +1159,10 @@ function bigShow(done){
   showDone = done; setSlow(1.8);
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
-  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip'].filter(k => k !== S.lastShow)); S.lastShow = kind;
+  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip', 'dora'].filter(k => k !== S.lastShow)); S.lastShow = kind;
   if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, kind === 'hg-g' ? 7800 : 6700)); return; }
   if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
+  if(kind === 'dora' && doraShow()){ showTimers.push(setTimeout(endShow, 7000)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
   const bb = kind === 'crew' && bobobo(pick(BB_MOVES), 6000);
