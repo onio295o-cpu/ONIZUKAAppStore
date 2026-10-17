@@ -944,8 +944,16 @@ function crew(d, n){
     const say = Math.random() < .5 ? `<b>${pick(['えっ！？', 'なにこれ〜！', 'へんなの！', 'まって〜！', 'いえーい！', 'わっしょい！', 'きゃー！', 'おもしろ〜い！'])}</b>` : '';
     const el = document.createElement('div'); el.className = 'm';
     el.style.cssText = `--x:${xs[i]}%;--a:${a};--t:${(t * (0.85 + Math.random() * .3)).toFixed(2)}s;--d:${(-Math.random()).toFixed(2)}s;--h:${rnd(34, 46)}%`;
-    el.innerHTML = `<img src="${imgOfSrc(m, pick(['happy', 'surprised', 'funny', 'normal']))}" alt="">${say}`;
-    box.append(el);
+    const live = window.CutoutActor && {'のび太':'nobita', 'ジャイアン':'gian'}[m.name];
+    if(live){   // のび太・ジャイアンは 関節で 動く 本物の アクターで
+      el.innerHTML = say; box.append(el);
+      const host = document.createElement('div'); host.style.cssText = 'position:absolute;inset:0'; el.prepend(host);
+      const ac = CutoutActor.create(CUTOUT_CONFIGS[live], host).speed(.8);
+      ac.play(pick(live === 'gian' ? ['ダンス', '大笑い', 'ガッツポーズ', '足踏み', 'どやポーズ'] : ['スキップ', 'ばんざい', 'くすくす笑い', 'ジャンプ', '照れる']));
+    }else{
+      el.innerHTML = `<img src="${imgOfSrc(m, pick(['happy', 'surprised', 'funny', 'normal']))}" alt="">${say}`;
+      box.append(el);
+    }
   });
 }
 // 鼻毛劇場：ボーボボの はなげに のび太が からまる／ジャイアンが はなに すいこまれる
