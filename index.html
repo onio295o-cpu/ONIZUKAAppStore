@@ -210,6 +210,18 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .fx.chaos-big{left:0;right:0;top:12%;height:60vh}
 .fx.bb-big{left:0;right:0;top:13%;bottom:2%;background:none;min-height:0}
 .fx.bb-big .bb-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.crew{position:absolute;inset:0;pointer-events:none;z-index:2}
+.crew .m{position:absolute;bottom:3%;left:var(--x);height:var(--h,38%);aspect-ratio:2/3;translate:-50% 0;animation:var(--a) var(--t,.8s) ease-in-out var(--d,0s) infinite;transform-origin:50% 100%}
+.crew .m img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 6px 4px rgba(0,0,0,.35))}
+.crew .m b{position:absolute;left:50%;top:-6%;transform:translateX(-50%);white-space:nowrap;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:2px 9px;font:900 .95rem/1.3 var(--font);color:var(--ink);animation:none}
+@keyframes wJump{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-55%) rotate(360deg)}}
+@keyframes wSquash{0%,100%{transform:scale(1,1)}25%{transform:scale(1.35,.65)}55%{transform:scale(.75,1.35) translateY(-18%)}}
+@keyframes wSway{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(22deg) translateY(-8%)}}
+@keyframes wRun{0%{transform:translateX(-120vw) scaleX(1)}49%{transform:translateX(120vw) scaleX(1)}50%{transform:translateX(120vw) scaleX(-1)}100%{transform:translateX(-120vw) scaleX(-1)}}
+@keyframes wZoom{0%,100%{transform:scale(.6)}50%{transform:scale(1.5) rotate(-12deg)}}
+@keyframes wFlip{0%,100%{transform:rotate(0) translateY(0)}40%{transform:rotate(180deg) translateY(30%)}60%{transform:rotate(180deg) translateY(30%) scale(1.15)}}
+@keyframes wShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-14%) rotate(-8deg)}40%{transform:translateX(14%) rotate(8deg)}60%{transform:translateX(-10%) skewX(15deg)}80%{transform:translateX(10%) skewX(-15deg)}}
+@keyframes wPeek{0%,100%{transform:translateY(80%)}30%,70%{transform:translateY(0) rotate(10deg)}}
 .fx.chaos-big .chaos-actor{width:min(60vw,300px)}
 .fx.chaos-big .chaos-bubble{font:800 1.2rem/1.3 var(--font);border:4px solid var(--ink)}
 .cheer img{height:100%;max-width:40%;object-fit:contain;animation:bob 1.8s ease-in-out infinite;transform-origin:50% 100%}
@@ -314,8 +326,7 @@ a.btn{text-decoration:none}
       <button class="btn a5" data-age="5">5歳<small>足し算</small></button>
       <button class="btn a6" data-age="6">6歳<small>足し算・九九・割り算・筆算</small></button>
     </div>
-    <button class="btn nochar hide" id="noChar" data-go="party">📁 キャラ画像を 読み込むと キャラが 出てきます</button>
-    <div class="subrow"><button class="btn" data-go="party">🤝 キャラ</button><button class="btn" data-go="settings">⚙️ 設定</button></div>
+    <div class="subrow"><button class="btn" data-go="settings">⚙️ 設定</button></div>
   </div>
 </section>
 
@@ -374,6 +385,7 @@ a.btn{text-decoration:none}
 <div id="overlay" class="overlay hide"><div class="panel result" id="resultBox"></div></div>
 <canvas id="fw"></canvas>
 
+<script src="chars/precure.js"></script>
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
 <script src="volleyball/story.js"></script>
@@ -600,10 +612,7 @@ const CharDB = {
   async put(rec){ const d = await this.open(); if(!d) return;
     return new Promise(res => { try{ const t = d.transaction('chars', 'readwrite'); t.objectStore('chars').put(rec); t.oncomplete = t.onerror = res; }catch(e){ res(); } }); },
 };
-CharDB.all().then(rs => rs.forEach(r => r.data && addMember(r.name, r.data, r.pose || 'normal')));
-try{ const r = indexedDB.open('tashizan-chars', 1); r.onupgradeneeded = () => r.result.createObjectStore('chars', {keyPath:'name'});   // 前の版で 読み込んだ 画像も つかう
-  r.onsuccess = () => { try{ const q = r.result.transaction('chars').objectStore('chars').getAll(); q.onsuccess = () => (q.result || []).forEach(x => x.data && addMember(x.name, x.data)); }catch(e){} }; }catch(e){}
-FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, 'キャラクター/' + f, pose); });
+FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, (window.CHAR_IMAGES || {})[f] || 'キャラクター/' + f, pose); });   // 埋めこみ画像（chars/precure.js）を つかう
 /* ---- 読み込み：画像ファイル・ZIP（中の画像を ぜんぶ）に 対応。背景が ある 画像は 自動で 切り抜く ---- */
 const IMG_RE = /\.(png|jpe?g|gif|webp)$/i, GENERIC = /^(character|image|img|chara|キャラ)\d*$/i;
 function loadScript(src){ return new Promise((res, rej) => { const x = document.createElement('script'); x.src = src; x.onload = res; x.onerror = rej; document.head.append(x); }); }
@@ -697,7 +706,6 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { sfx('tap
 document.querySelectorAll('[data-age]').forEach(b => b.onclick = () => { sfx('tap'); AGE = +b.dataset.age; show('menu'); });
 
 function renderHome(){
-  $('noChar').classList.toggle('hide', PARTY.length > 0);
   const ps = shuffle(PARTY).slice(0, 2);
   $('homeStage').innerHTML = ps.map(imgOf).join('');
 }
@@ -858,11 +866,27 @@ function bobobo(move, ms){
   if(!window.BoboboAnimator) return false;
   const d = fxAdd('bb-big', '', ms);
   const r = BoboboAnimator.create({target:d, autoplay:false, transparent:true, noLabel:AGE < 5, style:pick(['impact', 'chaos'])});
-  r.play(move); bbLive.push(r);
+  r.play(move); bbLive.push(r); crew(d, rnd(3, 4));
   setTimeout(() => { r.destroy(); bbLive = bbLive.filter(x => x !== r); }, ms);
   sfx('boing'); [.3, .5, .7].forEach(f => setTimeout(() => sfx(/^nose|hyper/.test(move) ? 'boom' : 'hit'), ms * f));
   if(AGE < 5) setTimeout(() => word(/^nose/.test(move) ? 'はなげ しんけん！' : pick(['なにそれ〜！？', 'へんな うごき！', 'すごい わざ！'])), 500);
   return true;
+}
+// プリキュアたちが まわりで わちゃわちゃ（3〜4人）
+const W_ANIM = [['wJump', .9], ['wSquash', .7], ['wSway', .8], ['wZoom', 1.1], ['wFlip', 1.4], ['wShake', .5]];
+function crew(d, n){
+  const ms = shuffle(PARTY.filter(m => !isVillain(m))).slice(0, n); if(!ms.length) return;
+  const box = document.createElement('div'); box.className = 'crew'; d.append(box);
+  const xs = shuffle([20, 40, 62, 82]).slice(0, ms.length);
+  const runner = ms.length >= 3 ? rnd(0, ms.length - 1) : -1;
+  ms.forEach((m, i) => {
+    const [a, t] = i === runner ? ['wRun', 3.2] : pick(W_ANIM);
+    const say = Math.random() < .5 ? `<b>${pick(['えっ！？', 'なにこれ〜！', 'へんなの！', 'まって〜！', 'いえーい！', 'わっしょい！', 'きゃー！', 'おもしろ〜い！'])}</b>` : '';
+    const el = document.createElement('div'); el.className = 'm';
+    el.style.cssText = `--x:${xs[i]}%;--a:${a};--t:${(t * (0.85 + Math.random() * .3)).toFixed(2)}s;--d:${(-Math.random()).toFixed(2)}s;--h:${rnd(44, 58)}%`;
+    el.innerHTML = `<img src="${imgOfSrc(m, pick(['happy', 'surprised', 'funny', 'normal']))}" alt="">${say}`;
+    box.append(el);
+  });
 }
 const bbStop = () => { bbLive.forEach(r => r.destroy()); bbLive = []; };
 function word(t, cls){ fxAdd('fx-word' + (cls ? ' ' + cls : ''), '', 1400).textContent = t; }
