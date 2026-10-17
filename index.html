@@ -89,6 +89,7 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 #battle .wrap{gap:14px}
 .arena{position:relative;height:36vh;min-height:220px;flex-shrink:0;overflow:visible}
 .enemy-box{position:absolute;right:5%;top:6%;width:46%;max-width:200px;text-align:center;z-index:1}
+.enemy-box .enemy img{display:block;width:100%;max-height:26vh;object-fit:contain}
 .enemy-box .enemy{width:100%;margin-top:4px;animation:bob 1.4s ease-in-out infinite;transform-origin:50% 100%}
 .enemy-box .enemy.hit{animation:hit .45s}
 .enemy-box .enemy.attack{animation:eatk .5s}
@@ -240,6 +241,9 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
   font-size:1.2rem;line-height:1.1;background:rgba(255,255,255,.9);transform:rotate(-14deg);animation:stamp .5s .9s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes stamp{0%{transform:scale(3) rotate(-30deg);opacity:0}100%{transform:scale(1) rotate(-14deg);opacity:1}}
 @media (prefers-reduced-motion:reduce){.fx{animation-duration:.01s!important}}
+/* ===== 動画 ===== */
+.clipov{position:fixed;inset:0;z-index:40;background:rgba(20,14,10,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px}
+.clipov iframe{width:min(100%,720px);aspect-ratio:16/9;border:var(--line);border-radius:16px;background:#000}
 /* ===== リザルト ===== */
 .overlay{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(59,42,30,.55)}
 .result{width:min(92vw,430px);padding:24px 18px 20px;text-align:center;position:relative;z-index:2}
@@ -353,6 +357,7 @@ a.btn{text-decoration:none}
 </section>
 
 <div id="fxl"></div>
+<div id="clipov" class="clipov hide"></div>
 <div id="overlay" class="overlay hide"><div class="panel result" id="resultBox"></div></div>
 <canvas id="fw"></canvas>
 
@@ -497,31 +502,9 @@ function speak(t){
 /* ================================================================
    4) 絵：ゆうしゃ（ほし）・スライム・なかま画像
    ================================================================ */
-function heroSVG(){
-  return `<svg viewBox="0 0 160 160"><defs><radialGradient id="hgr" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fffbd0"/><stop offset="1" stop-color="#ffb400"/></radialGradient></defs>
-  <rect x="118" y="28" width="10" height="70" rx="4" fill="#dfe8ff" stroke="#3a4a7a" stroke-width="4" transform="rotate(25 123 63)"/>
-  <rect x="104" y="86" width="34" height="9" rx="4" fill="#ffcf3f" stroke="#7a4d00" stroke-width="3" transform="rotate(25 121 90)"/>
-  <path d="M80 10 L98 55 L148 58 L110 90 L122 140 L80 113 L38 140 L50 90 L12 58 L62 55Z" fill="url(#hgr)" stroke="#b86e00" stroke-width="6" stroke-linejoin="round"/>
-  <ellipse cx="68" cy="78" rx="6" ry="9" fill="#3b2a00"/><ellipse cx="94" cy="78" rx="6" ry="9" fill="#3b2a00"/>
-  <circle cx="70" cy="75" r="2.2" fill="#fff"/><circle cx="96" cy="75" r="2.2" fill="#fff"/>
-  <path d="M70 94 Q81 104 92 94" stroke="#3b2a00" stroke-width="4" fill="none" stroke-linecap="round"/>
-  <circle cx="58" cy="92" r="6" fill="#ff8aa0" opacity=".6"/><circle cx="104" cy="92" r="6" fill="#ff8aa0" opacity=".6"/></svg>`;
-}
-let eid = 0;
-function enemySVG(hue, boss){
-  const id = 'eg' + (++eid), d = `hsl(${hue},60%,25%)`;
-  return `<svg viewBox="0 0 200 190"><defs><radialGradient id="${id}" cx="35%" cy="30%" r="75%">
-    <stop offset="0" stop-color="hsl(${hue},90%,82%)"/><stop offset=".6" stop-color="hsl(${hue},75%,55%)"/><stop offset="1" stop-color="hsl(${hue},70%,36%)"/></radialGradient></defs>
-  ${boss ? `<path d="M62 56 L70 20 L88 42 L100 12 L112 42 L130 20 L138 56Z" fill="#ffcf3f" stroke="#7a4d00" stroke-width="5" stroke-linejoin="round"/><circle cx="100" cy="32" r="6" fill="#ff4a6a"/>` : ''}
-  <path d="M28 168 Q16 118 55 78 Q100 20 145 78 Q184 118 172 168 Q100 182 28 168Z" fill="url(#${id})" stroke="${d}" stroke-width="6"/>
-  <ellipse cx="72" cy="72" rx="18" ry="10" fill="#fff" opacity=".55" transform="rotate(-35 72 72)"/>
-  <ellipse cx="78" cy="118" rx="12" ry="15" fill="#fff" stroke="${d}" stroke-width="3"/><ellipse cx="122" cy="118" rx="12" ry="15" fill="#fff" stroke="${d}" stroke-width="3"/>
-  <circle cx="81" cy="121" r="6" fill="#1b1030"/><circle cx="119" cy="121" r="6" fill="#1b1030"/>
-  <path d="M62 98 L90 106 M138 98 L110 106" stroke="${d}" stroke-width="6" stroke-linecap="round"/>
-  <path d="M80 146 Q100 158 120 146" stroke="${d}" stroke-width="5" fill="none" stroke-linecap="round"/>
-  <path d="M86 149 l4 8 4 -6 M106 150 l4 7 4 -8" fill="#fff" stroke="${d}" stroke-width="2"/></svg>`;
-}
-const ENEMY_NAMES = ['スライム', 'プルン', 'ドロロン', 'ポヨン'];
+// キャラは「なかま」に よみこんだ 画像だけを つかう（オリジナルキャラは つかわない）
+// 名前に「ボーボボ」「わるもの」「てき」が入った画像は てき役。てき役が いないときは なかま同士の しょうぶ。
+const isVillain = m => /ボーボボ|ぼーぼぼ|わるもの|てき|敵/.test(m.name);
 
 // なかま：この端末に保存した画像（IndexedDB）＋「キャラクター」フォルダの画像
 const FOLDER = ['キュアハート.png','キュアダイヤモンド (1).png','キュアロゼった.png','image_main05 (1).png','キュアあるかな.png',
@@ -530,7 +513,7 @@ const PARTY = [];
 const nameOf = f => f.replace(/\.[^.]+$/, '').replace(/\s*\(\d+\)$/, '').trim();
 function addMember(name, src){
   const i = new Image();
-  i.onload = () => { if(!PARTY.some(m => m.name === name)){ PARTY.push({name, src}); renderParty(); renderHomeHero(); } };
+  i.onload = () => { if(!PARTY.some(m => m.name === name)){ PARTY.push({name, src}); renderParty(); if(!$('home').classList.contains('hide')) renderHome(); } };
   i.src = src;
 }
 const CharDB = {
@@ -554,7 +537,10 @@ document.getElementById('charFiles').onchange = async e => {
   }
   e.target.value = '';
 };
-const heroHTML = () => PARTY.length ? `<img src="${pick(PARTY).src}" alt="">` : heroSVG();
+const heroes = () => PARTY.filter(m => !isVillain(m));
+const villains = () => PARTY.filter(isVillain);
+const imgOf = m => m ? `<img src="${m.src}" alt="">` : '';
+const heroHTML = () => imgOf(pick(heroes().length ? heroes() : PARTY));
 
 /* ================================================================
    5) 画面
@@ -570,7 +556,7 @@ document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { sfx('tap
 function renderHomeHero(){ document.querySelectorAll('[data-hero]').forEach(h => h.innerHTML = heroHTML()); }
 function renderHome(){
   renderHomeHero();
-  document.querySelectorAll('[data-enemy]').forEach(e => e.innerHTML = enemySVG(+e.dataset.enemy, false));
+  document.querySelectorAll('[data-enemy]').forEach(e => { const v = villains(); e.innerHTML = v.length ? imgOf(pick(v)) : (PARTY.length > 1 ? imgOf(pick(PARTY)) : ''); });
   $('totalStars').textContent = `⭐ ${totalStars()} / ${COURSES.length * STAGES * 3}`;
 }
 function renderCourses(){
@@ -621,16 +607,19 @@ function startBattle(c, s){
   B.hp = B.total;
   $('battle').className = 'screen'; buildScene(c.bg); B.coins = 0; showCoins();
   $('bTitle').textContent = boss ? '👑 ボス バトル' : `ステージ ${s}`;
-  $('eName').textContent = boss ? `${c.enemy}の キング` : `${c.enemy}の ${pick(ENEMY_NAMES)}`;
-  const en = $('enemy'); en.className = 'enemy'; en.innerHTML = enemySVG(c.hue + (s - 1) * 14, boss);
-  $('heroBox').className = 'hero-box'; $('heroBox').innerHTML = heroHTML();
+  const hero = pick(heroes().length ? heroes() : PARTY), vs = villains();
+  const foe = vs.length ? pick(vs) : pick(PARTY.filter(m => m !== hero));
+  $('eName').textContent = foe ? (vs.length ? (boss ? '👑 ' : '') + foe.name : 'ライバル：' + foe.name) : '';
+  $('eName').classList.toggle('hide', !foe); $('hpbar').classList.toggle('hide', !foe);
+  const en = $('enemy'); en.className = 'enemy'; en.innerHTML = imgOf(foe);
+  $('heroBox').className = 'hero-box'; $('heroBox').innerHTML = imgOf(hero);
   $('answers').innerHTML = ''; $('eq').innerHTML = ''; $('pics').innerHTML = ''; $('hint').textContent = '';
   updateHp(); updateCombo();
   show('battle');
   speak(boss ? 'ボスが あらわれた！' : 'モンスターが あらわれた！');
   later(nextQuestion, 800);
 }
-$('flee').onclick = () => { B = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); openCourse(course); };
+$('flee').onclick = () => { stopClip(); B = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); openCourse(course); };
 function updateHp(){
   const r = B.hp / B.total; $('hpfill').style.width = (r * 100) + '%';
   $('hpbar').classList.toggle('low', r <= .34);
@@ -693,7 +682,14 @@ function attack(){
     B.hp--; B.done++; updateHp();
     reward(B.first ? B.combo : 0, B.hp <= 0);
   }, 250);
-  later(() => { $('comboFx').classList.remove('on'); B.hp <= 0 ? defeat() : nextQuestion(); }, 1500);
+  B.ok = (B.ok || 0) + 1;
+  const vid = CAN_YT && B.hp > 1 && B.ok % 3 === 0;
+  later(() => {
+    $('comboFx').classList.remove('on');
+    if(B.hp <= 0) return defeat();
+    if(vid){ const id = B.id; playClip(pick(CLIPS), () => { if(B && B.id === id) nextQuestion(); }); }
+    else nextQuestion();
+  }, vid ? 1900 : 1500);
 }
 
 /* ---- ひっ算（一のくらいから1けたずつ） ---- */
@@ -737,7 +733,7 @@ function result(){
   const st = Logic.stars(B.misses), key = B.c.id + '-' + B.s;
   save.stars[key] = Math.max(st, save.stars[key] || 0); Save.store();
   const c = B.c, s = B.s, boss = B.boss, hasNext = s < STAGES;
-  const party = shuffle(PARTY).slice(0, 3).map(m => `<img src="${m.src}" alt="">`).join('') || heroSVG();
+  const party = shuffle(PARTY).slice(0, 3).map(imgOf).join('');
   $('resultBox').innerHTML = `<div class="stamp">${boss ? 'ボス<br>げきは' : 'クリア'}</div><h2>${boss ? 'ボス げきは！' : 'ステージ クリア！'}</h2>
     <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
     <div class="party">${party}</div>
@@ -747,9 +743,10 @@ function result(){
   sfx('win'); speak(boss ? 'ボスを たおした！ すごい！' : 'ステージ クリア！');
   [...$('resultBox').querySelectorAll('.bigstars span')].forEach((el, i) => { if(i < st) setTimeout(() => { el.classList.add('on'); sfx('star'); }, 400 + i * 350); });
   if(st === 3 || boss) fireworks(boss ? 30000 : 4000);
+  if(boss) setTimeout(() => playClip(pick(BIG_CLIPS)), 1800);
   $('fxl').innerHTML = '';
   B = null;
-  const close = () => { stopFireworks(); $('overlay').classList.add('hide'); };
+  const close = () => { stopClip(); stopFireworks(); $('overlay').classList.add('hide'); };
   if(hasNext) $('rNext').onclick = () => { close(); startBattle(c, s + 1); };
   $('rMap').onclick = () => { close(); openCourse(c); };
 }
@@ -765,7 +762,7 @@ function fxAdd(cls, html, ms, style){
   fxl.append(d); setTimeout(() => d.remove(), ms); return d;
 }
 const member = () => PARTY.length ? pick(PARTY) : null;
-const memberHTML = m => m ? `<img src="${m.src}" alt="">` : heroSVG();
+const memberHTML = imgOf;
 const SAYS = ['やったね！', 'てんさい！', 'すごーい！', 'ナイス！', 'かんぺき！', 'いえーい！'];
 function word(t, cls){ fxAdd('fx-word' + (cls ? ' ' + cls : ''), '', 1400).textContent = t; }
 function confetti(n){
@@ -780,6 +777,7 @@ function sparks(x, y, n, ch){
 }
 function sceneFx(cls){ const sc = $('scene'); sc.classList.remove(cls); void sc.offsetWidth; sc.classList.add(cls); setTimeout(() => sc.classList.remove(cls), 800); }
 function actor(cls, m, extra, ms){
+  if(!m) return fxAdd('hide', '', 10);
   const a = fxAdd('fx-actor ' + cls, memberHTML(m) + (extra || ''), ms || 2000);
   return a;
 }
@@ -792,7 +790,7 @@ const PATTERNS = {
   },
   kyodai(){ actor('p-kyodai', member(), '', 1900); setTimeout(() => { word('ででーん！'); sfx('boing'); }, 500); },
   run(){
-    const ms = shuffle(PARTY).slice(0, 3); const list = ms.length ? ms : [null, null, null];
+    const ms = shuffle(PARTY).slice(0, 3); const list = ms;
     list.forEach((m, i) => setTimeout(() => { actor('p-run', m, i === 0 ? `<div class="say">わーい！</div>` : '', 2000); sfx('pop'); }, i * 260));
   },
   manga(){
@@ -813,7 +811,7 @@ const PATTERNS = {
   },
   ufo(){ fxAdd('ufo', '🛸', 2000); fxAdd('beam', '', 2000); actor('p-ufo', member(), '', 2000); sfx('ufo'); setTimeout(() => word('ただいま〜'), 1500); },
   parade(){
-    const ms = shuffle(PARTY).slice(0, 5); const list = ms.length ? ms : [null, null, null];
+    const list = shuffle(PARTY).slice(0, 5); if(!list.length) return;
     const w = 100 / list.length;
     list.forEach((m, i) => setTimeout(() => { const a = actor('p-parade', m, '', 2200); a.style.left = (w * i + w / 2) + '%'; a.style.marginLeft = 'min(-14vw,-75px)'; }, i * 120));
     word('みんな しゅうごう！'); sfx('fanfare');
@@ -835,6 +833,41 @@ function reward(combo, finalHit){
   setTimeout(() => { showCoins(); replay($('coins'), 'bump'); sfx('coin'); }, 900);
 }
 function showCoins(){ $('coins').textContent = `🪙 ${save.coins || 0}`; }
+
+/* ---- YouTube（公式チャンネルの動画）：3回 正解するごとに 7びょう、ボスを たおすと 30びょう ----
+   ※ ファイルを ちょくせつ ひらくと YouTube が さいせいを ことわる（エラー153）ので、https で ひらいた ときだけ ながす */
+const CAN_YT = /^https?:/.test(location.protocol);
+const CLIPS = [
+  // プリキュア公式YouTubeチャンネル
+  {id:'l-PoXgn2kCk', start:57, end:64}, {id:'QwExFKxU5ok', start:62, end:69}, {id:'ANZ2qYtKdMA', start:104, end:111},
+  {id:'FtyzmWfGhcs', start:36, end:43}, {id:'_w_XpbkFhDc', start:51, end:58}, {id:'2pDtyVGAN5c', start:40, end:47}, {id:'cg2RJr8eXOk', start:56, end:63},
+  // 東映アニメーション公式（キュアハート）
+  {id:'aLIKtTHpn1c', start:4, end:11},
+  // 東宝MOVIEチャンネル・テレビ朝日（ドラえもん）
+  {id:'Nhwf_Mz2LdM', start:10, end:17}, {id:'LZwwVNYKFHA', start:12, end:19}, {id:'AvZoMJrFqeU', start:2, end:9},
+  // パウ・パトロール公式
+  {id:'ds2jgGxkNKg', start:5, end:12},
+  // 東映アニメーション公式・フロンティアワークス（ボーボボ）
+  {id:'w_4YeUnq5yY', start:3, end:10}, {id:'aa8pY52h6fU', start:3, end:10}, {id:'bjgKRWLkAdg', start:3, end:10},
+];
+const BIG_CLIPS = [
+  {id:'gri5qHqXjMg', start:0, end:30},   // 名探偵プリキュア！ オープニング
+  {id:'wfB-OvWKCvc', start:0, end:30},   // わんだふるぷりきゅあ！ オープニング
+  {id:'ds2jgGxkNKg', start:0, end:30},   // パウ・パトロール オープニング
+  {id:'yQYmWIfwf0I', start:0, end:30},   // 映画ドラえもん スペシャルPV
+];
+let clipTimer = null;
+function playClip(clip, done){
+  if(!CAN_YT){ done && done(); return false; }
+  const ov = $('clipov');
+  ov.innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.id}?autoplay=1&start=${clip.start}&end=${clip.end}&playsinline=1&rel=0&modestbranding=1&controls=0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe><button class="btn ghost" id="clipSkip">スキップ ▶▶</button>`;
+  ov.classList.remove('hide');
+  const end = () => { if(clipTimer === null) return; clearTimeout(clipTimer); clipTimer = null; ov.classList.add('hide'); ov.innerHTML = ''; done && done(); };
+  clipTimer = setTimeout(end, (clip.end - clip.start + 1) * 1000);
+  $('clipSkip').onclick = end;
+  return true;
+}
+function stopClip(){ if(clipTimer !== null){ clearTimeout(clipTimer); clipTimer = null; } $('clipov').classList.add('hide'); $('clipov').innerHTML = ''; }
 
 /* ---- 花火（ボスは30秒） ---- */
 let fwRun = 0;
