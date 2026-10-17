@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>さんすうクエスト</title>
+<title>さんすうパーティー</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;800&display=swap" rel="stylesheet">
 <style>
@@ -55,67 +55,6 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .hdr .sp{width:86px}
 .starline{color:var(--ink);font-size:1.05rem}
 
-/* ===== ホーム ===== */
-#home .wrap{justify-content:space-between}
-.home-stage{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:14px;min-height:200px;padding-bottom:16px;position:relative}
-.home-stage::after{content:"";position:absolute;left:8%;right:8%;bottom:6px;height:26px;border-radius:50%;background:rgba(59,42,30,.14)}
-.home-stage .hero{width:140px;animation:bob 1.6s ease-in-out infinite;z-index:1}
-.home-stage .hero img{width:100%;max-height:220px;object-fit:contain}
-.home-stage .enemy{width:120px;animation:bob 1.3s ease-in-out infinite reverse;z-index:1}
-@keyframes bob{50%{transform:translateY(-10px)}}
-.menu{display:flex;flex-direction:column;gap:18px}
-.menu .sub{font-size:1.25rem;white-space:nowrap;padding:12px 8px}
-.chip:empty{visibility:hidden}
-.menu .main{min-height:92px;font-size:2rem;background:var(--orange);color:#fff;-webkit-text-stroke:0}
-
-/* ===== コース・ステージ ===== */
-.list{flex:1;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:10px 4px 16px;align-content:start}
-.course{padding:14px 8px 12px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px;transition:transform .06s}
-.course:active{transform:translateY(5px);box-shadow:0 1px 0 var(--ink)}
-.course .ic{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.3rem;border:var(--line)}
-.course .nm{font-size:1rem;line-height:1.25;word-break:keep-all}
-.path{flex:1;display:flex;flex-direction:column-reverse;justify-content:space-around;align-items:center;padding:16px 0}
-.node{width:96px;height:96px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:2rem;
-  background:var(--yellow);border:var(--line);box-shadow:0 7px 0 var(--ink)}
-.node small{font-size:.8rem;letter-spacing:1px;color:var(--ink)}
-.node.boss{width:116px;height:116px;background:var(--red);color:#fff}
-.node.boss small{color:#fff}
-.node.lock{background:#d8d2c8;color:#8a7f74}
-.node:nth-child(odd){transform:translateX(-58px)}.node:nth-child(even){transform:translateX(58px)}
-.node.now{animation:nodepulse 1s ease-in-out infinite}
-@keyframes nodepulse{50%{box-shadow:0 7px 0 var(--ink),0 0 0 10px rgba(255,138,61,.45)}}
-
-/* ===== バトル ===== */
-#battle .wrap{gap:14px}
-.arena{position:relative;height:36vh;min-height:220px;flex-shrink:0;overflow:visible}
-.enemy-box{position:absolute;right:5%;top:6%;width:46%;max-width:200px;text-align:center;z-index:1}
-.enemy-box .enemy img{display:block;width:100%;max-height:26vh;object-fit:contain}
-.enemy-box .enemy{width:100%;margin-top:4px;animation:bob 1.4s ease-in-out infinite;transform-origin:50% 100%}
-.enemy-box .enemy.hit{animation:hit .45s}
-.enemy-box .enemy.attack{animation:eatk .5s}
-.enemy-box .enemy.down{animation:down .9s forwards}
-@keyframes hit{0%,100%{filter:none;transform:none}20%{filter:brightness(1.8);transform:translateX(14px) scale(1.06,.94)}50%{transform:translateX(-8px)}}
-@keyframes eatk{40%{transform:translateX(-40%) scale(1.12)}}
-@keyframes down{30%{filter:brightness(1.8);transform:scale(1.2,.8)}100%{transform:scale(0) rotate(30deg);opacity:0}}
-.ename{font-size:.85rem;background:#fff;border:3px solid var(--ink);border-radius:99px;padding:0 10px;display:inline-block;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px}
-.hpbar{height:18px;border-radius:99px;background:#fff;border:3px solid var(--ink);overflow:hidden}
-.hpbar i{display:block;height:100%;background:var(--green);transition:width .4s}
-.hpbar.low i{background:var(--red)}
-.hero-box{position:absolute;left:5%;bottom:5%;width:36%;max-width:150px;z-index:2}
-.hero-box img,.hero-box svg{display:block;width:100%;max-height:24vh;object-fit:contain;animation:bob 1.8s ease-in-out infinite}
-.hero-box.atk{animation:dash .55s cubic-bezier(.3,.6,.4,1)}
-@keyframes dash{0%{transform:none}35%{transform:translateX(110%) translateY(-20%) scale(1.1)}100%{transform:none}}
-.hero-box.hurt{animation:hurt .45s}
-@keyframes hurt{30%{transform:translateX(-14px) rotate(-6deg)}}
-.slash{position:absolute;right:12%;top:22%;width:40%;pointer-events:none;opacity:0;z-index:3}
-.slash.on{animation:slash .4s ease-out}
-@keyframes slash{0%{opacity:1;transform:scale(.4) rotate(-30deg)}60%{opacity:1}100%{opacity:0;transform:scale(1.3) rotate(10deg)}}
-.dmg{position:absolute;right:14%;top:18%;font-size:2.4rem;color:var(--yellow);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;pointer-events:none;opacity:0;z-index:4;white-space:nowrap}
-.dmg.on{animation:dmg .8s ease-out}
-@keyframes dmg{0%{opacity:0;transform:translateY(10px) scale(.6)}20%{opacity:1;transform:translateY(0) scale(1.3)}100%{opacity:0;transform:translateY(-40px)}}
-.combo{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);font-size:1.6rem;color:var(--orange);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;opacity:0;white-space:nowrap;z-index:4}
-.combo.on{animation:cpop .8s ease-out forwards}
-@keyframes cpop{0%{opacity:0;transform:translateX(-50%) scale(.4)}40%{opacity:1;transform:translateX(-50%) scale(1.25)}100%{opacity:1;transform:translateX(-50%) scale(1)}}
 .qwin{padding:20px 14px 12px;text-align:center;position:relative}
 .qcount{position:absolute;top:-17px;left:16px;font-size:.9rem;background:var(--orange);color:#fff;padding:2px 12px;border-radius:99px;border:3px solid var(--ink)}
 .eq{font-size:clamp(2.8rem,14vw,4rem);letter-spacing:.03em;font-variant-numeric:tabular-nums;line-height:1.15;color:var(--ink)}
@@ -141,9 +80,8 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .hs .bx.ng{animation:shake .35s}
 .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:auto}
 .pad .btn{font-size:2.2rem;min-height:76px;padding:0;background:#fff}
-
 /* ===== 世界（背景レイヤー：空・太陽・雲・遠い山・地面・かざり） ===== */
-#battle{background:linear-gradient(var(--sky1),var(--sky2))}
+#study{background:linear-gradient(var(--sky1),var(--sky2))}
 .scene{position:absolute;inset:0;overflow:hidden;z-index:0;pointer-events:none}
 .scene .sun{position:absolute;top:8%;right:9%;width:82px;height:82px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#fffbe0,var(--sunc) 65%);
   box-shadow:0 0 50px 20px var(--glow);animation:sunb 5s ease-in-out infinite}
@@ -171,7 +109,7 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 @keyframes jig{30%{transform:scaleY(1.06)}60%{transform:scaleY(.97)}}
 .scene.flash::after{content:"";position:absolute;inset:0;background:#fff;animation:flash .5s ease-out forwards}
 @keyframes flash{from{opacity:.85}to{opacity:0}}
-#battle .wrap{z-index:1}
+#study .wrap{z-index:1}
 .ground-shadow{position:absolute;bottom:-2px;width:70%;left:15%;height:16px;border-radius:50%;background:rgba(59,42,30,.22)}
 .hdr .coins{background:#fff;border:3px solid var(--ink);border-radius:99px;padding:2px 10px;font-size:1rem;min-width:86px;text-align:center;box-shadow:0 3px 0 var(--ink)}
 .hdr .coins.bump{animation:bump .4s}
@@ -241,6 +179,61 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
   font-size:1.2rem;line-height:1.1;background:rgba(255,255,255,.9);transform:rotate(-14deg);animation:stamp .5s .9s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes stamp{0%{transform:scale(3) rotate(-30deg);opacity:0}100%{transform:scale(1) rotate(-14deg);opacity:1}}
 @media (prefers-reduced-motion:reduce){.fx{animation-duration:.01s!important}}
+/* ===== はじめの画面（年齢をえらぶ） ===== */
+#home .wrap{justify-content:space-between}
+.home-stage{flex:1;display:flex;align-items:flex-end;justify-content:center;gap:10px;min-height:150px;padding-bottom:10px}
+.home-stage img{height:min(26vh,210px);max-width:44%;object-fit:contain;animation:bob 1.6s ease-in-out infinite}
+.home-stage img:nth-child(2){animation-delay:-.8s}
+@keyframes bob{50%{transform:translateY(-10px)}}
+.ages{display:flex;flex-direction:column;gap:14px}
+.ages .btn{min-height:88px;font-size:2rem;flex-direction:column;gap:0;line-height:1.1}
+.ages .btn small{font-size:1rem;color:var(--ink2)}
+.ages .a4{background:#ffe08a}.ages .a5{background:#bfe6ff}.ages .a6{background:#ffc9d4}
+.subrow{display:flex;gap:12px;margin-top:14px}.subrow .btn{flex:1;min-height:60px;font-size:1.15rem;background:#fff}
+/* ===== メニュー（問題の種類） ===== */
+.menu-list{flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:12px 2px}
+.menu-list .btn{justify-content:flex-start;text-align:left;min-height:84px;font-size:1.35rem;padding:10px 16px;background:#fff}
+.menu-list .btn .ic{font-size:2.2rem;width:56px;text-align:center}
+/* ===== 勉強画面 ===== */
+#study .wrap{gap:12px}
+.prog{display:flex;gap:3px;justify-content:center;flex-wrap:nowrap;padding:2px 0;flex:1}
+.prog i{width:14px;height:14px;flex-shrink:0;border-radius:50%;background:#fff;border:3px solid var(--ink)}
+.prog i.done{background:var(--yellow)}.prog i.now{background:var(--orange);animation:nowp 1s ease-in-out infinite}
+@keyframes nowp{50%{transform:scale(1.25)}}
+.cheer{position:relative;height:20vh;min-height:120px;flex-shrink:0;display:flex;justify-content:space-between;align-items:flex-end;padding:0 4%}
+.cheer img{height:100%;max-width:40%;object-fit:contain;animation:bob 1.8s ease-in-out infinite;transform-origin:50% 100%}
+.cheer img:nth-child(2){animation-delay:-.9s}
+.cheer.yay img{animation:yay .5s ease-out 2}
+@keyframes yay{40%{transform:translateY(-30px) scale(1.06,.94)}}
+.cheer.sad img{animation:sad .5s}
+@keyframes sad{30%{transform:rotate(-8deg)}60%{transform:rotate(6deg)}}
+/* ===== ごほうび：1問（1.5秒の とびだし） ===== */
+.q-actor{width:min(42vw,210px);height:min(32vh,250px)}
+.q-bottom{left:50%;bottom:0;margin-left:min(-21vw,-105px);animation:qb 1.5s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes qb{0%{transform:translateY(100%)}25%{transform:translateY(0) scale(1.1,.9)}35%{transform:scale(.95,1.06)}45%,75%{transform:none}100%{transform:translateY(110%)}}
+.q-left{left:0;top:30%;animation:ql 1.5s cubic-bezier(.3,1.4,.5,1) forwards}
+@keyframes ql{0%{transform:translateX(-110%) rotate(-30deg)}30%{transform:translateX(10%) rotate(8deg)}45%,75%{transform:translateX(0) rotate(0)}100%{transform:translateX(-120%)}}
+.q-right{right:0;top:30%;animation:qr 1.5s cubic-bezier(.3,1.4,.5,1) forwards}
+@keyframes qr{0%{transform:translateX(110%) rotate(30deg)}30%{transform:translateX(-10%) rotate(-8deg)}45%,75%{transform:translateX(0) rotate(0)}100%{transform:translateX(120%)}}
+.q-zoom{left:50%;top:26%;margin-left:min(-21vw,-105px);animation:qz 1.5s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes qz{0%{transform:scale(0) rotate(-180deg)}35%{transform:scale(1.15) rotate(8deg)}50%,78%{transform:scale(1) rotate(0)}100%{transform:scale(0);opacity:0}}
+.q-word{left:0;right:0;top:20%;text-align:center;font-size:clamp(2rem,11vw,3.4rem);color:var(--yellow);-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink);animation:wordpop 1.3s cubic-bezier(.3,1.6,.5,1) forwards;white-space:nowrap}
+/* ===== ごほうび：4問ごと（ハチャメチャ ショー） ===== */
+.showveil{position:fixed;inset:0;z-index:14;background:radial-gradient(circle,rgba(255,240,180,.35),rgba(59,42,30,.55));display:flex;align-items:flex-end;justify-content:center;padding-bottom:max(20px,env(safe-area-inset-bottom))}
+.showveil .btn{min-height:56px;font-size:1.1rem;background:#fff}
+.showtitle{left:0;right:0;top:5%;text-align:center;font-size:clamp(1.8rem,9vw,3rem);color:#fff;-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink);animation:titlein .6s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes titlein{from{transform:translateY(-120%) rotate(-8deg)}to{transform:none}}
+.rain{top:-30vh;width:min(26vw,130px);height:min(22vh,170px);left:var(--x);animation:rain var(--t) cubic-bezier(.5,0,.8,1) forwards;animation-delay:var(--d)}
+@keyframes rain{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(140vh) rotate(var(--r))}}
+.face{left:50%;top:50%;width:min(90vw,520px);height:min(80vh,620px);margin:min(-40vh,-310px) 0 0 min(-45vw,-260px);animation:face 1.9s cubic-bezier(.2,1.4,.4,1) forwards}
+@keyframes face{0%{transform:scale(.1) rotate(20deg);opacity:0}25%{transform:scale(1.15);opacity:1}40%{transform:scale(1) rotate(-3deg)}55%{transform:scale(1.05) rotate(3deg)}85%{opacity:1}100%{transform:scale(2.4);opacity:0}}
+body.upside #study{animation:upside 1.9s cubic-bezier(.5,0,.5,1)}
+@keyframes upside{20%,75%{transform:rotate(180deg)}}
+body.jelly #study{animation:jelly 1.9s ease-in-out}
+@keyframes jelly{10%{transform:scale(1.08,.9) skewX(6deg)}25%{transform:scale(.92,1.1) skewX(-6deg)}40%{transform:scale(1.06,.94) skewX(4deg)}55%{transform:scale(.96,1.05) skewX(-3deg)}70%{transform:none}}
+body.shake #study{animation:sshake .12s linear 10}
+@keyframes sshake{25%{transform:translate(-6px,3px)}75%{transform:translate(6px,-3px)}}
+
 /* ===== 動画 ===== */
 .clipov{position:fixed;inset:0;z-index:40;background:rgba(20,14,10,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:16px}
 .clipov iframe{width:min(100%,720px);aspect-ratio:16/9;border:var(--line);border-radius:16px;background:#000}
@@ -269,60 +262,40 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 .toggle.on{background:var(--green)}.toggle.on::after{left:35px}
 .note{font-size:.95rem;font-weight:500;color:var(--ink2);line-height:1.5;text-align:center}
 a.btn{text-decoration:none}
+#study .eq{font-size:clamp(2.2rem,11.5vw,3.6rem);white-space:nowrap}
+.btn.ghost{white-space:nowrap}
 </style>
 </head>
 <body>
 
 <section id="home" class="screen bg-night stars">
   <div class="wrap">
-    <div style="text-align:center;margin-top:4vh">
-      <h1 class="title-logo">さんすう<br><span>クエスト</span></h1>
-      <div class="starline" id="totalStars" style="margin-top:10px"></div>
+    <div style="text-align:center;margin-top:3vh"><h1 class="title-logo">さんすう<br><span>パーティー</span></h1></div>
+    <div class="home-stage" id="homeStage"></div>
+    <div class="ages">
+      <button class="btn a4" data-age="4">4さい<small>たしざん</small></button>
+      <button class="btn a5" data-age="5">5歳<small>足し算</small></button>
+      <button class="btn a6" data-age="6">6歳<small>足し算・九九・割り算・筆算</small></button>
     </div>
-    <div class="home-stage"><div class="hero" data-hero></div><div class="enemy" data-enemy="200"></div></div>
-    <div class="menu">
-      <button class="btn main" data-go="courses">▶ ぼうけんに でる</button>
-      <div style="display:flex;gap:12px">
-        <button class="btn sub" data-go="party" style="flex:1">🤝 なかま</button>
-        <button class="btn sub" data-go="settings" style="flex:1">⚙️ せってい</button>
-      </div>
-    </div>
+    <div class="subrow"><button class="btn" data-go="party">🤝 キャラ</button><button class="btn" data-go="settings">⚙️ 設定</button></div>
   </div>
 </section>
 
-<section id="courses" class="screen bg-night stars hide">
+<section id="menu" class="screen bg-night stars hide">
   <div class="wrap">
-    <div class="hdr"><button class="btn ghost" data-go="home">← もどる</button><h2>どこへ いく？</h2><span class="sp"></span></div>
-    <div class="list" id="courseList"></div>
+    <div class="hdr"><button class="btn ghost" data-go="home" data-t="back"></button><h2 id="menuTitle"></h2><span class="sp"></span></div>
+    <div class="menu-list" id="menuList"></div>
   </div>
 </section>
 
-<section id="stages" class="screen hide">
-  <div class="wrap">
-    <div class="hdr"><button class="btn ghost" data-go="courses">← もどる</button><h2 id="stageTitle"></h2><span class="sp"></span></div>
-    <div class="path" id="stagePath"></div>
-  </div>
-</section>
-
-<section id="battle" class="screen hide">
+<section id="study" class="screen hide">
   <div class="scene" id="scene">
     <div class="sun"></div><div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
     <div class="hill h1"></div><div class="hill h2"></div><div class="ground"></div><div class="deco" id="deco"></div>
   </div>
   <div class="wrap">
-    <div class="hdr"><button class="btn ghost" id="flee">🏃 にげる</button><h2 id="bTitle"></h2><span class="coins" id="coins">🪙 0</span></div>
-    <div class="arena" id="arena">
-      <div class="enemy-box">
-        <div class="ename" id="eName"></div>
-        <div class="hpbar" id="hpbar"><i id="hpfill"></i></div>
-        <div class="enemy" id="enemy"></div>
-      </div>
-      <div class="hero-box" id="heroBox"></div>
-      <svg class="slash" id="slash" viewBox="0 0 100 100"><path d="M10 80 Q50 50 92 12" stroke="#fff" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M18 88 Q55 58 96 26" stroke="#ffe46b" stroke-width="5" fill="none" stroke-linecap="round"/></svg>
-      <div class="dmg" id="dmg"></div>
-      <div class="combo" id="comboFx"></div>
-      <span class="chip" id="bCombo" style="position:absolute;left:4px;top:4px"></span>
-    </div>
+    <div class="hdr"><button class="btn ghost" id="quit" data-t="back"></button><div class="prog" id="prog"></div><span style="width:20px"></span></div>
+    <div class="cheer" id="cheer"></div>
     <div class="panel qwin">
       <span class="qcount" id="qcount"></span>
       <div class="pics" id="pics"></div>
@@ -337,26 +310,26 @@ a.btn{text-decoration:none}
 
 <section id="party" class="screen bg-night stars hide">
   <div class="wrap">
-    <div class="hdr"><button class="btn ghost" data-go="home">← もどる</button><h2>なかま</h2><span class="sp"></span></div>
+    <div class="hdr"><button class="btn ghost" data-go="home">← 戻る</button><h2>キャラ</h2><span class="sp"></span></div>
     <div class="chars" id="charList"></div>
     <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
-      <label class="btn">📁 画像を よみこむ<input type="file" id="charFiles" accept="image/*" multiple hidden></label>
-      <a class="btn sub" href="cutout.html">✂️ 画像を きりぬく</a>
-      <p class="note">よみこんだ 画像は この端末に ほぞんされ、バトルで いっしょに たたかいます。</p>
+      <label class="btn">📁 画像を 読み込む<input type="file" id="charFiles" accept="image/*" multiple hidden></label>
+      <a class="btn sub" href="cutout.html">✂️ 画像を 切り抜く</a>
+      <p class="note">読み込んだ画像は この端末に保存され、ごほうびの演出に登場します。<br>名前に「ボーボボ」が入った画像は、てき役になります。</p>
     </div>
   </div>
 </section>
 
 <section id="settings" class="screen bg-night stars hide">
   <div class="wrap">
-    <div class="hdr"><button class="btn ghost" data-go="home">← もどる</button><h2>せってい</h2><span class="sp"></span></div>
-    <div class="panel setting">🔊 こうかおん<button class="toggle" data-set="sound"></button></div>
-    <div class="panel setting">🗣 よみあげ<button class="toggle" data-set="voice"></button></div>
-    <button class="btn ghost" id="resetSave" style="margin-top:20px">⭐ きろくを けす</button>
+    <div class="hdr"><button class="btn ghost" data-go="home">← 戻る</button><h2>設定</h2><span class="sp"></span></div>
+    <div class="panel setting">🔊 効果音<button class="toggle" data-set="sound"></button></div>
+    <div class="panel setting">🗣 読み上げ<button class="toggle" data-set="voice"></button></div>
   </div>
 </section>
 
 <div id="fxl"></div>
+<div id="showveil" class="showveil hide"><button class="btn ghost" id="showSkip">スキップ ▶▶</button></div>
 <div id="clipov" class="clipov hide"></div>
 <div id="overlay" class="overlay hide"><div class="panel result" id="resultBox"></div></div>
 <canvas id="fw"></canvas>
@@ -397,30 +370,17 @@ const Logic = {
     return shuffle([...set]);
   },
   hint(p){
-    if(p.op === 'add' && p.pics) return {text:'ひとつずつ かぞえて みよう！', dots:[p.a, p.b]};
-    if(p.op === 'add'){ const t = p.b - p.b % 10, o = p.b % 10;
-      return {text:o && t ? `${p.a} ＋ ${t} ＝ ${p.a + t}、そこに ${o} を たそう` : '10の まとまりで かんがえよう'}; }
-    if(p.op === 'mul') return p.a * p.b <= 30 ? {text:`${p.a}こ が ${p.b}れつ`, grid:[p.a, p.b]} : {text:`${p.a} × ${p.b - 1} ＝ ${p.a * (p.b - 1)}、そこに ${p.a} を たそう`};
-    if(p.op === 'div') return {text:`${p.b} × □ ＝ ${p.a}　□ は いくつ？`};
+    if(p.op === 'add' && p.pics) return {text:t('ひとつずつ かぞえて みよう！', '1つずつ 数えてみよう！'), dots:[p.a, p.b]};
+    if(p.op === 'add'){ const tn = p.b - p.b % 10, o = p.b % 10;
+      return {text:o && tn ? `${p.a} ＋ ${tn} ＝ ${p.a + tn}、そこに ${o} を 足そう` : '10の まとまりで 考えよう'}; }
+    if(p.op === 'mul') return p.a * p.b <= 30 ? {text:`${p.a}個が ${p.b}列`, grid:[p.a, p.b]} : {text:`${p.a} × ${p.b - 1} ＝ ${p.a * (p.b - 1)}、そこに ${p.a} を 足そう`};
+    if(p.op === 'div') return {text:`${p.b} × □ ＝ ${p.a}　□は いくつ？`};
   },
   digit:(x, p) => Math.floor(x / 10 ** p) % 10,
   carries(a, b){ const c = [0]; for(let p = 0; p < 3; p++) c[p + 1] = Math.floor((Logic.digit(a, p) + Logic.digit(b, p) + c[p]) / 10); return c; },
   stars:misses => misses === 0 ? 3 : misses <= 2 ? 2 : 1,
 };
 
-/* ================================================================
-   2) ゲームデータ：コース・ステージ・保存
-   ================================================================ */
-const COURSES = [
-  {id:'k4',   type:'add4',   name:'はじめての たしざん', age:'4さい',   icon:'🌱', bg:'bg-meadow',  hue:110, enemy:'くさ'},
-  {id:'k5',   type:'add5',   name:'10までの たしざん',   age:'5さい',   icon:'🌻', bg:'bg-forest',  hue:45,  enemy:'もり'},
-  {id:'a200', type:'add200', name:'200までの たしざん',  age:'6さい',   icon:'🏜', bg:'bg-desert',  hue:25,  enemy:'すな'},
-  {id:'mul',  type:'mul',    name:'くくの とう',         age:'6さい',   icon:'🗼', bg:'bg-sky',     hue:255, enemy:'そら'},
-  {id:'div',  type:'div',    name:'わりざんの どうくつ', age:'6さい',   icon:'💎', bg:'bg-cave',    hue:290, enemy:'やみ'},
-  {id:'mix',  type:'mix',    name:'まぜまぜ かざん',     age:'6さい',   icon:'🌋', bg:'bg-volcano', hue:5,   enemy:'ほのお'},
-  {id:'h22',  type:'h22',    name:'ひっさんの こおり',   age:'ひっさん', icon:'❄️', bg:'bg-ice',    hue:195, enemy:'こおり'},
-  {id:'h32',  type:'h32',    name:'ひっさんの おしろ',   age:'ひっさん', icon:'🏰', bg:'bg-castle', hue:330, enemy:'まおう'},
-];
 const WORLDS = {
   'bg-meadow': {sky1:'#8fd3ff', sky2:'#e3f6ff', hill1:'#9ad97a', hill2:'#7cc865', ground:'#6fc05a', sunc:'#ffd23f', glow:'rgba(255,220,100,.55)', cloud:'#fff', deco:['🌷','🌼','🌳','🌷','🦋','🌼']},
   'bg-forest': {sky1:'#9fe0b8', sky2:'#eefbf0', hill1:'#4fae5c', hill2:'#3a9a4a', ground:'#3f9a4c', sunc:'#fff0a0', glow:'rgba(255,250,170,.5)', cloud:'#fff', deco:['🌲','🍄','🌳','🌲','🐿️','🍄']},
@@ -432,21 +392,30 @@ const WORLDS = {
   'bg-castle': {sky1:'#7d73c4', sky2:'#e3dfff', hill1:'#9b95b8', hill2:'#857f9f', ground:'#8d879f', sunc:'#fff2b0', glow:'rgba(255,240,180,.5)', cloud:'#efeaff', deco:['🏰','🚩','🦇','🕯️','🏰','👻']},
 };
 function buildScene(bg){
-  const w = WORLDS[bg], el = $('battle');
+  const w = WORLDS[bg], el = $('study');
   for(const k of ['sky1','sky2','hill1','hill2','ground','sunc','glow','cloud']) el.style.setProperty('--' + k, w[k]);
   $('scene').className = 'scene' + (w.float ? ' float' : '');
   const pos = [[4,46,2.6],[20,58,2],[76,44,2.8],[88,60,2.1],[36,64,1.6],[60,66,1.5]];
   $('deco').innerHTML = w.deco.map((e, i) => `<span style="--x:${pos[i][0]}%;--y:${pos[i][1]}%;--s:${pos[i][2]}rem;--d:${-i * .6}s">${e}</span>`).join('');
 }
-const STAGES = 5, Q_NORMAL = 5, Q_BOSS = 7;
-const Save = {
-  load(){ try{ return JSON.parse(localStorage.getItem('sansu-quest')) || {}; }catch(e){ return {}; } },
-  store(){ try{ localStorage.setItem('sansu-quest', JSON.stringify(save)); }catch(e){} },
+
+/* ================================================================
+   2) 年齢・ことば（4さいは ひらがな、5歳以上は 漢字）・保存
+   ================================================================ */
+let AGE = 4;
+const t = (hira, kan) => AGE >= 5 ? kan : hira;
+const MENUS = {
+  4: [{type:'add4', ic:'🍎', name:'たしざん（5まで）'}, {type:'add5', ic:'🍓', name:'たしざん（10まで）'}],
+  5: [{type:'add5', ic:'🍓', name:'足し算（10まで）'}, {type:'add4', ic:'🍎', name:'足し算（5まで）'}],
+  6: [{type:'add200', ic:'➕', name:'足し算（200まで）'}, {type:'mul', ic:'✖️', name:'九九（かけ算）'}, {type:'div', ic:'➗', name:'割り算'},
+      {type:'mix', ic:'🌈', name:'ミックス'}, {type:'h22', ic:'✏️', name:'筆算（2けた＋2けた）'}, {type:'h32', ic:'📝', name:'筆算（3けた＋2けた）'}],
 };
-const save = Object.assign({stars:{}, sound:true, voice:true, coins:0}, Save.load());
-const starsOf = (c, s) => save.stars[c + '-' + s] || 0;
-const unlocked = (c, s) => s === 1 || starsOf(c, s - 1) > 0;
-const totalStars = () => Object.values(save.stars).reduce((x, y) => x + y, 0);
+const TOTAL = 12, BIG_EVERY = 4;
+const Save = {
+  load(){ try{ return JSON.parse(localStorage.getItem('sansu-party')) || {}; }catch(e){ return {}; } },
+  store(){ try{ localStorage.setItem('sansu-party', JSON.stringify(save)); }catch(e){} },
+};
+const save = Object.assign({sound:true, voice:true}, Save.load());
 
 /* ================================================================
    3) 音と声
@@ -474,6 +443,7 @@ function sfx(kind){
     };
     ({
       tap:  () => tone(660, .06, 'triangle', .12),
+      ding: () => { tone(880, .18, 'sine', .2); tone(1320, .3, 'sine', .18, .1); },
       slash:() => { noise(.18, 3000, .5, 0, 'highpass'); tone(900, .12, 'sawtooth', .08, 0, 300); },
       hit:  () => { tone(180, .2, 'square', .18, 0, 60); noise(.12, 600, .5); },
       crit: () => { tone(1200, .1, 'square', .12); tone(1600, .2, 'square', .12, .08); },
@@ -500,7 +470,7 @@ function speak(t){
 }
 
 /* ================================================================
-   4) 絵：ゆうしゃ（ほし）・スライム・なかま画像
+   4) キャラ画像
    ================================================================ */
 // キャラは「なかま」に よみこんだ 画像だけを つかう（オリジナルキャラは つかわない）
 // 名前に「ボーボボ」「わるもの」「てき」が入った画像は てき役。てき役が いないときは なかま同士の しょうぶ。
@@ -546,98 +516,68 @@ const heroHTML = () => imgOf(pick(heroes().length ? heroes() : PARTY));
    5) 画面
    ================================================================ */
 const $ = id => document.getElementById(id);
-const SCREENS = ['home', 'courses', 'stages', 'battle', 'party', 'settings'];
+const SCREENS = ['home', 'menu', 'study', 'party', 'settings'];
 function show(id){
   SCREENS.forEach(s => $(s).classList.toggle('hide', s !== id));
-  ({home:renderHome, courses:renderCourses, party:renderParty, settings:renderSettings})[id]?.();
+  document.querySelectorAll('[data-t="back"]').forEach(b => b.textContent = t('← もどる', '← 戻る'));
+  ({home:renderHome, menu:renderMenu, party:renderParty, settings:renderSettings})[id]?.();
 }
 document.querySelectorAll('[data-go]').forEach(b => b.onclick = () => { sfx('tap'); show(b.dataset.go); });
+document.querySelectorAll('[data-age]').forEach(b => b.onclick = () => { sfx('tap'); AGE = +b.dataset.age; show('menu'); });
 
-function renderHomeHero(){ document.querySelectorAll('[data-hero]').forEach(h => h.innerHTML = heroHTML()); }
 function renderHome(){
-  renderHomeHero();
-  document.querySelectorAll('[data-enemy]').forEach(e => { const v = villains(); e.innerHTML = v.length ? imgOf(pick(v)) : (PARTY.length > 1 ? imgOf(pick(PARTY)) : ''); });
-  $('totalStars').textContent = `⭐ ${totalStars()} / ${COURSES.length * STAGES * 3}`;
+  const ps = shuffle(PARTY).slice(0, 2);
+  $('homeStage').innerHTML = ps.map(imgOf).join('');
 }
-function renderCourses(){
-  $('courseList').innerHTML = '';
-  COURSES.forEach(c => {
-    let st = 0; for(let s = 1; s <= STAGES; s++) st += starsOf(c.id, s);
-    const el = document.createElement('button'); el.className = 'panel course';
-    el.innerHTML = `<div class="ic ${c.bg}">${c.icon}</div><span class="chip">${c.age}</span><div class="nm">${c.name}</div><div class="starline">⭐ ${st}/${STAGES * 3}</div>`;
-    el.onclick = () => { sfx('tap'); openCourse(c); };
-    $('courseList').append(el);
+function renderMenu(){
+  $('menuTitle').textContent = AGE >= 5 ? `${AGE}歳` : '4さい';
+  $('menuList').innerHTML = '';
+  MENUS[AGE].forEach(m => {
+    const b = document.createElement('button'); b.className = 'btn';
+    b.innerHTML = `<span class="ic">${m.ic}</span><span></span>`; b.lastChild.textContent = m.name;
+    b.onclick = () => { sfx('tap'); startStudy(m.type); };
+    $('menuList').append(b);
   });
-}
-let course = null;
-function openCourse(c){
-  course = c;
-  $('stages').className = 'screen ' + c.bg;
-  $('stageTitle').textContent = c.icon + ' ' + c.name;
-  const p = $('stagePath'); p.innerHTML = '';
-  let now = 0;
-  for(let s = 1; s <= STAGES; s++) if(unlocked(c.id, s)) now = s;
-  for(let s = 1; s <= STAGES; s++){
-    const n = document.createElement('button'), lock = !unlocked(c.id, s), boss = s === STAGES, st = starsOf(c.id, s);
-    n.className = 'node' + (boss ? ' boss' : '') + (lock ? ' lock' : '') + (s === now && !st ? ' now' : '');
-    n.innerHTML = lock ? '🔒' : `${boss ? '👑' : s}<small>${'★'.repeat(st)}${'☆'.repeat(3 - st)}</small>`;
-    n.onclick = () => { if(lock){ sfx('miss'); return; } sfx('tap'); startBattle(c, s); };
-    p.append(n);
-  }
-  show('stages');
 }
 function renderParty(){
   const l = $('charList');
-  l.innerHTML = PARTY.length ? '' : '<p class="note" style="grid-column:1/-1">まだ なかまが いません。<br>画像を よみこんでね。</p>';
+  l.innerHTML = PARTY.length ? '' : '<p class="note" style="grid-column:1/-1">まだ キャラが いません。<br>画像を 読み込んでください。</p>';
   PARTY.forEach(m => { const d = document.createElement('div'); d.className = 'panel c'; d.innerHTML = `<img src="${m.src}" alt=""><div></div>`; d.lastChild.textContent = m.name; l.append(d); });
 }
-function renderSettings(){ document.querySelectorAll('[data-set]').forEach(t => t.classList.toggle('on', !!save[t.dataset.set])); }
-document.querySelectorAll('[data-set]').forEach(t => t.onclick = () => { save[t.dataset.set] = !save[t.dataset.set]; Save.store(); renderSettings(); sfx('tap'); });
-$('resetSave').onclick = () => { if(confirm('ほしの きろくを ぜんぶ けしますか？')){ save.stars = {}; Save.store(); sfx('tap'); } };
+function renderSettings(){ document.querySelectorAll('[data-set]').forEach(x => x.classList.toggle('on', !!save[x.dataset.set])); }
+document.querySelectorAll('[data-set]').forEach(x => x.onclick = () => { save[x.dataset.set] = !save[x.dataset.set]; Save.store(); renderSettings(); sfx('tap'); });
 
 /* ================================================================
-   6) バトル：正解＝こうげき、まちがい＝ヒント、HP0でクリア
+   6) 勉強：12問。1問ごとに 短い ごほうび、4問ごとに ショー、12問で 動画
    ================================================================ */
-let B = null;
-const later = (fn, ms) => { const id = B && B.id; setTimeout(() => { if(B && B.id === id) fn(); }, ms); };   // にげたら 予約を 止める
+let S = null;
+const later = (fn, ms) => { const id = S && S.id; setTimeout(() => { if(S && S.id === id) fn(); }, ms); };   // 戻ったら 予約を 止める
 const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
-function startBattle(c, s){
-  const boss = s === STAGES;
-  B = {id:Math.random(), c, s, boss, total:boss ? Q_BOSS : Q_NORMAL, misses:0, combo:0, maxCombo:0, done:0};
-  B.hp = B.total;
-  $('battle').className = 'screen'; buildScene(c.bg); B.coins = 0; showCoins();
-  $('bTitle').textContent = boss ? '👑 ボス バトル' : `ステージ ${s}`;
-  const hero = pick(heroes().length ? heroes() : PARTY), vs = villains();
-  const foe = vs.length ? pick(vs) : pick(PARTY.filter(m => m !== hero));
-  $('eName').textContent = foe ? (vs.length ? (boss ? '👑 ' : '') + foe.name : 'ライバル：' + foe.name) : '';
-  $('eName').classList.toggle('hide', !foe); $('hpbar').classList.toggle('hide', !foe);
-  const en = $('enemy'); en.className = 'enemy'; en.innerHTML = imgOf(foe);
-  $('heroBox').className = 'hero-box'; $('heroBox').innerHTML = imgOf(hero);
-  $('answers').innerHTML = ''; $('eq').innerHTML = ''; $('pics').innerHTML = ''; $('hint').textContent = '';
-  updateHp(); updateCombo();
-  show('battle');
-  speak(boss ? 'ボスが あらわれた！' : 'モンスターが あらわれた！');
-  later(nextQuestion, 800);
+function startStudy(type){
+  S = {id:Math.random(), type, n:0, first:true, firstOk:0, misses:0, locked:false};
+  buildScene(pick(['bg-meadow', 'bg-forest', 'bg-sky', 'bg-desert']));
+  const cs = shuffle(PARTY.filter(m => !isVillain(m))).slice(0, 2);
+  $('cheer').innerHTML = cs.map(imgOf).join('');
+  show('study');
+  nextQuestion();
 }
-$('flee').onclick = () => { stopClip(); B = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); openCourse(course); };
-function updateHp(){
-  const r = B.hp / B.total; $('hpfill').style.width = (r * 100) + '%';
-  $('hpbar').classList.toggle('low', r <= .34);
-  $('qcount').textContent = `もんだい ${Math.min(B.done + 1, B.total)} / ${B.total}`;
+$('quit').onclick = () => { endShow(); stopClip(); stopFireworks(); S = null; $('fxl').innerHTML = ''; try{ speechSynthesis.cancel(); }catch(e){} sfx('tap'); show('menu'); };
+function renderProg(){
+  $('prog').innerHTML = Array.from({length:TOTAL}, (_, i) => `<i class="${i < S.n ? 'done' : i === S.n ? 'now' : ''}"></i>`).join('');
+  const q = Math.min(S.n + 1, TOTAL);
+  $('qcount').textContent = t(`もんだい ${q} / ${TOTAL}`, `問題 ${q} / ${TOTAL}`);
 }
-function updateCombo(){ $('bCombo').textContent = B.combo >= 2 ? `🔥${B.combo}` : ''; }
-
 function nextQuestion(){
-  const p = B.p = Logic.gen(B.c.type);
-  B.first = true; B.locked = false;
+  const p = S.p = Logic.gen(S.type);
+  S.first = true; S.locked = false;
   $('hint').innerHTML = '';
-  updateHp();
+  renderProg();
   const item = pick(['🍎', '🍓', '🍩', '⭐', '🐟', '🍪', '🌸', '🎈']);
   $('pics').innerHTML = p.pics ? `<div class="grp">${item.repeat(p.a)}</div><span>＋</span><div class="grp">${item.repeat(p.b)}</div>` : '';
   const hs = !!p.hissan;
   $('eq').classList.toggle('hide', hs); $('hs').classList.toggle('hide', !hs);
   $('answers').classList.toggle('hide', hs); $('pad').classList.toggle('hide', !hs);
-  if(hs){ renderHissan(); speak(`${p.a} たす ${p.b}。 いちの くらいから`); return; }
+  if(hs){ renderHissan(); speak(`${p.a} たす ${p.b}`); return; }
   $('eq').innerHTML = `${p.a} ${SYM[p.op]} ${p.b} ＝ <span class="q">？</span>`;
   const box = $('answers'); box.innerHTML = '';
   Logic.choices(p).forEach(v => {
@@ -648,53 +588,38 @@ function nextQuestion(){
   speak(`${p.a} ${WORD[p.op]} ${p.b} は？`);
 }
 function answer(btn, v){
-  if(!B || B.locked || btn.disabled) return;
-  if(v === B.p.ans){
-    B.locked = true; btn.classList.add('ok');
-    $('eq').innerHTML = `${B.p.a} ${SYM[B.p.op]} ${B.p.b} ＝ <span class="q">${B.p.ans}</span>`;
-    attack();
+  if(!S || S.locked || btn.disabled) return;
+  if(v === S.p.ans){
+    S.locked = true; btn.classList.add('ok');
+    $('eq').innerHTML = `${S.p.a} ${SYM[S.p.op]} ${S.p.b} ＝ <span class="q">${S.p.ans}</span>`;
+    correct();
   }else{ btn.disabled = true; btn.classList.add('ng'); wrong(); }
 }
 function wrong(){
-  B.misses++; B.first = false; B.combo = 0; updateCombo();
-  sfx('miss'); later(() => sfx('hurt'), 150);
-  replay($('enemy'), 'attack'); replay($('heroBox'), 'hurt');
-  const h = Logic.hint(B.p);
+  S.misses++; S.first = false;
+  sfx('miss'); replay($('cheer'), 'sad');
+  const h = Logic.hint(S.p);
   if(h){
     let html = `💡 ${h.text}`;
-    if(h.dots) html += `<div class="dots">${'●'.repeat(h.dots[0])}　<span style="color:var(--gold)">${'●'.repeat(h.dots[1])}</span></div>`;
+    if(h.dots) html += `<div class="dots">${'●'.repeat(h.dots[0])}　<span style="color:var(--orange)">${'●'.repeat(h.dots[1])}</span></div>`;
     if(h.grid) html += `<div class="dots" style="flex-direction:column;align-items:center">${Array.from({length:h.grid[1]}, () => `<div>${'●'.repeat(h.grid[0])}</div>`).join('')}</div>`;
     $('hint').innerHTML = html;
   }
-  speak('おしい！ ヒントを みてね');
+  speak(t('おしい！ ヒントを みてね', 'おしい！ ヒントを見てね'));
 }
-function attack(){
-  if(B.first){ B.combo++; B.maxCombo = Math.max(B.maxCombo, B.combo); }
-  updateCombo();
-  const crit = B.first && B.combo >= 3;
-  replay($('heroBox'), 'atk'); sfx('slash');
-  later(() => {
-    replay($('slash'), 'on'); replay($('enemy'), 'hit');
-    const dm = $('dmg'); dm.textContent = crit ? 'クリティカル！' : pick(['ズバッ！', 'ドカッ！', 'バシッ！']);
-    dm.style.fontSize = crit ? '1.7rem' : ''; replay(dm, 'on');
-    if(crit){ const cf = $('comboFx'); cf.textContent = `🔥 ${B.combo} コンボ！`; replay(cf, 'on'); sfx('crit'); }
-    sfx('hit');
-    B.hp--; B.done++; updateHp();
-    reward(B.first ? B.combo : 0, B.hp <= 0);
-  }, 250);
-  B.ok = (B.ok || 0) + 1;
-  const vid = CAN_YT && B.hp > 1 && B.ok % 3 === 0;
-  later(() => {
-    $('comboFx').classList.remove('on');
-    if(B.hp <= 0) return defeat();
-    if(vid){ const id = B.id; playClip(pick(CLIPS), () => { if(B && B.id === id) nextQuestion(); }); }
-    else nextQuestion();
-  }, vid ? 1900 : 1500);
+function correct(){
+  if(S.first) S.firstOk++;
+  S.n++; renderProg();
+  sfx('ding'); sceneFx('pulse'); replay($('cheer'), 'yay');
+  if(S.n >= TOTAL){ later(finalReward, 700); return; }
+  if(S.n % BIG_EVERY === 0){ later(() => bigShow(nextQuestion), 500); return; }
+  quickPop();
+  later(nextQuestion, 1100);
 }
 
-/* ---- ひっ算（一のくらいから1けたずつ） ---- */
+/* ---- 筆算（一の位から1けたずつ） ---- */
 function renderHissan(){
-  const p = B.p, D = String(p.ans).length;
+  const p = S.p, D = String(p.ans).length;
   p.dig = D; p.pos = 0; p.car = Logic.carries(p.a, p.b);
   const d = (x, i) => x >= 10 ** (2 - i) ? Logic.digit(x, 2 - i) : '';
   let h = '<div class="cy"></div>' + [0, 1, 2].map(i => `<div class="cy" id="cy${i}"></div>`).join('');
@@ -702,58 +627,29 @@ function renderHissan(){
   h += '<div>＋</div>' + [0, 1, 2].map(i => `<div>${d(p.b, i)}</div>`).join('');
   h += '<div class="ln"></div><div></div>' + [0, 1, 2].map(i => `<div class="bx ${2 - i >= D ? 'off' : ''}" id="bx${i}"></div>`).join('');
   $('hs').innerHTML = h; markBox();
-  $('hint').textContent = 'いちの くらいから たそう！';
+  $('hint').textContent = t('いちの くらいから たそう！', '一の位から 足そう！');
 }
-function markBox(){ for(let i = 0; i < 3; i++) $('bx' + i).classList.toggle('on', 2 - i === B.p.pos && B.p.pos < B.p.dig); }
+function markBox(){ for(let i = 0; i < 3; i++) $('bx' + i).classList.toggle('on', 2 - i === S.p.pos && S.p.pos < S.p.dig); }
 $('pad').innerHTML = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(d => `<button class="btn" data-d="${d}">${d}</button>`).join('');
 $('pad').onclick = e => {
-  const b = e.target.closest('[data-d]'); if(!b || !B || B.locked || !B.p || !B.p.hissan) return;
-  const p = B.p, d = +b.dataset.d, box = $('bx' + (2 - p.pos));
+  const b = e.target.closest('[data-d]'); if(!b || !S || S.locked || !S.p || !S.p.hissan) return;
+  const p = S.p, d = +b.dataset.d, box = $('bx' + (2 - p.pos));
   if(d === Logic.digit(p.ans, p.pos)){
     sfx('tap'); box.textContent = d;
-    const c = p.car[p.pos + 1];
-    $('hint').textContent = c && p.pos + 1 < p.dig ? `くりあがり ${c}！` : 'その ちょうし！';
-    if(c && p.pos + 1 < p.dig) $('cy' + (1 - p.pos)).textContent = c;
-    p.pos++;
-    markBox();
-    if(p.pos >= p.dig){ B.locked = true; attack(); }
+    const c = p.car[p.pos + 1], up = c && p.pos + 1 < p.dig;
+    $('hint').textContent = up ? t(`くりあがり ${c}！`, `くり上がり ${c}！`) : t('その ちょうし！', 'その調子！');
+    if(up) $('cy' + (1 - p.pos)).textContent = c;
+    p.pos++; markBox();
+    if(p.pos >= p.dig){ S.locked = true; correct(); }
   }else{
     replay(box, 'ng'); wrong();
     const da = Logic.digit(p.a, p.pos), db = Logic.digit(p.b, p.pos), c = p.car[p.pos];
-    $('hint').textContent = `💡 ${da} ＋ ${db}${c ? ' ＋ ' + c : ''} の いちばん みぎの かず`;
+    $('hint').textContent = `💡 ${da} ＋ ${db}${c ? ' ＋ ' + c : ''} ${t('の いちばん みぎの かず', 'の 一番右の数')}`;
   }
 };
 
-/* ---- たおした → リザルト ---- */
-function defeat(){
-  B.locked = true; replay($('enemy'), 'down'); sfx('down');
-  later(result, 950);
-}
-function result(){
-  const st = Logic.stars(B.misses), key = B.c.id + '-' + B.s;
-  save.stars[key] = Math.max(st, save.stars[key] || 0); Save.store();
-  const c = B.c, s = B.s, boss = B.boss, hasNext = s < STAGES;
-  const party = shuffle(PARTY).slice(0, 3).map(imgOf).join('');
-  $('resultBox').innerHTML = `<div class="stamp">${boss ? 'ボス<br>げきは' : 'クリア'}</div><h2>${boss ? 'ボス げきは！' : 'ステージ クリア！'}</h2>
-    <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
-    <div class="party">${party}</div>
-    <div>${B.misses === 0 ? 'ノーミス！ パーフェクト！' : `まちがい ${B.misses}かい`}${B.maxCombo >= 3 ? `<br>🔥 さいだい ${B.maxCombo} コンボ` : ''}<br>🪙 ${B.coins} コイン ゲット！</div>
-    <div class="row">${hasNext ? '<button class="btn" id="rNext">つぎへ ▶</button>' : ''}<button class="btn sub" id="rMap">マップ</button></div>`;
-  $('overlay').classList.remove('hide');
-  sfx('win'); speak(boss ? 'ボスを たおした！ すごい！' : 'ステージ クリア！');
-  [...$('resultBox').querySelectorAll('.bigstars span')].forEach((el, i) => { if(i < st) setTimeout(() => { el.classList.add('on'); sfx('star'); }, 400 + i * 350); });
-  if(st === 3 || boss) fireworks(boss ? 30000 : 4000);
-  if(boss) setTimeout(() => playClip(pick(BIG_CLIPS)), 1800);
-  $('fxl').innerHTML = '';
-  B = null;
-  const close = () => { stopClip(); stopFireworks(); $('overlay').classList.add('hide'); };
-  if(hasNext) $('rNext').onclick = () => { close(); startBattle(c, s + 1); };
-  $('rMap').onclick = () => { close(); openCourse(c); };
-}
-
 /* ================================================================
-   7) ごほうび演出：正解のたびに ちがう パターン。連続正解で ごうかに。
-      演出は #fxl（さわれない レイヤー）で 動くので、つぎの もんだいは すぐ とける。
+   7) 演出の部品
    ================================================================ */
 const fxl = $('fxl');
 function fxAdd(cls, html, ms, style){
@@ -817,24 +713,79 @@ const PATTERNS = {
     word('みんな しゅうごう！'); sfx('fanfare');
   },
 };
-const NORMAL = ['tobi', 'yaburi', 'kyodai', 'run', 'manga', 'hyokko', 'kuru', 'pyon', 'buni', 'hanage', 'ufo'];
-let lastP = '';
-function reward(combo, finalHit){
-  sceneFx('pulse');
-  let key;
-  if(combo >= 5 && combo % 5 === 0) key = 'parade';                       // 5れんぞく ごとに みんな しゅうごう
-  else { const pool = NORMAL.filter(k => k !== lastP && !(finalHit && k === 'hanage')); key = pick(pool); }
-  lastP = key; PATTERNS[key]();
-  confetti(combo >= 5 ? 46 : combo >= 3 ? 28 : 14);
-  if(combo >= 3){ shock(38); sceneFx('flash'); }
-  const gain = 10 + Math.min(combo, 5) * 2;
-  B.coins += gain; save.coins = (save.coins || 0) + gain; Save.store();
-  fxAdd('coinfly', '', 1000).textContent = `+${gain} 🪙`;
-  setTimeout(() => { showCoins(); replay($('coins'), 'bump'); sfx('coin'); }, 900);
+/* ================================================================
+   7) ごほうび演出
+   ================================================================ */
+// 1問正解：1.5秒の とびだし（つぎの問題の じゃまを しない）
+const QUICK = ['q-bottom', 'q-left', 'q-right', 'q-zoom'];
+let lastQ = '';
+function quickPop(){
+  const cls = pick(QUICK.filter(q => q !== lastQ)); lastQ = cls;
+  const m = member();
+  if(m) fxAdd('q-actor ' + cls, imgOf(m) + `<div class="say">${pick([t('せいかい！', '正解！'), 'やったね！', 'すごい！', 'ナイス！', 'いえーい！'])}</div>`, 1600);
+  else fxAdd('q-word', '', 1400).textContent = t('せいかい！', '正解！');
+  sparks(50, 46, 10); confetti(10); sfx('pop');
 }
-function showCoins(){ $('coins').textContent = `🪙 ${save.coins || 0}`; }
+// 4問ごと：約6秒の ハチャメチャ ショー（3つの演出を つづけて）
+const CRAZY = {
+  yaburi:PATTERNS => PATTERNS.yaburi(), kyodai:P => P.kyodai(), run:P => P.run(), manga:P => P.manga(), kuru:P => P.kuru(),
+  pyon:P => P.pyon(), buni:P => P.buni(), ufo:P => P.ufo(), tobi:P => P.tobi(),
+  rain(){ const ms = PARTY.length ? PARTY : []; for(let i = 0; i < 9 && ms.length; i++)
+      fxAdd('rain', imgOf(pick(ms)), 2600, `--x:${rnd(-5, 80)}%;--t:${(1.4 + Math.random() * .6).toFixed(2)}s;--d:${(i * .12).toFixed(2)}s;--r:${rnd(-540, 540)}deg`);
+    word(t('キャラが ふってきた！', 'キャラが 降ってきた！')); sfx('whoosh2'); },
+  face(){ const m = member(); if(!m) return CRAZY.upside(); fxAdd('face', imgOf(m), 1900); setTimeout(() => { word('ドアップ！'); sfx('boing'); }, 400); },
+  upside(){ document.body.classList.add('upside'); word('さかさま〜！'); sfx('whoosh2'); setTimeout(() => document.body.classList.remove('upside'), 1900); },
+  jelly(){ document.body.classList.add('jelly'); word('ぐにゃ〜ん！'); sfx('boing'); setTimeout(() => document.body.classList.remove('jelly'), 1900); },
+};
+let showTimers = [], showDone = null;
+function bigShow(done){
+  showDone = done;
+  $('showveil').classList.remove('hide');
+  fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
+  sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
+  const keys = shuffle(Object.keys(CRAZY)).slice(0, 3);
+  keys.forEach((k, i) => showTimers.push(setTimeout(() => { CRAZY[k](PATTERNS); confetti(24); shock(45); sceneFx('flash'); }, 500 + i * 1900)));
+  showTimers.push(setTimeout(endShow, 6300));
+}
+function endShow(){
+  showTimers.forEach(clearTimeout); showTimers = [];
+  document.body.classList.remove('upside', 'jelly', 'shake');
+  $('showveil').classList.add('hide'); $('fxl').innerHTML = '';
+  const d = showDone; showDone = null; d && d();
+}
+$('showSkip').onclick = endShow;
+// 12問：ほんとうの ごほうび（YouTube 15秒。ファイルで開いたときは 15秒の パーティー）
+function finalReward(){
+  const id = S.id;
+  const after = () => { if(S && S.id === id) result(); };
+  word(t('ぜんぶ せいかい！', '全問 正解！')); sfx('win'); confetti(40);
+  setTimeout(() => {
+    if(CAN_YT){ playClip(pick(BIG_CLIPS), after); return; }
+    fireworks(15000); showDone = after; $('showveil').classList.remove('hide');
+    const keys = shuffle(Object.keys(CRAZY));
+    for(let i = 0; i < 7; i++) showTimers.push(setTimeout(() => { CRAZY[keys[i % keys.length]](PATTERNS); confetti(20); }, i * 2000));
+    showTimers.push(setTimeout(endShow, 15000));
+  }, 1300);
+}
+function result(){
+  stopFireworks();
+  const ps = shuffle(PARTY).slice(0, 3).map(imgOf).join('');
+  const st = S.firstOk >= TOTAL ? 3 : S.firstOk >= TOTAL - 3 ? 2 : 1;
+  $('resultBox').innerHTML = `<div class="stamp">${t('よく<br>できました', 'よく<br>できました')}</div><h2>${t('12もん クリア！', '12問 クリア！')}</h2>
+    <div class="bigstars"><span>⭐</span><span>⭐</span><span>⭐</span></div>
+    <div class="party">${ps}</div>
+    <div>${t(`いっかいで せいかい ${S.firstOk}もん`, `1回で 正解 ${S.firstOk}問`)}</div>
+    <div class="row"><button class="btn" id="rAgain">${t('もういちど', 'もう一度')}</button><button class="btn sub" id="rBack">${t('もどる', '戻る')}</button></div>`;
+  $('overlay').classList.remove('hide');
+  sfx('win'); speak(t('よく できました！', 'よくできました！'));
+  [...$('resultBox').querySelectorAll('.bigstars span')].forEach((el, i) => { if(i < st) setTimeout(() => { el.classList.add('on'); sfx('star'); }, 400 + i * 350); });
+  const type = S.type; S = null;
+  const close = () => { $('overlay').classList.add('hide'); };
+  $('rAgain').onclick = () => { close(); startStudy(type); };
+  $('rBack').onclick = () => { close(); show('menu'); };
+}
 
-/* ---- YouTube（公式チャンネルの動画）：3回 正解するごとに 7びょう、ボスを たおすと 30びょう ----
+/* ---- YouTube（公式チャンネルの動画）：12問 正解で 15秒 ----
    ※ ファイルを ちょくせつ ひらくと YouTube が さいせいを ことわる（エラー153）ので、https で ひらいた ときだけ ながす */
 const CAN_YT = /^https?:/.test(location.protocol);
 const CLIPS = [
@@ -851,10 +802,10 @@ const CLIPS = [
   {id:'w_4YeUnq5yY', start:3, end:10}, {id:'aa8pY52h6fU', start:3, end:10}, {id:'bjgKRWLkAdg', start:3, end:10},
 ];
 const BIG_CLIPS = [
-  {id:'gri5qHqXjMg', start:0, end:30},   // 名探偵プリキュア！ オープニング
-  {id:'wfB-OvWKCvc', start:0, end:30},   // わんだふるぷりきゅあ！ オープニング
-  {id:'ds2jgGxkNKg', start:0, end:30},   // パウ・パトロール オープニング
-  {id:'yQYmWIfwf0I', start:0, end:30},   // 映画ドラえもん スペシャルPV
+  {id:'gri5qHqXjMg', start:0, end:15},   // 名探偵プリキュア！ オープニング
+  {id:'wfB-OvWKCvc', start:0, end:15},   // わんだふるぷりきゅあ！ オープニング
+  {id:'ds2jgGxkNKg', start:0, end:15},   // パウ・パトロール オープニング
+  {id:'yQYmWIfwf0I', start:0, end:15},   // 映画ドラえもん スペシャルPV
 ];
 let clipTimer = null;
 function playClip(clip, done){
