@@ -652,6 +652,11 @@ const CharDB = {
   async put(rec){ const d = await this.open(); if(!d) return;
     return new Promise(res => { try{ const t = d.transaction('chars', 'readwrite'); t.objectStore('chars').put(rec); t.oncomplete = t.onerror = res; }catch(e){ res(); } }); },
 };
+if(window.NG_IMAGES){   // のび太・ジャイアンも ショーの キャラに
+  const N = window.NG_IMAGES;
+  [['のび太', {normal:'n_shout', happy:'n_panic', surprised:'n_shock', funny:'n_cry', attack:'n_run'}], ['ジャイアン', {normal:'g_angry', happy:'g_laugh', surprised:'g_tilt', funny:'g_daze', attack:'g_yell'}]]
+    .forEach(([name, ps]) => Object.entries(ps).forEach(([pose, k]) => N[k] && addMember(name, N[k], pose)));
+}
 FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, (window.CHAR_IMAGES || {})[f] || 'キャラクター/' + f, pose); });   // 埋めこみ画像（chars/precure.js）を つかう
 /* ---- 読み込み：画像ファイル・ZIP（中の画像を ぜんぶ）に 対応。背景が ある 画像は 自動で 切り抜く ---- */
 const IMG_RE = /\.(png|jpe?g|gif|webp)$/i, GENERIC = /^(character|image|img|chara|キャラ)\d*$/i;
@@ -783,15 +788,9 @@ let S = null;
 const later = (fn, ms) => { const id = S && S.id; setTimeout(() => { if(S && S.id === id) fn(); }, ms); };   // 戻ったら 予約を 止める
 const replay = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 function startStudy(type){
-  S = {id:Math.random(), type, n:0, first:true, firstOk:0, misses:0, locked:false};
+  S = {id:Math.random(), type, n:0, first:true, firstOk:0, misses:0, locked:false, streak:0};
   buildScene(pick(['bg-meadow', 'bg-forest', 'bg-sky', 'bg-desert']));
-  const cs = shuffle(PARTY).slice(0, 3);
-  $('cheer').innerHTML = ''; S.chars = cs.map(m => {
-    const st = document.createElement('div'); $('cheer').append(st);
-    const c = ChaosCharacter.create({stage:st, image:m.src, alt:m.name});
-    const img = c.element.querySelector('img'); img.classList.add('pose', 'normal'); img.dataset.name = m.name;   // ポーズの 差しかえにも 対応
-    return c;
-  });
+  $('cheer').innerHTML = ''; $('cheer').classList.add('hide'); S.chars = [];   // 問題中は キャラを 出さない（集中できるように）
   show('study');
   nextQuestion();
 }
@@ -830,7 +829,7 @@ function answer(btn, v){
   }else{ btn.disabled = true; btn.classList.add('ng'); wrong(); }
 }
 function wrong(){
-  S.misses++; S.first = false;
+  S.misses++; S.first = false; S.streak = 0;
   sfx('miss'); setPose($('cheer'), 'surprised'); chaosPlay(['fall', 'shake', 'bow'], t('あれれ〜？', 'あれれ〜？')); later(() => setPose($('cheer'), 'normal'), 900);
   const h = Logic.hint(S.p);
   if(h){
@@ -842,11 +841,11 @@ function wrong(){
   speak(t('おしい！ ヒントを みてね', 'おしい！ ヒントを見てね'));
 }
 function correct(){
-  if(S.first) S.firstOk++;
+  if(S.first){ S.firstOk++; S.streak++; }
   S.n++; renderProg();
   sfx('ding'); sceneFx('pulse'); setPose($('cheer'), 'happy'); chaosPlay(['victory', 'dance', 'jump', 'spin', 'slide', 'charge'], AGE < 5 ? pick(['やったー！', 'すごーい！', 'せいかい！']) : undefined); later(() => setPose($('cheer'), 'normal'), 1000);
   if(S.n >= TOTAL){ later(finalReward, 700); return; }
-  if(S.n % BIG_EVERY === 0){ later(() => bigShow(nextQuestion), 500); return; }
+  if(S.first && S.streak % BIG_EVERY === 0){ later(() => bigShow(nextQuestion), 500); return; }   // 1回で 3問 つづけて 正解したときだけ
   quickPop();
   later(nextQuestion, 1100);
 }
@@ -1061,9 +1060,7 @@ const QUICK = ['q-bottom', 'q-left', 'q-right', 'q-zoom'];
 let lastQ = '';
 function quickPop(){
   const cls = pick(QUICK.filter(q => q !== lastQ)); lastQ = cls;
-  const m = member();
-  if(m) fxAdd('q-actor ' + cls, imgOf(m) + `<div class="say">${pick([t('せいかい！', '正解！'), 'やったね！', 'すごい！', 'ナイス！', 'いえーい！'])}</div>`, 1600);
-  else fxAdd('q-word', '', 1400).textContent = t('せいかい！', '正解！');
+  fxAdd('q-word', '', 1400).textContent = pick([t('せいかい！', '正解！'), 'やったね！', 'すごい！', 'ナイス！']);
   sparks(50, 46, 10); confetti(10); sfx('pop');
 }
 // 4問ごと：約6秒の ハチャメチャ ショー（3つの演出を つづけて）
@@ -1084,11 +1081,12 @@ let showTimers = [], showDone = null;
 function bigShow(done){
   showDone = done;
   $('showveil').classList.remove('hide');
-  S.shows = (S.shows || 0) + 1;   // 1回目・3回目：鼻毛劇場（ジャイアン→のび太）、2回目：ボーボボと プリキュア
-  if(S.shows % 2 === 1 && hanage(S.shows % 4 === 1 ? 'g' : 'n')){ showTimers.push(setTimeout(endShow, 6700)); return; }
+  // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
+  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix'].filter(k => k !== S.lastShow)); S.lastShow = kind;
+  if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, 6700)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
-  const bb = bobobo(pick(BB_MOVES), 4600);
+  const bb = kind === 'crew' && bobobo(pick(BB_MOVES), 4600);
   const keys = shuffle(Object.keys(CRAZY)).slice(0, bb ? 1 : 3);
   keys.forEach((k, i) => showTimers.push(setTimeout(() => { CRAZY[k](PATTERNS); confetti(24); shock(45); sceneFx('flash'); }, bb ? 4700 : 500 + i * 1900)));
   showTimers.push(setTimeout(endShow, 6300));
