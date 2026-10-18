@@ -680,7 +680,7 @@ if(window.DORA_FRAMES){   // ドラえもんも キャラに
 // シートで 作った キャラ（docs/character-pipeline.md）。chars/sheet/ の ファイルは ページを 開いてから じゅんばんに 読みこむ（最初の 表示を 速く）
 const addSheetChar = c => Object.entries({happy:'p_laugh', surprised:'p_jump', funny:'p_shy', attack:'p_point'}).forEach(([pose, k]) => c.frames[k] && addMember(c.name, c.frames[k], pose));
 Object.values(window.SHEET_CHARS || {}).forEach(addSheetChar);
-const SHEET_IDS = [];   // 例: ['ace', 'diamond', ...]（ファイル名）
+const SHEET_IDS = ['diamond','ace','rosetta','flora','mermaid','arcana','answer','eclair','mystic','black','white','dream','peach','blossom','marine','melody','happy','lovely','whip','sky','chase','marshall','skye','rubble','rocky'];   // chars/sheet/<id>.js（tools/charkit/chars.tsv の じゅん）
 window.addEventListener('load', () => SHEET_IDS.reduce((p, id) => p.then(() => new Promise(res => {
   if((window.SHEET_CHARS || {})[id]) return res();   // 1つの HTML に まとめた 版では もう 入っている
   const x = document.createElement('script'); x.src = 'chars/sheet/' + id + '.js';

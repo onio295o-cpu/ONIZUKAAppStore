@@ -8,7 +8,7 @@ def info(cid):
     for r in open(os.path.join(ROOT, 'tools/charkit/chars.tsv'), encoding='utf-8'):
         f = r.rstrip('\n').split('\t')
         if f[0] == cid: return f
-def pack(cid, src, height=260, q=80):
+def pack(cid, src, height=260, q=80, aspect=None):   # aspect: 横長の キャラ（犬など）は '5/4'
     f = info(cid); frames = {}
     for p in sorted(glob.glob(os.path.join(src, '*.png'))):
         im = Image.open(p).convert('RGBA'); s = min(1, height / im.height)
@@ -16,10 +16,11 @@ def pack(cid, src, height=260, q=80):
         b = io.BytesIO(); im.save(b, 'WEBP', quality=q, method=6)
         frames[os.path.basename(p)[:-4]] = 'data:image/webp;base64,' + base64.b64encode(b.getvalue()).decode()
     meta = {'name': f[1], 'turn': [t for t in TURN if t in frames], 'special': 'special', 'line': [f[5], f[6]]}
+    if aspect: meta['aspect'] = aspect
     js = json.dumps(meta, ensure_ascii=False)[:-1] + ', "frames": ' + json.dumps(frames) + '}'
     os.makedirs(os.path.join(ROOT, 'chars/sheet'), exist_ok=True)
     out = os.path.join(ROOT, 'chars/sheet', cid + '.js')
     open(out, 'w', encoding='utf-8').write(f'/* {f[1]}：Codex で 作った シートから 切り抜き（docs/character-pipeline.md） */\n(window.SHEET_CHARS = window.SHEET_CHARS || {{}}).{cid} = {js};\n')
     return out, os.path.getsize(out)
 if __name__ == '__main__':
-    print(*pack(sys.argv[1], sys.argv[2]))
+    print(*pack(sys.argv[1], sys.argv[2], aspect=sys.argv[3] if len(sys.argv) > 3 else None))
