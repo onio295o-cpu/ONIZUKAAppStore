@@ -439,6 +439,8 @@ a.btn{text-decoration:none}
 <script src="chars/ng.js"></script>
 <script src="chars/cutout.js"></script>
 <script src="chars/dora.js"></script>
+<script src="chars/sheet-actor.js"></script>
+<script src="chars/heart.js"></script>
 <script src="chars/whip.js"></script>
 <script src="bobobo/assets.js"></script>
 <script src="bobobo/bobobo.js"></script>
@@ -675,6 +677,9 @@ if(window.DORA_FRAMES){   // ドラえもんも キャラに
   const D = window.DORA_FRAMES;
   Object.entries({normal:'t000', happy:'p_laugh', surprised:'p_jump', funny:'p_cry', attack:'p_point'}).forEach(([pose, k]) => D[k] && addMember('ドラえもん', D[k], pose));
 }
+Object.values(window.SHEET_CHARS || {}).forEach(c => {   // シートで 作った キャラの ポーズ（docs/character-pipeline.md）
+  Object.entries({happy:'p_laugh', surprised:'p_jump', funny:'p_shy', attack:'p_point'}).forEach(([pose, k]) => c.frames[k] && addMember(c.name, c.frames[k], pose));
+});
 FOLDER.forEach(f => { const {name, pose} = parseName(f); addMember(name, (window.CHAR_IMAGES || {})[f] || 'キャラクター/' + f, pose); });   // 埋めこみ画像（chars/precure.js）を つかう
 /* ---- 読み込み：画像ファイル・ZIP（中の画像を ぜんぶ）に 対応。背景が ある 画像は 自動で 切り抜く ---- */
 const IMG_RE = /\.(png|jpe?g|gif|webp)$/i, GENERIC = /^(character|image|img|chara|キャラ)\d*$/i;
@@ -1147,6 +1152,22 @@ function doraShow(){
   T(6100, () => { a.pose('victory'); say(t('すごいね！ そのちょうし！', 'すごいね！ その調子！')); sfx('win'); });
   return true;
 }
+// キュアハート：ジャンプで 登場 → くるっと 1周 → ハートの ポーズ
+function heartShow(){
+  const C = (window.SHEET_CHARS || {}).heart;
+  if(!C || !window.SheetActor) return false;
+  const d = fxAdd('dora', '<div class="dora-ring"></div><div class="dora-mov"></div>', 7000);
+  const mov = d.querySelector('.dora-mov'); const a = SheetActor.create(mov, C);
+  mov.style.transition = 'none'; mov.style.transform = 'translateY(-120%)'; a.pose('fly'); void mov.offsetWidth;
+  mov.style.transition = ''; mov.style.transform = 'translateY(0)'; sfx('whoosh2');
+  const say = s => { d.querySelector('.dora-say')?.remove(); const b = document.createElement('div'); b.className = 'dora-say'; b.textContent = s; d.append(b); };
+  const T = (ms, fn) => showTimers.push(setTimeout(() => d.isConnected && fn(), ms));
+  T(1000, () => { sfx('land'); a.pose('wave'); a.turn(1500, 1, () => a.pose('wave')); word('くるりん！'); });
+  T(2700, () => { a.pose('heart'); say(t('みなぎる あいっ！', 'みなぎる 愛！')); sfx('boing'); });
+  T(3900, () => { a.pose(pick(['dance', 'laugh', 'jump'])); say(t('すごい すごい！', 'すごい すごい！')); crew(d, 2); confetti(20); });
+  T(5300, () => { a.pose('victory'); say(t('その ちょうしで がんばろう！', 'その調子で がんばろう！')); sfx('win'); });
+  return true;
+}
 // キュアホイップ：大きく 登場して パーツごとに 動く（まわりに キャラも わちゃわちゃ）
 function whipShow(){
   if(!window.WhipCharacter) return false;
@@ -1159,10 +1180,11 @@ function bigShow(done){
   showDone = done; setSlow(1.8);
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
-  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip', 'dora'].filter(k => k !== S.lastShow)); S.lastShow = kind;
+  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip', 'dora', 'heart'].filter(k => k !== S.lastShow)); S.lastShow = kind;
   if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, kind === 'hg-g' ? 7800 : 6700)); return; }
   if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
   if(kind === 'dora' && doraShow()){ showTimers.push(setTimeout(endShow, 7000)); return; }
+  if(kind === 'heart' && heartShow()){ showTimers.push(setTimeout(endShow, 7000)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
   const bb = kind === 'crew' && bobobo(pick(BB_MOVES), 6000);
