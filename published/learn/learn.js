@@ -817,7 +817,7 @@ const PLANET = {
 };
 // わくせいの え（SVG）。size:true で ほんとうの おおきさの じゅんが わかる ように する
 function planetSVG(id, opt = {}){
-  const p = PLANET[id] || PLANET.earth, r = opt.fixed ? 40 : p.r, g = 'pg' + id + (opt.fixed ? 'f' : '');
+  const p = PLANET[id] || PLANET.earth, r = opt.fixed ? 40 : opt.big ? 10 + p.r * .8 : p.r, g = 'pg' + id + (opt.fixed ? 'f' : opt.big ? 'b' : '');   // big：ちいさい ほしも 見えるよう ちぢめた 大きさ（じゅんばんは そのまま）
   let extra = '';
   if(p.band) extra += [-.45, -.15, .2, .5].map((y, i) => `<ellipse cx="50" cy="${50 + y * r}" rx="${r * Math.sqrt(1 - y * y)}" ry="${r * .09}" fill="${i % 2 ? '#e7b98a' : '#b9784a'}" opacity=".7"/>`).join('') + `<ellipse cx="${50 + r * .3}" cy="${50 + r * .3}" rx="${r * .16}" ry="${r * .1}" fill="#c4553a"/>`;
   if(p.land) extra += `<path d="M${50 - r * .5} ${50 - r * .3} q${r * .3} ${-r * .3} ${r * .5} 0 t${r * .2} ${r * .5} t${-r * .5} ${r * .2}z M${50 + r * .1} ${50 + r * .2} q${r * .3} ${-r * .1} ${r * .4} ${r * .3} t${-r * .4} ${r * .2}z" fill="#4cc36b"/>`;
@@ -861,7 +861,7 @@ Object.assign(TYPES, {
     input(c){ const q = c.q, slots = document.createElement('div'); slots.className = 'lq-slots lq-slots2';
       slots.innerHTML = q.items.map(() => '<span></span>').join(''); c.inp.append(slots);
       const box = document.createElement('div'); box.className = 'lq-order lq-order2';
-      shuffle(q.items.map((it, i) => [it, i])).forEach(([it, i]) => { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = q.planets ? planetSVG(it) + `<small>${ruby(q.labels ? q.labels[i] : it)}</small>` : ruby(it);
+      shuffle(q.items.map((it, i) => [it, i])).forEach(([it, i]) => { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = q.planets ? planetSVG(it, {big:true}) + `<small>${ruby(q.labels ? q.labels[i] : it)}</small>` : ruby(it);
         b.onclick = () => { if(c.locked) return;
           if(i === c.next){ tap(); b.classList.add('used'); const s = slots.children[c.next]; s.innerHTML = q.planets ? `<small>${ruby(q.labels ? q.labels[i] : it)}</small>` : ruby(it); s.classList.add('f'); c.next++; if(c.next === q.items.length) submit(c, c.ans, null); }
           else submit(c, '__ng', b); };

@@ -149,7 +149,7 @@ function describeOdd(q){
    ひっかけ：もとの まま・はんたいむきの うつしかた・まわした もの・1マス ちがう もの
    ================================================================ */
 const MIR_LV = {
-  1:{n:3, cells:[3, 3], colors:1, traps:['orig', 'alter'], fixed:true},
+  1:{n:3, cells:[3, 4], colors:1, traps:['orig', 'alter'], fixed:true},
   2:{n:3, cells:[4, 4], colors:2, traps:['orig', 'flip2', 'alter']},
   3:{n:4, cells:[4, 5], colors:2, traps:['orig', 'flip2', 'alter', 'rot']},
   4:{n:4, cells:[5, 6], colors:2, traps:['flip2', 'rot', 'alter', 'orig']},
@@ -543,7 +543,7 @@ function describeShadow(q){
    みえかたは 画面を こまかく しらべて きめる（てまえ＝x+y+z が おおきい つみきが まえ）
    ================================================================ */
 const BL_LV = {
-  1:{w:3, d:2, total:[2, 4], maxH:2, hidden:[0, 0]},
+  1:{w:3, d:3, total:[2, 4], maxH:2, hidden:[0, 0]},
   2:{w:3, d:2, total:[4, 6], maxH:3, hidden:[0, 0], tall:true},
   3:{w:3, d:3, total:[5, 7], maxH:3, hidden:[0, 0], tall:true},
   4:{w:3, d:3, total:[6, 9], maxH:3, hidden:[1, 2], tall:true},

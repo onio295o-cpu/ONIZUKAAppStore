@@ -1,11 +1,18 @@
 {
   "subject": "shikou",
   "version": 1,
-  "note": "gen=じどう生成の せってい（learn/puzzles.js）。track=ゲームの しゅるい（おなじ track の まえの ステージで 星1いじょう で つぎが ひらく）。count=もんだいすう",
+  "note": "gen=じどう生成の せってい（learn/puzzles.js・learn/puzzles2.js）。track=ゲームの しゅるい（おなじ track の まえの ステージで 星1いじょう で つぎが ひらく）。count=もんだいすう",
   "tracks": {
     "pattern": {"title": "きそく パズル", "icon": "🔴🔵", "say": "きそく パズル"},
     "maze": {"title": "めいろ たんけん", "icon": "🧭", "say": "めいろ たんけん"},
-    "rotate": {"title": "かたち まわし", "icon": "🔄", "say": "かたち まわし"}
+    "rotate": {"title": "かたち まわし", "icon": "🔄", "say": "かたち まわし"},
+    "odd": {"title": "なかまはずれ", "icon": "🔍", "say": "なかまはずれ"},
+    "mirror": {"title": "かがみの せかい", "icon": "🦋", "say": "かがみの せかい"},
+    "logic": {"title": "じょうけん パズル", "icon": "💡", "say": "じょうけん パズル"},
+    "memory": {"title": "じゅんばん きおく", "icon": "🧠", "say": "じゅんばん きおく"},
+    "shadow": {"title": "かげあて", "icon": "👤", "say": "かげあて"},
+    "blocks": {"title": "ブロック つみ", "icon": "🧱", "say": "ブロック つみ"},
+    "tangram": {"title": "かたち あわせ", "icon": "🧩", "say": "かたち あわせ"}
   },
   "courses": {
     "4": [
@@ -17,7 +24,21 @@
       {"id": "k4-m3", "track": "maze", "title": "おばけ めいろ", "count": 5, "gen": {"gen": "maze", "w": 5, "h": 5, "braid": 1, "ghosts": 1}},
       {"id": "k4-r1", "track": "rotate", "title": "まわして おなじ", "count": 10, "gen": {"gen": "rotate", "n": 3, "g": 3, "marks": 1}},
       {"id": "k4-r2", "track": "rotate", "title": "4マスの かたち", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 1}},
-      {"id": "k4-r3", "track": "rotate", "title": "いろが 2つの かたち", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 2}}
+      {"id": "k4-r3", "track": "rotate", "title": "いろが 2つの かたち", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 2}},
+      {"id": "k4-od1", "track": "odd", "title": "いろと かたちの なかまはずれ", "count": 10, "gen": {"gen": "odd", "level": 1}},
+      {"id": "k4-od2", "track": "odd", "title": "なかまを みつけよう", "count": 10, "gen": {"gen": "odd", "level": 2}},
+      {"id": "k4-mr1", "track": "mirror", "title": "かがみに うつそう", "count": 10, "gen": {"gen": "mirror", "level": 1}},
+      {"id": "k4-mr2", "track": "mirror", "title": "いろが 2つの もよう", "count": 10, "gen": {"gen": "mirror", "level": 2}},
+      {"id": "k4-lg1", "track": "logic", "title": "あかい まるは どれ？", "count": 10, "gen": {"gen": "logic", "level": 1}},
+      {"id": "k4-lg2", "track": "logic", "title": "なにを もっている？", "count": 10, "gen": {"gen": "logic", "level": 2}},
+      {"id": "k4-me1", "track": "memory", "title": "3つ おぼえよう", "count": 8, "gen": {"gen": "memory", "level": 1}},
+      {"id": "k4-me2", "track": "memory", "title": "4つ おぼえよう", "count": 8, "gen": {"gen": "memory", "level": 2}},
+      {"id": "k4-sh1", "track": "shadow", "title": "なんの かげ？", "count": 10, "gen": {"gen": "shadow", "level": 1}},
+      {"id": "k4-sh2", "track": "shadow", "title": "どうぶつの かげ", "count": 10, "gen": {"gen": "shadow", "level": 2}},
+      {"id": "k4-bl1", "track": "blocks", "title": "つみきを かぞえよう", "count": 10, "gen": {"gen": "blocks", "level": 1}},
+      {"id": "k4-bl2", "track": "blocks", "title": "たかく つもう", "count": 10, "gen": {"gen": "blocks", "level": 2}},
+      {"id": "k4-tg1", "track": "tangram", "title": "ぴったり はめよう", "count": 10, "gen": {"gen": "tangram", "level": 1}},
+      {"id": "k4-tg2", "track": "tangram", "title": "3マスの ピース", "count": 10, "gen": {"gen": "tangram", "level": 2}}
     ],
     "5": [
       {"id": "k5-p1", "track": "pattern", "title": "いろと かたちの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p4"}},
@@ -28,7 +49,21 @@
       {"id": "k5-m3", "track": "maze", "title": "ひろい めいろ", "count": 5, "gen": {"gen": "maze", "w": 7, "h": 6, "braid": 3, "ghosts": 2}},
       {"id": "k5-r1", "track": "rotate", "title": "うらがえしに ちゅうい", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 1, "mirror": 1}},
       {"id": "k5-r2", "track": "rotate", "title": "5マスの かたち", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 1, "mirror": 1}},
-      {"id": "k5-r3", "track": "rotate", "title": "いろも よく みよう", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 2, "mirror": 1}}
+      {"id": "k5-r3", "track": "rotate", "title": "いろも よく みよう", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 2, "mirror": 1}},
+      {"id": "k5-od1", "track": "odd", "title": "かずも よく みよう", "count": 10, "gen": {"gen": "odd", "level": 3}},
+      {"id": "k5-od2", "track": "odd", "title": "にている なかま", "count": 10, "gen": {"gen": "odd", "level": 4}},
+      {"id": "k5-mr1", "track": "mirror", "title": "4マスの かがみ", "count": 10, "gen": {"gen": "mirror", "level": 3}},
+      {"id": "k5-mr2", "track": "mirror", "title": "ひっかけに ちゅうい", "count": 10, "gen": {"gen": "mirror", "level": 4}},
+      {"id": "k5-lg1", "track": "logic", "title": "3つの じょうけん", "count": 10, "gen": {"gen": "logic", "level": 3}},
+      {"id": "k5-lg2", "track": "logic", "title": "〜では ない もの", "count": 10, "gen": {"gen": "logic", "level": 4}},
+      {"id": "k5-me1", "track": "memory", "title": "4つの じゅんばん", "count": 8, "gen": {"gen": "memory", "level": 3}},
+      {"id": "k5-me2", "track": "memory", "title": "5つの じゅんばん", "count": 8, "gen": {"gen": "memory", "level": 4}},
+      {"id": "k5-sh1", "track": "shadow", "title": "2つの かたちの かげ", "count": 10, "gen": {"gen": "shadow", "level": 3}},
+      {"id": "k5-sh2", "track": "shadow", "title": "3つの かたちの かげ", "count": 10, "gen": {"gen": "shadow", "level": 4}},
+      {"id": "k5-bl1", "track": "blocks", "title": "うしろも みよう", "count": 10, "gen": {"gen": "blocks", "level": 3}},
+      {"id": "k5-bl2", "track": "blocks", "title": "かくれた つみき", "count": 10, "gen": {"gen": "blocks", "level": 4}},
+      {"id": "k5-tg1", "track": "tangram", "title": "4マスの ピース", "count": 10, "gen": {"gen": "tangram", "level": 3}},
+      {"id": "k5-tg2", "track": "tangram", "title": "2つで つくろう", "count": 8, "gen": {"gen": "tangram", "level": 4}}
     ],
     "6": [
       {"id": "k6-p1", "track": "pattern", "title": "2つの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p7"}},
@@ -39,7 +74,21 @@
       {"id": "k6-m3", "track": "maze", "title": "だいめいろ", "count": 5, "gen": {"gen": "maze", "w": 8, "h": 8, "braid": 4, "ghosts": 4, "key": true}},
       {"id": "k6-r1", "track": "rotate", "title": "ひっかけに ちゅうい", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 2, "mirror": 2}},
       {"id": "k6-r2", "track": "rotate", "title": "なんかい まわす？", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 1, "mode": "angle"}},
-      {"id": "k6-r3", "track": "rotate", "title": "あたまの なかで まわそう", "count": 10, "gen": {"gen": "rotate", "n": 6, "g": 4, "marks": 2, "mirror": 1, "mode": "angle"}}
+      {"id": "k6-r3", "track": "rotate", "title": "あたまの なかで まわそう", "count": 10, "gen": {"gen": "rotate", "n": 6, "g": 4, "marks": 2, "mirror": 1, "mode": "angle"}},
+      {"id": "k6-od1", "track": "odd", "title": "いきものの なかま", "count": 10, "gen": {"gen": "odd", "level": 5}},
+      {"id": "k6-od2", "track": "odd", "title": "4つの ちがい", "count": 10, "gen": {"gen": "odd", "level": 6}},
+      {"id": "k6-mr1", "track": "mirror", "title": "5マスの かがみ", "count": 10, "gen": {"gen": "mirror", "level": 5}},
+      {"id": "k6-mr2", "track": "mirror", "title": "みずに うつすと", "count": 10, "gen": {"gen": "mirror", "level": 6}},
+      {"id": "k6-lg1", "track": "logic", "title": "どうぶつの いえ", "count": 8, "gen": {"gen": "logic", "level": 5}},
+      {"id": "k6-lg2", "track": "logic", "title": "4けんの いえ", "count": 8, "gen": {"gen": "logic", "level": 6}},
+      {"id": "k6-me1", "track": "memory", "title": "おなじ ものが でるかも", "count": 8, "gen": {"gen": "memory", "level": 5}},
+      {"id": "k6-me2", "track": "memory", "title": "6つの じゅんばん", "count": 8, "gen": {"gen": "memory", "level": 6}},
+      {"id": "k6-sh1", "track": "shadow", "title": "むきに ちゅうい", "count": 10, "gen": {"gen": "shadow", "level": 5}},
+      {"id": "k6-sh2", "track": "shadow", "title": "4つの かたちの かげ", "count": 10, "gen": {"gen": "shadow", "level": 6}},
+      {"id": "k6-bl1", "track": "blocks", "title": "かくれた つみきを さがせ", "count": 10, "gen": {"gen": "blocks", "level": 5}},
+      {"id": "k6-bl2", "track": "blocks", "title": "おおきな つみき", "count": 10, "gen": {"gen": "blocks", "level": 6}},
+      {"id": "k6-tg1", "track": "tangram", "title": "まわして はめよう", "count": 10, "gen": {"gen": "tangram", "level": 5}},
+      {"id": "k6-tg2", "track": "tangram", "title": "まわして つくろう", "count": 8, "gen": {"gen": "tangram", "level": 6}}
     ]
   }
 }
