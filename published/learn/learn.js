@@ -796,6 +796,88 @@ const TYPES = {
   },
 };
 /* ================================================================
+   こくご・こっき・うちゅう・えいご で つかう きょうつうの もんだい
+   quiz  ：みせる もの（show）を みて えらぶ。q = {t:'quiz', text, say?, show:{big|pics|flag|planet|html}, choices:[...], ans:(番号 or もじ), hint?, expl?, en?, cbig?}
+   order ：ただしい じゅんに タップ。q = {t:'order2', text, items:[ラベル...]（ただしい じゅん）, show?, expl?}
+   repeat：えいごを きいて 2かい いってみよう（れんしゅう。かならず せいかい）。q = {t:'repeat', en, ja, show}
+   ================================================================ */
+const PLANET = {
+  sun:{c1:'#ffe36e', c2:'#ff9a1f', r:46, glow:1}, mercury:{c1:'#cfc6bd', c2:'#8f857c', r:14}, venus:{c1:'#ffe2a6', c2:'#d9a24f', r:22},
+  earth:{c1:'#6ec6ff', c2:'#2b78d6', r:23, land:1}, mars:{c1:'#ff9d6e', c2:'#c4492a', r:18}, jupiter:{c1:'#f3d2a8', c2:'#c48a57', r:42, band:1},
+  saturn:{c1:'#f8e3a6', c2:'#d1a95c', r:34, ring:1}, uranus:{c1:'#bff3f2', c2:'#5cc7d1', r:28, ring:2}, neptune:{c1:'#8fb6ff', c2:'#3557d6', r:27},
+  moon:{c1:'#f2f2ee', c2:'#a9a9a2', r:16, crater:1}, pluto:{c1:'#e8d2c0', c2:'#a2826a', r:10},
+};
+// わくせいの え（SVG）。size:true で ほんとうの おおきさの じゅんが わかる ように する
+function planetSVG(id, opt = {}){
+  const p = PLANET[id] || PLANET.earth, r = opt.fixed ? 40 : p.r, g = 'pg' + id + (opt.fixed ? 'f' : '');
+  let extra = '';
+  if(p.band) extra += [-.45, -.15, .2, .5].map((y, i) => `<ellipse cx="50" cy="${50 + y * r}" rx="${r * Math.sqrt(1 - y * y)}" ry="${r * .09}" fill="${i % 2 ? '#e7b98a' : '#b9784a'}" opacity=".7"/>`).join('') + `<ellipse cx="${50 + r * .3}" cy="${50 + r * .3}" rx="${r * .16}" ry="${r * .1}" fill="#c4553a"/>`;
+  if(p.land) extra += `<path d="M${50 - r * .5} ${50 - r * .3} q${r * .3} ${-r * .3} ${r * .5} 0 t${r * .2} ${r * .5} t${-r * .5} ${r * .2}z M${50 + r * .1} ${50 + r * .2} q${r * .3} ${-r * .1} ${r * .4} ${r * .3} t${-r * .4} ${r * .2}z" fill="#4cc36b"/>`;
+  if(p.crater) extra += `<circle cx="${50 - r * .3}" cy="${50 - r * .2}" r="${r * .18}" fill="#c9c9c2"/><circle cx="${50 + r * .3}" cy="${50 + r * .25}" r="${r * .12}" fill="#c9c9c2"/>`;
+  const ring = p.ring ? `<ellipse cx="50" cy="50" rx="${r * 1.7}" ry="${r * (p.ring === 2 ? .9 : .38)}" fill="none" stroke="#d9c38a" stroke-width="${r * .14}" transform="rotate(${p.ring === 2 ? 70 : -15} 50 50)" opacity=".9"/>` : '';
+  const glow = p.glow ? `<circle cx="50" cy="50" r="${r * 1.08}" fill="#ffd23f" opacity=".35"/>` : '';
+  return `<svg viewBox="-20 -20 140 140" class="lpl" aria-label="${id}"><defs><radialGradient id="${g}" cx=".35" cy=".35" r=".75"><stop offset="0" stop-color="${p.c1}"/><stop offset="1" stop-color="${p.c2}"/></radialGradient></defs>${glow}<circle cx="50" cy="50" r="${r}" fill="url(#${g})" stroke="#3b2a1e" stroke-width="2"/>${extra}${ring}</svg>`;
+}
+// みせる もの
+function showHTML(s){
+  if(!s) return '';
+  if(s.big) return `<div class="lq-big ${s.small ? 'sm' : ''}">${ruby(s.big)}</div>`;
+  if(s.pics) return `<div class="lq-pics lq-pics2">${s.pics.map(e => `<i>${esc(e)}</i>`).join('')}</div>`;
+  if(s.flag) return `<div class="lq-flag">${esc(s.flag)}</div>`;
+  if(s.planet) return `<div class="lq-planet">${planetSVG(s.planet, {fixed:true})}</div>`;
+  if(s.planets) return `<div class="lq-planets">${s.planets.map(id => planetSVG(id)).join('')}</div>`;
+  if(s.text) return `<div class="lq-read">${ruby(s.text)}</div>`;
+  return '';
+}
+const enSay = (c, w) => Voice.say(w, {lang:'en-US', raw:true, rate:.8});
+Object.assign(TYPES, {
+  quiz: {
+    setup(c){ const q = c.q; c.text = q.text; c.say = q.say || q.text;
+      c.choices = q.choices.slice(); c.ans = typeof q.ans === 'number' ? q.choices[q.ans] : q.ans;
+      if(q.shuffle !== false) c.choices = shuffle(c.choices);
+      c.ansLabel = reading(c.ans);
+      c.vis.innerHTML = showHTML(q.show);
+      if(q.en){ const b = document.createElement('button'); b.className = 'btn sub lq-en'; b.textContent = '🔊 English'; b.onclick = () => { tap(); enSay(c, q.en); }; c.vis.append(b); } },
+    async intro(c){ if(c.q.en){ await Voice.say(c.q.text); await enSay(c, c.q.en); c.say = ''; } },
+    input(c){ const q = c.q, box = document.createElement('div');
+      box.className = 'lq-ans' + (q.cbig ? ' cbig' : ' txt'); box.style.setProperty('--n', c.choices.length > 4 ? 3 : c.choices.length > 2 && !q.cbig && c.choices.some(x => reading(x).length > 5) ? 1 : c.choices.length);
+      c.choices.forEach(ch => { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = ruby(ch); b.dataset.v = ch;
+        b.onclick = () => { if(q.enChoices && !c.locked) enSay(c, reading(ch)); submit(c, ch, b); }; box.append(b); });
+      c.inp.append(box); },
+    async hint(c){ c.hintSay = c.q.hint || 'よく みて かんがえて みよう'; await Voice.say(c.hintSay, c.q.hintEn ? {lang:'en-US', raw:true} : {}); },
+    async explain(c){ if(c.q.en) await enSay(c, c.q.en); return c.q.expl || ''; },
+  },
+  order2: {
+    setup(c){ const q = c.q; c.text = q.text; c.ans = q.items.join(' → '); c.ansLabel = q.items.map(reading).join('・'); c.ansSay = ''; c.next = 0; c.vis.innerHTML = showHTML(q.show); },
+    input(c){ const q = c.q, slots = document.createElement('div'); slots.className = 'lq-slots lq-slots2';
+      slots.innerHTML = q.items.map(() => '<span></span>').join(''); c.inp.append(slots);
+      const box = document.createElement('div'); box.className = 'lq-order lq-order2';
+      shuffle(q.items.map((it, i) => [it, i])).forEach(([it, i]) => { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = q.planets ? planetSVG(it) + `<small>${ruby(q.labels ? q.labels[i] : it)}</small>` : ruby(it);
+        b.onclick = () => { if(c.locked) return;
+          if(i === c.next){ tap(); b.classList.add('used'); const s = slots.children[c.next]; s.innerHTML = q.planets ? `<small>${ruby(q.labels ? q.labels[i] : it)}</small>` : ruby(it); s.classList.add('f'); c.next++; if(c.next === q.items.length) submit(c, c.ans, null); }
+          else submit(c, '__ng', b); };
+        box.append(b); });
+      c.inp.append(box); c.box = box; },
+    check(c, v){ return v === c.ans; },
+    async hint(c){ c.hintSay = c.q.hint || 'さいしょに くるのは どれかな？'; await Voice.say(c.hintSay);
+      c.box.querySelectorAll('.btn').forEach(b => { b.disabled = false; b.classList.remove('ng'); }); },
+    async explain(c){ return c.q.expl || c.q.items.map(reading).join('、') + ' の じゅんだよ'; },
+  },
+  repeat: {
+    setup(c){ const q = c.q; c.text = `「${q.ja}」は えいごで 「${q.en}」。2かい いって みよう`; c.say = ''; c.ans = 'ok'; c.ansSay = ''; c.ansLabel = q.en; c.count = 0;
+      c.vis.innerHTML = showHTML(q.show) + `<div class="lq-enw">${esc(q.en)}</div>`; },
+    async intro(c){ await Voice.say(`${c.q.ja}は えいごで`); await enSay(c, c.q.en); await Voice.say('れんしゅう してみよう。2かい いってみよう'); },
+    input(c){ const box = document.createElement('div'); box.className = 'lq-rep';
+      box.innerHTML = `<button class="btn sub" data-a="listen">🔊 きく</button><button class="btn" data-a="said">🗣️ いえたよ！ <b>0</b>/2</button>`;
+      box.querySelector('[data-a=listen]').onclick = () => { tap(); enSay(c, c.q.en); };
+      box.querySelector('[data-a=said]').onclick = async e => { if(c.locked) return; tap('coin'); c.count++; e.currentTarget.querySelector('b').textContent = c.count;
+        if(c.count < 2){ Buddy.say('じょうず！ もう1かい', 'clap', 2000); await enSay(c, c.q.en); } else submit(c, 'ok', null); };
+      c.inp.append(box); },
+    check(){ return true; },
+    async explain(c){ await enSay(c, c.q.en); return `${c.q.en} は 「${c.q.ja}」だよ`; },
+  },
+});
+/* ================================================================
    しこうりょく：きそく パズル・めいろ たんけん・かたち まわし（問題は learn/puzzles.js が 生成・検証）
    ================================================================ */
 const PZ = () => window.Puzzles;
@@ -954,6 +1036,8 @@ function init(){
   Profiles.load(); mountScreens(); linkGame();
   go('lprof');
 }
-window.Learn = {init, go, Profiles, Progress, Voice, TYPES, ruby, reading, speechOf, groupSay, starsFor, _ctx:null, _result:null, _submit:(v) => { const c = window.Learn._ctx; if(c) submit(c, v, c.inp.querySelector(`.lq-ans .btn[data-v="${v}"]`)); }};
+window.Learn = {init, go, Profiles, Progress, Voice, TYPES, ruby, reading, speechOf, groupSay, starsFor,
+  // ほかの ファイル（learn/shikou2.js など）から 問題の しゅるいを ふやす ための どうぐ
+  kit:{submit, sleep, STOP, Run, Buddy, shuffle, tap, esc, choicesFor, pickOne, nChoices, pickButtons, showHTML, planetSVG, enSay, PZ:() => window.Puzzles}, _ctx:null, _result:null, _submit:(v) => { const c = window.Learn._ctx; if(c) submit(c, v, c.inp.querySelector(`.lq-ans .btn[data-v="${v}"]`)); }};
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
