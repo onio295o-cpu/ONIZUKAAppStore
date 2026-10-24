@@ -476,6 +476,7 @@ function markAnswer(ctx){ ctx.inp.querySelectorAll('.lq-ans .btn, .lq-pick .btn'
 function showFb(html){ const f = $('lqFb'); f.innerHTML = html; f.classList.remove('hide'); }
 async function feedback(ctx, ok){
   const first = ok && ctx.tries === 0;
+  if(!ctx.recorded) P.streak = first ? (P.streak || 0) + 1 : 0;   // 1かいめで せいかいした かずの れんぞく
   record(ctx, first);
   if(ok) Buddy.say(first ? pickOne(['すごい！', 'やったね！', 'よく かんがえたね！']) : 'できたね！', pickOne(['laugh', 'clap', 'victory']), 2600);
   else Buddy.say('いっしょに たしかめよう', 'point', 2600);
@@ -486,7 +487,12 @@ async function feedback(ctx, ok){
   if(!Run.alive(ctx.t)) return;
   if(ex){ $('lqEx').innerHTML = ruby(ex); await Voice.say(ex, {rate:.85}); }
   if(!Run.alive(ctx.t)) return;
-  if(first && P.i % 5 === 4) Buddy.spin();   // くぎりで ときどき たのしい うごき（とく あいだは うごかない）
+  // 3もん つづけて 1かいめで せいかい → たのしい ショー（それまでは キャラは 出ない）
+  if(first && P.streak >= 3 && typeof window.bigShow === 'function'){
+    P.streak = 0; Voice.stop();
+    await new Promise(res => { try{ window.bigShow(res); }catch(e){ console.error(e); res(); } });
+    if(!Run.alive(ctx.t)) return;
+  }
   const b = document.createElement('button'); b.className = 'btn lq-go'; b.textContent = P.i + 1 < P.qs.length ? 'つぎへ ▶' : 'けっかを みる ▶';
   b.onclick = () => { tap(); P.i++; nextQ(); };
   $('lqFb').append(b);
@@ -529,6 +535,7 @@ function finishStage(){
     <div class="row">${hasNext ? '<button class="btn" id="lrNext">つぎの ステージ ▶</button>' : ''}<button class="btn sub" id="lrAgain">🔁 もういちど</button></div>
     <button class="btn sub" id="lrList" style="margin-top:10px">📋 ステージ いちらん</button>`);
   if(stars >= 2 && window.sfx) tap('win');
+  if(Buddy.el) Buddy.el.classList.remove('hide');
   if(stars >= 1) Buddy.spin(); else Buddy.say('つぎは きっと できるよ', 'wave', 3000);
   Voice.say(msg).then(() => { if(unlocked && $('lrList')) Voice.say('つぎの ステージが あそべるように なったよ'); });
   if($('lrNext')) $('lrNext').onclick = () => { tap(); startStage({subject:P.subject, age:P.age, stage:P.stages[ni], index:ni, stages:P.stages}); };
@@ -547,6 +554,7 @@ const Buddy = {
     box.classList.remove('hide');
     box.innerHTML = '<div class="lb-stage"></div><div class="lb-say hide"></div>';
     try{ this.actor = SheetActor.create(box.firstChild, C); this.el = box; this.C = C; this.actor.pose('wave'); }catch(e){ this.actor = null; box.classList.add('hide'); }
+    box.classList.add('hide');   // 問題中は キャラを 出さない（集中できるように）。ステージの おわりに 出す
   },
   say(text, pose, ms = 2600){
     if(!this.actor || !this.el) return; if(pose) this.actor.pose(pose);
@@ -805,7 +813,7 @@ const PLANET = {
   sun:{c1:'#ffe36e', c2:'#ff9a1f', r:46, glow:1}, mercury:{c1:'#cfc6bd', c2:'#8f857c', r:14}, venus:{c1:'#ffe2a6', c2:'#d9a24f', r:22},
   earth:{c1:'#6ec6ff', c2:'#2b78d6', r:23, land:1}, mars:{c1:'#ff9d6e', c2:'#c4492a', r:18}, jupiter:{c1:'#f3d2a8', c2:'#c48a57', r:42, band:1},
   saturn:{c1:'#f8e3a6', c2:'#d1a95c', r:34, ring:1}, uranus:{c1:'#bff3f2', c2:'#5cc7d1', r:28, ring:2}, neptune:{c1:'#8fb6ff', c2:'#3557d6', r:27},
-  moon:{c1:'#f2f2ee', c2:'#a9a9a2', r:16, crater:1}, pluto:{c1:'#e8d2c0', c2:'#a2826a', r:10},
+  moon:{c1:'#f2f2ee', c2:'#a9a9a2', r:10, crater:1}, pluto:{c1:'#e8d2c0', c2:'#a2826a', r:7},
 };
 // わくせいの え（SVG）。size:true で ほんとうの おおきさの じゅんが わかる ように する
 function planetSVG(id, opt = {}){
@@ -836,6 +844,7 @@ Object.assign(TYPES, {
       c.choices = q.choices.slice(); c.ans = typeof q.ans === 'number' ? q.choices[q.ans] : q.ans;
       if(q.shuffle !== false) c.choices = shuffle(c.choices);
       c.ansLabel = reading(c.ans);
+      if(q.enChoices) c.ansSay = '';   // えいごの こたえは 日本語の 声で よまない（explain で えいごで よむ）
       c.vis.innerHTML = showHTML(q.show);
       if(q.en){ const b = document.createElement('button'); b.className = 'btn sub lq-en'; b.textContent = '🔊 English'; b.onclick = () => { tap(); enSay(c, q.en); }; c.vis.append(b); } },
     async intro(c){ if(c.q.en){ await Voice.say(c.q.text); await enSay(c, c.q.en); c.say = ''; } },
@@ -845,10 +854,10 @@ Object.assign(TYPES, {
         b.onclick = () => { if(q.enChoices && !c.locked) enSay(c, reading(ch)); submit(c, ch, b); }; box.append(b); });
       c.inp.append(box); },
     async hint(c){ c.hintSay = c.q.hint || 'よく みて かんがえて みよう'; await Voice.say(c.hintSay, c.q.hintEn ? {lang:'en-US', raw:true} : {}); },
-    async explain(c){ if(c.q.en) await enSay(c, c.q.en); return c.q.expl || ''; },
+    async explain(c){ if(c.q.enChoices && c.q.en !== reading(c.ans)) await enSay(c, reading(c.ans)); if(c.q.en) await enSay(c, c.q.en); return c.q.expl || ''; },
   },
   order2: {
-    setup(c){ const q = c.q; c.text = q.text; c.ans = q.items.join(' → '); c.ansLabel = q.items.map(reading).join('・'); c.ansSay = ''; c.next = 0; c.vis.innerHTML = showHTML(q.show); },
+    setup(c){ const q = c.q; c.text = q.text; c.ans = q.items.join(' → '); c.ansLabel = (q.planets && q.labels ? q.labels : q.items).map(reading).join('・'); c.ansSay = ''; c.next = 0; c.vis.innerHTML = showHTML(q.show); },
     input(c){ const q = c.q, slots = document.createElement('div'); slots.className = 'lq-slots lq-slots2';
       slots.innerHTML = q.items.map(() => '<span></span>').join(''); c.inp.append(slots);
       const box = document.createElement('div'); box.className = 'lq-order lq-order2';
@@ -861,7 +870,7 @@ Object.assign(TYPES, {
     check(c, v){ return v === c.ans; },
     async hint(c){ c.hintSay = c.q.hint || 'さいしょに くるのは どれかな？'; await Voice.say(c.hintSay);
       c.box.querySelectorAll('.btn').forEach(b => { b.disabled = false; b.classList.remove('ng'); }); },
-    async explain(c){ return c.q.expl || c.q.items.map(reading).join('、') + ' の じゅんだよ'; },
+    async explain(c){ return c.q.expl || (c.q.planets && c.q.labels ? c.q.labels : c.q.items).map(reading).join('、') + ' の じゅんだよ'; },
   },
   repeat: {
     setup(c){ const q = c.q; c.text = `「${q.ja}」は えいごで 「${q.en}」。2かい いって みよう`; c.say = ''; c.ans = 'ok'; c.ansSay = ''; c.ansLabel = q.en; c.count = 0;

@@ -1612,7 +1612,7 @@ if(window.DORA_FRAMES){   // ドラえもんも キャラに
 // シートで 作った キャラ（docs/character-pipeline.md）。chars/sheet/ の ファイルは ページを 開いてから じゅんばんに 読みこむ（最初の 表示を 速く）
 const addSheetChar = c => Object.entries({happy:'p_laugh', surprised:'p_jump', funny:'p_shy', attack:'p_point'}).forEach(([pose, k]) => c.frames[k] && addMember(c.name, c.frames[k], pose));
 Object.values(window.SHEET_CHARS || {}).forEach(addSheetChar);
-const SHEET_IDS = ['diamond','ace','rosetta','flora','mermaid','arcana','answer','eclair','mystic','black','white','dream','peach','blossom','marine','melody','happy','lovely','whip','sky','chase','marshall','skye','rubble','rocky'];   // chars/sheet/<id>.js（tools/charkit/chars.tsv の じゅん）
+const SHEET_IDS = ['diamond','ace','rosetta','flora','mermaid','arcana','answer','eclair','mystic','black','white','dream','peach','blossom','marine','melody','happy','lovely','whip','sky','chase','marshall','skye','rubble','rocky','zuma','everest','shinnosuke','himawari','shiro','chiikawa','hachiware','usagi','himari'];   // chars/sheet/<id>.js（tools/charkit/chars.tsv の じゅん）
 window.addEventListener('load', () => SHEET_IDS.reduce((p, id) => p.then(() => new Promise(res => {
   if((window.SHEET_CHARS || {})[id]) return res();   // 1つの HTML に まとめた 版では もう 入っている
   const x = document.createElement('script'); x.src = 'chars/sheet/' + id + '.js';
@@ -1853,14 +1853,14 @@ $('pad').onclick = e => {
 // ほんものっぽい 鼻毛：1本ずつ 根もとが 太く 先が 細い、ちぢれた 毛を 束で 描く（ボーボボの 技・鼻毛劇場で 共通）
 window.drawNoseHair = function(ctx, sx, sy, ex, ey, o = {}){
   const n = o.n || 6, t = o.t || 0, w = o.w || 5, sway = o.sway ?? 26, seed = o.seed || 1, grow = o.grow ?? 1;
-  const dx = ex - sx, dy = ey - sy, L = Math.hypot(dx, dy) || 1, px = -dy / L, py = dx / L, N = 22;
+  const dx = ex - sx, dy = ey - sy, L = Math.hypot(dx, dy) || 1, px = -dy / L, py = dx / L, N = 40;
   const rnd = k => { const s = Math.sin(seed * 12.9898 + k * 78.233) * 43758.5453; return s - Math.floor(s); };
   for(let j = 0; j < n; j++){
     const r1 = rnd(j), r2 = rnd(j + 50), r3 = rnd(j + 99), ph = r1 * 6.28, spread = (j - (n - 1) / 2) * (o.spread ?? 7) * (.6 + r2), len = (.78 + .3 * r3) * grow;
     const kink = 3 + r2 * 4, curlR = 6 + r3 * 10, wd = w * (.55 + .7 * r1);
     const P = [];
     for(let k = 0; k <= N; k++){
-      const u = k / N * len, wave = Math.sin(u * Math.PI * 1.6 + t / 260 + ph) * sway * u + Math.sin(u * 30 + ph) * kink * u;   // ゆれ＋ちぢれ
+      const u = k / N * len, wave = Math.sin(u * Math.PI * 1.6 + t / 260 + ph) * sway * u + Math.sin(u * 17 + ph) * kink * u;   // ゆれ＋ちぢれ
       let x = sx + dx * u + px * (wave + spread * Math.pow(u, 1.2)), y = sy + dy * u + py * (wave + spread * Math.pow(u, 1.2));
       if(u > len * .82){ const a = (u - len * .82) / (len * .18) * Math.PI * (1.2 + r1); x += (Math.cos(a + ph) - 1) * curlR; y += Math.sin(a + ph) * curlR; }   // 先が くるん
       P.push([x, y, u / len]);
@@ -1872,10 +1872,12 @@ window.drawNoseHair = function(ctx, sx, sy, ex, ey, o = {}){
       const hw = (wd * Math.pow(1 - P[k][2], .8) + .5) / 2, nx2 = -ty / tl * hw, ny2 = tx / tl * hw;
       left.push([P[k][0] + nx2, P[k][1] + ny2]); right.push([P[k][0] - nx2, P[k][1] - ny2]);
     }
-    ctx.beginPath(); ctx.moveTo(left[0][0], left[0][1]); left.forEach(p => ctx.lineTo(p[0], p[1])); right.reverse().forEach(p => ctx.lineTo(p[0], p[1])); ctx.closePath();
+    // かくかく しないよう 点の あいだを 曲線で つなぐ
+    const curve = (pts, first) => { first ? ctx.moveTo(pts[0][0], pts[0][1]) : ctx.lineTo(pts[0][0], pts[0][1]); for(let k = 1; k < pts.length - 1; k++) ctx.quadraticCurveTo(pts[k][0], pts[k][1], (pts[k][0] + pts[k + 1][0]) / 2, (pts[k][1] + pts[k + 1][1]) / 2); const z = pts[pts.length - 1]; ctx.lineTo(z[0], z[1]); };
+    ctx.beginPath(); curve(left, true); curve(right.reverse(), false); ctx.closePath();
     ctx.fillStyle = o.color || (j % 3 ? '#21140b' : '#33200f'); ctx.fill();
     // つやの 線
-    ctx.beginPath(); P.forEach((p, k) => k ? ctx.lineTo(p[0] - px * wd * .15, p[1] - py * wd * .15) : ctx.moveTo(p[0], p[1]));
+    ctx.beginPath(); curve(P.slice(0, Math.round(P.length * .85)).map(p => [p[0] - px * wd * .15, p[1] - py * wd * .15]), true);
     ctx.strokeStyle = o.shine || 'rgba(190,150,95,.55)'; ctx.lineWidth = Math.max(.6, wd * .18); ctx.lineCap = 'round'; ctx.stroke();
   }
   // 鼻の あなの まわりの みじかい 毛
@@ -1985,7 +1987,7 @@ function hanage(kind){
     const k = Math.min(1, (now - hair.t0) / 380) * (hair.out ? Math.max(0, 1 - (now - hair.out) / 300) : 1);
     for(let i = 0; i < hair.n; i++){   // ほんものっぽい 鼻毛の 束
       const ex = nx + (tx - nx) * k + (i - hair.n / 2) * 6, ey = ny + (ty - ny) * k + Math.sin(i * 1.7) * 10;
-      drawNoseHair(x, nx + (i % 2 ? 3 : -3), ny, ex, ey, {n:4, t:now + i * 120, w:4.5, sway:22 + i * 2, seed:i + 1, spread:4});
+      drawNoseHair(x, nx + (i % 2 ? 3 : -3), ny, ex, ey, {n:3, t:now + i * 120, w:7, sway:22 + i * 2, seed:i + 1, spread:5});
     }
   })(performance.now());
   const T = (ms, fn) => setTimeout(() => d.isConnected && fn(), ms);
@@ -2121,11 +2123,12 @@ function doraShow(){
   return true;
 }
 // シートで 作った キャラ（プリキュア・パウパトロールなど）：飛びこんで 登場 → くるっと 1周 → 決めポーズ → セリフ
+const SHOW_MEM = {};   // つづけて 同じ ショー・キャラを 出さない ための きおく（学習画面では S が ないので 別に もつ）
 function sheetShow(){
-  const all = window.SHEET_CHARS || {}, ids = Object.keys(all).filter(k => k !== S.lastSheet);
+  const all = window.SHEET_CHARS || {}, ids = Object.keys(all).filter(k => k !== SHOW_MEM.lastSheet);
   if(!ids.length || !window.SheetActor) return false;
-  const C = all[S.lastSheet = pick(ids)];
-  const d = fxAdd('dora', '<div class="dora-ring"></div><div class="dora-mov"></div>', 7000);
+  const C = all[SHOW_MEM.lastSheet = pick(ids)];
+  const d = fxAdd('dora', '<div class="dora-ring"></div><div class="dora-mov"></div>', 9300);
   const mov = d.querySelector('.dora-mov'); const a = SheetActor.create(mov, C);
   mov.style.transition = 'none'; mov.style.transform = 'translateY(-120%)'; a.pose('fly'); void mov.offsetWidth;
   mov.style.transition = ''; mov.style.transform = 'translateY(0)'; sfx('whoosh2');
@@ -2134,8 +2137,11 @@ function sheetShow(){
   const line = C.line || ['やったね！', 'やったね！'];
   T(1000, () => { sfx('land'); a.pose('wave'); a.turn(1500, 1, () => a.pose('wave')); word('くるりん！'); });
   T(2700, () => { a.pose(C.special || 'special'); say(t(line[0], line[1])); sfx('boing'); });
-  T(3900, () => { a.pose(pick(['dance', 'laugh', 'jump', 'clap'])); say(t('すごい すごい！', 'すごい すごい！')); crew(d, 2); confetti(20); });
-  T(5300, () => { a.pose('victory'); say(t('その ちょうしで がんばろう！', 'その調子で がんばろう！')); sfx('win'); });
+  // 笑う・おこる・なく・びっくり など いろんな 顔を じゅんばんに（1つずつ じっくり 見せる）
+  const FACES = [['laugh', 'わははは！', 'boing'], ['angry', 'ぷんぷん！', 'hit'], ['cry', 'えーん えーん', 'boing'], ['scared', 'びっくり！', 'crit'], ['jump', 'えっ！？', 'boing'],
+    ['shy', 'てれちゃう〜', 'pop'], ['dance', 'ノリノリ！', 'boing'], ['trip', 'すってんころりん！', 'hit'], ['think', 'うーん？', 'pop'], ['eat', 'もぐもぐ', 'pop'], ['sleep', 'すやすや…', 'pop']].filter(f => C.frames['p_' + f[0]]);
+  shuffle(FACES).slice(0, 3).forEach(([p, w, s], i) => T(3900 + i * 1300, () => { a.pose(p); word(w); sfx(s); if(i === 1){ crew(d, 2); confetti(20); } }));
+  T(7800, () => { a.pose('victory'); say(t('その ちょうしで がんばろう！', 'その調子で がんばろう！')); sfx('win'); });
   return true;
 }
 // キュアホイップ：大きく 登場して パーツごとに 動く（まわりに キャラも わちゃわちゃ）
@@ -2150,11 +2156,11 @@ function bigShow(done){
   showDone = done; setSlow(1.8);
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
-  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip', 'dora', 'sheet', 'sheet'].filter(k => k !== S.lastShow || k === 'sheet')); S.lastShow = kind;
+  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip', 'dora', 'sheet', 'sheet'].filter(k => k !== SHOW_MEM.lastShow || k === 'sheet')); SHOW_MEM.lastShow = kind;
   if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, kind === 'hg-g' ? 7800 : 6700)); return; }
   if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
   if(kind === 'dora' && doraShow()){ showTimers.push(setTimeout(endShow, 7000)); return; }
-  if(kind === 'sheet' && sheetShow()){ showTimers.push(setTimeout(endShow, 7000)); return; }
+  if(kind === 'sheet' && sheetShow()){ showTimers.push(setTimeout(endShow, 9300)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
   const bb = kind === 'crew' && bobobo(pick(BB_MOVES), 6000);
@@ -2241,7 +2247,7 @@ const BIG_CLIPS = [
   {id:'yQYmWIfwf0I', start:0, end:15},   // 映画ドラえもん スペシャルPV
 ];
 let clipTimer = null;
-function playClip(clip, done){
+function playYT(clip, done){   // 声の playClip と 名前が かぶって 声が 消えていたので 分ける
   if(!CAN_YT){ done && done(); return false; }
   const ov = $('clipov');
   ov.innerHTML = `<iframe src="https://www.youtube.com/embed/${clip.id}?autoplay=1&start=${clip.start}&end=${clip.end}&playsinline=1&rel=0&modestbranding=1&controls=0" allow="autoplay; encrypted-media" referrerpolicy="strict-origin-when-cross-origin"></iframe><button class="btn ghost" id="clipSkip">スキップ ▶▶</button>`;

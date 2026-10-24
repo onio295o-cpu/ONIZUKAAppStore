@@ -35,8 +35,8 @@
       "speak": "こっき",
       "icon": "🎌",
       "color": "#9fd8ff",
-      "ready": false,
-      "plan": "こっきと くにの なまえ・くにの ばしょ・とし・ぶんか"
+      "ready": true,
+      "data": "learn/data/kokki.json"
     },
     {
       "id": "uchu",
@@ -44,8 +44,8 @@
       "speak": "うちゅう",
       "icon": "🪐",
       "color": "#c9b7f0",
-      "ready": false,
-      "plan": "わくせいの なまえ・とくちょう・おおきさ・たいようけい たんけん"
+      "ready": true,
+      "data": "learn/data/uchu.json"
     },
     {
       "id": "english",
@@ -53,9 +53,9 @@
       "speak": "えいご",
       "icon": "🔤",
       "color": "#a6e3a1",
-      "ready": false,
+      "ready": true,
       "lang": "en-US",
-      "plan": "えいたんご・あいさつ・みじかい えいぶん・れんしゅうしてみよう・2かい いってみよう"
+      "data": "learn/data/english.json"
     }
   ]
 }
