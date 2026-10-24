@@ -5,7 +5,7 @@
   function create(wrap, C){
     const F = C.frames, TURN = C.turn;
     const box = document.createElement('div');
-    box.style.cssText = 'position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:' + (C.aspect || '3/4') + ';transform-origin:50% 100%;will-change:transform';
+    box.style.cssText = 'position:absolute;left:50%;bottom:0;height:100%;max-width:100vw;aspect-ratio:' + (C.aspect || '3/4') + ';transform-origin:50% 100%;will-change:transform';
     const mk = () => { const i = new Image(); i.alt = ''; i.draggable = false; i.style.cssText = 'position:absolute;left:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none'; box.append(i); return i; };
     const A = mk(), B = mk(); B.style.opacity = 0; wrap.append(box);
     let seq = 0, front = A, cur = '', spin = null, pop = 0, t0 = performance.now(), alive = true, x = 0, y = 0;

@@ -3,12 +3,13 @@
 # 使い方: python3 cut_sheet.py <シート.png> <列> <行> <出力フォルダ> <名前1,名前2,...> [--auto]
 #   --auto: マス目で 均等に 切らず、1人ずつの 形を 見つけて 切る（髪や 手が マスから はみ出す キャラ向け）
 #   --close N: 線の すきまが N px まで なら ふさいでから 背景を ぬる（白い キャラの 中まで 透明に なるのを ふせぐ）
+#   --holes N: 線に かこまれた 小さな 白（N px まで。巻いた 毛の 内がわ など）も 透明に する
 #   例: python3 cut_sheet.py turn.png 4 3 out t000,t030,t060,t090,t240b,t210b,t180,t150b,t270,t300,t330,t000b
 import sys, os
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
-CLOSE = 0
+CLOSE = 0; HOLES = 0
 def cutout(im):
     im = im.convert('RGB'); W, H = im.size
     a = np.array(im).astype(int)
@@ -25,6 +26,11 @@ def cutout(im):
         grow = Image.fromarray((outside * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(2 * CLOSE + 3))
         outside = (np.array(grow) > 0) & white
     alpha = np.where(outside, 0, 255).astype(np.uint8)
+    if HOLES:   # かこまれた 小さな 白い あなも 背景に する
+        inner = (a.min(axis=2) > 236) & (alpha > 0); lab, n = label(inner)
+        if n:
+            area = np.bincount(lab.ravel(), minlength=n + 1); small = area <= HOLES; small[0] = False
+            alpha[small[lab]] = 0
     # ふちを なめらかに：背景との さかいの うすい灰色は 半透明に
     edge = np.array(Image.fromarray(alpha).filter(ImageFilter.MaxFilter(3))) > 0
     lum = a.mean(axis=2)
@@ -135,4 +141,5 @@ def auto(path, cols, rows, outdir, names):
 if __name__ == '__main__':
     path, cols, rows, outdir, names = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], sys.argv[5].split(',')
     if '--close' in sys.argv: CLOSE = int(sys.argv[sys.argv.index('--close') + 1])
+    if '--holes' in sys.argv: HOLES = int(sys.argv[sys.argv.index('--holes') + 1])
     (auto if '--auto' in sys.argv else grid)(path, cols, rows, outdir, names)

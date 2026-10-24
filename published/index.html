@@ -666,7 +666,7 @@ window.DORA_FRAMES={"p_angry": "data:image/webp;base64,UklGRpQxAABXRUJQVlA4WAoAA
   function create(wrap, C){
     const F = C.frames, TURN = C.turn;
     const box = document.createElement('div');
-    box.style.cssText = 'position:absolute;left:50%;bottom:0;height:100%;aspect-ratio:' + (C.aspect || '3/4') + ';transform-origin:50% 100%;will-change:transform';
+    box.style.cssText = 'position:absolute;left:50%;bottom:0;height:100%;max-width:100vw;aspect-ratio:' + (C.aspect || '3/4') + ';transform-origin:50% 100%;will-change:transform';
     const mk = () => { const i = new Image(); i.alt = ''; i.draggable = false; i.style.cssText = 'position:absolute;left:0;bottom:0;width:100%;height:100%;object-fit:contain;object-position:50% 100%;pointer-events:none'; box.append(i); return i; };
     const A = mk(), B = mk(); B.style.opacity = 0; wrap.append(box);
     let seq = 0, front = A, cur = '', spin = null, pop = 0, t0 = performance.now(), alive = true, x = 0, y = 0;
@@ -1612,7 +1612,7 @@ if(window.DORA_FRAMES){   // ドラえもんも キャラに
 // シートで 作った キャラ（docs/character-pipeline.md）。chars/sheet/ の ファイルは ページを 開いてから じゅんばんに 読みこむ（最初の 表示を 速く）
 const addSheetChar = c => Object.entries({happy:'p_laugh', surprised:'p_jump', funny:'p_shy', attack:'p_point'}).forEach(([pose, k]) => c.frames[k] && addMember(c.name, c.frames[k], pose));
 Object.values(window.SHEET_CHARS || {}).forEach(addSheetChar);
-const SHEET_IDS = ['diamond','ace','rosetta','flora','mermaid','arcana','answer','eclair','mystic','black','white','dream','peach','blossom','marine','melody','happy','lovely','whip','sky','chase','marshall','skye','rubble','rocky','zuma','everest','shinnosuke','himawari','shiro','chiikawa','hachiware','usagi','himari'];   // chars/sheet/<id>.js（tools/charkit/chars.tsv の じゅん）
+const SHEET_IDS = ['diamond','ace','rosetta','flora','mermaid','arcana','answer','eclair','mystic','black','white','dream','peach','blossom','marine','melody','happy','lovely','whip','sky','chase','marshall','skye','rubble','rocky','zuma','everest','shinnosuke','himawari','shiro','chiikawa','hachiware','usagi','himari','bobobo'];   // chars/sheet/<id>.js（tools/charkit/chars.tsv の じゅん）
 window.addEventListener('load', () => SHEET_IDS.reduce((p, id) => p.then(() => new Promise(res => {
   if((window.SHEET_CHARS || {})[id]) return res();   // 1つの HTML に まとめた 版では もう 入っている
   const x = document.createElement('script'); x.src = 'chars/sheet/' + id + '.js';
