@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "subjects": [
+    {
+      "id": "kokugo",
+      "title": "{国語|こくご}",
+      "speak": "こくご",
+      "icon": "📖",
+      "color": "#ff9f9f",
+      "ready": false,
+      "plan": "たんぶん どっかい・たんご えらび・ひらがな・カタカナ・しりとり・かんじ・ぶしゅ・ことわざ"
+    },
+    {
+      "id": "sansu",
+      "title": "{算数|さんすう}",
+      "speak": "さんすう",
+      "icon": "🔢",
+      "color": "#ffd23f",
+      "ready": true,
+      "data": "learn/data/sansu.json"
+    },
+    {
+      "id": "shikou",
+      "title": "{思考力|しこうりょく}",
+      "speak": "しこうりょく",
+      "icon": "🧩",
+      "color": "#ffc9a8",
+      "ready": true,
+      "data": "learn/data/shikou.json",
+      "plan": "つぎ：なかまはずれ・かげあて・かがみ・じゅんばん きおく・ブロック・じょうけん・かたち あわせ"
+    },
+    {
+      "id": "kokki",
+      "title": "{国旗|こっき}",
+      "speak": "こっき",
+      "icon": "🎌",
+      "color": "#9fd8ff",
+      "ready": false,
+      "plan": "こっきと くにの なまえ・くにの ばしょ・とし・ぶんか"
+    },
+    {
+      "id": "uchu",
+      "title": "{宇宙|うちゅう}",
+      "speak": "うちゅう",
+      "icon": "🪐",
+      "color": "#c9b7f0",
+      "ready": false,
+      "plan": "わくせいの なまえ・とくちょう・おおきさ・たいようけい たんけん"
+    },
+    {
+      "id": "english",
+      "title": "English",
+      "speak": "えいご",
+      "icon": "🔤",
+      "color": "#a6e3a1",
+      "ready": false,
+      "lang": "en-US",
+      "plan": "えいたんご・あいさつ・みじかい えいぶん・れんしゅうしてみよう・2かい いってみよう"
+    }
+  ]
+}

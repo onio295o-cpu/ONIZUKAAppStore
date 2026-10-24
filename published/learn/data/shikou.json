@@ -1,0 +1,45 @@
+{
+  "subject": "shikou",
+  "version": 1,
+  "note": "gen=じどう生成の せってい（learn/puzzles.js）。track=ゲームの しゅるい（おなじ track の まえの ステージで 星1いじょう で つぎが ひらく）。count=もんだいすう",
+  "tracks": {
+    "pattern": {"title": "きそく パズル", "icon": "🔴🔵", "say": "きそく パズル"},
+    "maze": {"title": "めいろ たんけん", "icon": "🧭", "say": "めいろ たんけん"},
+    "rotate": {"title": "かたち まわし", "icon": "🔄", "say": "かたち まわし"}
+  },
+  "courses": {
+    "4": [
+      {"id": "k4-p1", "track": "pattern", "title": "いろの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p1"}},
+      {"id": "k4-p2", "track": "pattern", "title": "かたちの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p2"}},
+      {"id": "k4-p3", "track": "pattern", "title": "いろいろな きまり", "count": 10, "gen": {"gen": "pattern", "level": "p3"}},
+      {"id": "k4-m1", "track": "maze", "title": "はじめての めいろ", "count": 5, "gen": {"gen": "maze", "w": 4, "h": 4}},
+      {"id": "k4-m2", "track": "maze", "title": "ちょっと ながい めいろ", "count": 5, "gen": {"gen": "maze", "w": 5, "h": 5}},
+      {"id": "k4-m3", "track": "maze", "title": "おばけ めいろ", "count": 5, "gen": {"gen": "maze", "w": 5, "h": 5, "braid": 1, "ghosts": 1}},
+      {"id": "k4-r1", "track": "rotate", "title": "まわして おなじ", "count": 10, "gen": {"gen": "rotate", "n": 3, "g": 3, "marks": 1}},
+      {"id": "k4-r2", "track": "rotate", "title": "4マスの かたち", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 1}},
+      {"id": "k4-r3", "track": "rotate", "title": "いろが 2つの かたち", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 2}}
+    ],
+    "5": [
+      {"id": "k5-p1", "track": "pattern", "title": "いろと かたちの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p4"}},
+      {"id": "k5-p2", "track": "pattern", "title": "かずの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p5"}},
+      {"id": "k5-p3", "track": "pattern", "title": "ぬけている ところ", "count": 10, "gen": {"gen": "pattern", "level": "p6"}},
+      {"id": "k5-m1", "track": "maze", "title": "わかれみち めいろ", "count": 5, "gen": {"gen": "maze", "w": 6, "h": 6, "braid": 2}},
+      {"id": "k5-m2", "track": "maze", "title": "おばけ よけ めいろ", "count": 5, "gen": {"gen": "maze", "w": 6, "h": 6, "braid": 2, "ghosts": 2}},
+      {"id": "k5-m3", "track": "maze", "title": "ひろい めいろ", "count": 5, "gen": {"gen": "maze", "w": 7, "h": 6, "braid": 3, "ghosts": 2}},
+      {"id": "k5-r1", "track": "rotate", "title": "うらがえしに ちゅうい", "count": 10, "gen": {"gen": "rotate", "n": 4, "g": 3, "marks": 1, "mirror": 1}},
+      {"id": "k5-r2", "track": "rotate", "title": "5マスの かたち", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 1, "mirror": 1}},
+      {"id": "k5-r3", "track": "rotate", "title": "いろも よく みよう", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 2, "mirror": 1}}
+    ],
+    "6": [
+      {"id": "k6-p1", "track": "pattern", "title": "2つの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p7"}},
+      {"id": "k6-p2", "track": "pattern", "title": "むきの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p8"}},
+      {"id": "k6-p3", "track": "pattern", "title": "3つの きまり", "count": 10, "gen": {"gen": "pattern", "level": "p9"}},
+      {"id": "k6-m1", "track": "maze", "title": "ふくざつな めいろ", "count": 5, "gen": {"gen": "maze", "w": 7, "h": 7, "braid": 3, "ghosts": 3}},
+      {"id": "k6-m2", "track": "maze", "title": "かぎの めいろ", "count": 5, "gen": {"gen": "maze", "w": 7, "h": 7, "braid": 3, "ghosts": 2, "key": true}},
+      {"id": "k6-m3", "track": "maze", "title": "だいめいろ", "count": 5, "gen": {"gen": "maze", "w": 8, "h": 8, "braid": 4, "ghosts": 4, "key": true}},
+      {"id": "k6-r1", "track": "rotate", "title": "ひっかけに ちゅうい", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 2, "mirror": 2}},
+      {"id": "k6-r2", "track": "rotate", "title": "なんかい まわす？", "count": 10, "gen": {"gen": "rotate", "n": 5, "g": 4, "marks": 1, "mode": "angle"}},
+      {"id": "k6-r3", "track": "rotate", "title": "あたまの なかで まわそう", "count": 10, "gen": {"gen": "rotate", "n": 6, "g": 4, "marks": 2, "mirror": 1, "mode": "angle"}}
+    ]
+  }
+}

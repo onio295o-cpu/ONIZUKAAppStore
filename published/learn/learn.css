@@ -1,0 +1,207 @@
+/* ===== がくしゅう（プロフィール・5きょうか・さんすう） ===== */
+.ln{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.ln .wrap{height:auto;min-height:100%;gap:12px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+.ln ruby rt{font-size:.5em;font-weight:800;color:var(--ink2);letter-spacing:0}
+.ln h1.title-logo{font-size:clamp(2.2rem,10vw,3.2rem);margin:2vh 0 0}
+.ln .lead{text-align:center;font-size:1.25rem;margin:0}
+.ln input[type=text]{font:inherit;font-size:1.3rem;width:100%;padding:12px 14px;border:var(--line);border-radius:16px;background:#fff;color:var(--ink);user-select:text}
+.ln .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ln .row>.btn{flex:1}
+.ln .label{font-size:1rem;color:var(--ink2);margin:6px 0 2px}
+
+/* プロフィールの アイコン */
+.lav{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:var(--s,72px);height:var(--s,72px);border-radius:50%;border:4px solid var(--ink);background:var(--bgc,#ffe08a);font-size:calc(var(--s,72px)*.55);overflow:hidden;line-height:1}
+.lav.sq{border-radius:18px}
+.lav img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* プロフィール いちらん */
+.lp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+.lp-card{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 8px 12px;background:#fff;border:var(--line);border-radius:var(--r);box-shadow:var(--pop);text-align:center}
+.lp-card:active{transform:translateY(4px);box-shadow:0 2px 0 var(--ink)}
+.lp-card .nm{font-size:1.2rem;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lp-card .sub{font-size:.85rem;color:var(--ink2);font-weight:800}
+.lp-card .ed{position:absolute;top:6px;right:6px;width:40px;height:40px;border-radius:50%;background:var(--paper2);border:3px solid var(--ink);font-size:1rem}
+.lp-card.add{background:var(--paper2);justify-content:center;font-size:1.1rem;min-height:150px}
+.lp-card.add .plus{font-size:2.6rem}
+
+/* プロフィール へんしゅう */
+.le-icons{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.le-icons button{aspect-ratio:1;border-radius:50%;border:3px solid var(--ink);background:#fff;font-size:1.7rem;display:flex;align-items:center;justify-content:center}
+.le-icons button.on{background:var(--yellow);box-shadow:0 0 0 4px var(--orange)}
+.le-ages{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.le-ages .btn{min-height:60px;font-size:1.3rem;background:#fff}
+.le-ages .btn.on{background:var(--yellow)}
+.le-crop{display:flex;flex-direction:column;align-items:center;gap:10px}
+.le-crop canvas{width:240px;height:240px;border:var(--line);border-radius:50%;touch-action:none;background:#eee;cursor:grab}
+.le-crop canvas.sq{border-radius:18px}
+.le-crop input[type=range]{width:240px;accent-color:var(--orange)}
+
+/* がくしゅう ホーム */
+.lh-top{display:flex;align-items:center;gap:10px}
+.lh-top .who{flex:1;min-width:0}
+.lh-top .who b{display:block;font-size:1.25rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lh-top .who span{font-size:.9rem;color:var(--ink2)}
+.lh-ages{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lh-ages button{min-height:52px;border:3px solid var(--ink);border-radius:16px;background:#fff;font-size:1.15rem;box-shadow:0 4px 0 var(--ink)}
+.lh-ages button.on{background:var(--orange);color:#fff}
+.lh-subj{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.lh-subj .btn{flex-direction:column;gap:2px;min-height:118px;font-size:1.45rem;background:var(--c,#fff);position:relative;line-height:1.15}
+.lh-subj .btn .ic{font-size:2.3rem}
+.lh-subj .btn.off{background:#ece6dc;color:var(--ink2)}
+.lh-subj .btn .soon{position:absolute;top:-10px;right:-6px;background:var(--ink);color:#fff;font-size:.78rem;padding:3px 9px;border-radius:99px;transform:rotate(6deg)}
+.lh-subj .btn:last-child:nth-child(odd){grid-column:1/-1}
+.lh-stat{display:flex;justify-content:space-around;padding:10px;font-size:1rem;text-align:center}
+.lh-stat b{display:block;font-size:1.5rem}
+
+/* ステージ いちらん */
+.ls-list{display:flex;flex-direction:column;gap:12px}
+.ls-list .btn{justify-content:flex-start;text-align:left;min-height:78px;font-size:1.2rem;background:#fff;padding:10px 14px}
+.ls-list .btn .no{width:44px;height:44px;border-radius:50%;background:var(--yellow);border:3px solid var(--ink);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ls-list .btn .tt{flex:1}
+.ls-list .btn .st{font-size:1.15rem;letter-spacing:1px;white-space:nowrap}
+.ls-list .btn.lock{background:#ece6dc;color:#9a8f84}
+.ls-list .btn.weak{background:#ffe0e6}
+
+/* もんだい */
+#lplay .wrap{gap:10px}
+.lq-bar{display:flex;gap:8px}
+.lq-bar .btn{flex:1;min-height:50px;font-size:1rem;padding:4px 6px}
+.lq-bar .btn.on{background:var(--green);color:#fff}
+.lq-panel{padding:14px 12px;text-align:center}
+.lq-text{font-size:clamp(1.3rem,6vw,1.7rem);line-height:1.6;min-height:2.6em}
+.lq-vis{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:150px;margin-top:6px}
+.lq-ans{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:12px}
+.lq-ans .btn{font-size:clamp(1.8rem,9vw,2.6rem);min-height:90px;padding:0;background:#fff}
+.lq-ans .btn.ok{background:var(--green);color:#fff}
+.lq-ans .btn.ng{background:#d8d2c8;color:#9a8f84;animation:shake .35s}
+.lq-ans.txt .btn{font-size:clamp(1.3rem,6vw,1.7rem)}
+.lq-go{min-height:64px}
+.lq-fb{padding:14px;text-align:center;font-size:1.25rem;line-height:1.6}
+.lq-fb .big{font-size:1.9rem;color:var(--green2)}
+.lq-fb .big.no{color:var(--red2)}
+.lq-fb .ex{margin:6px 0 10px}
+
+/* 5この まとまり（よこ 5マス） */
+.dots{display:flex;flex-direction:column;gap:6px;padding:8px 10px;background:#fff;border:3px solid var(--ink);border-radius:16px}
+.dots .r{display:grid;grid-template-columns:repeat(5,var(--d,42px));gap:6px;padding:2px;border-radius:12px;transition:background .2s}
+.dots .r.g10{margin-top:8px}
+.dots .r.hl{background:#fff1b8}
+.dot{position:relative;width:var(--d,42px);height:var(--d,42px);border-radius:50%;border:3px dashed #c9bfb2;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1rem;color:#fff}
+.dot.on{border:3px solid var(--ink)}
+.dot.c1{background:var(--orange)}.dot.c2{background:var(--blue)}.dot.c3{background:var(--green)}
+.dot.q{border:3px dashed var(--blue);background:#e8f4ff;color:var(--blue2)}
+.dot.q::after{content:"?";font-size:1.2rem}
+.dot.x{background:#d8d2c8!important;border-color:#9a8f84}
+.dot.x::after{content:"×";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.9rem;color:var(--red2)}
+.dot.tp{cursor:pointer}
+.dot.pop{animation:dotpop .35s cubic-bezier(.3,1.8,.5,1)}
+@keyframes dotpop{0%{transform:scale(.2)}100%{transform:none}}
+.dot b{position:relative;z-index:1;font-size:1rem;text-shadow:0 1px 0 rgba(0,0,0,.4)}
+.lq-plus{display:flex;align-items:center;gap:8px;font-size:1.6rem}
+.lq-plus .mini{display:flex;gap:4px;flex-wrap:wrap;max-width:240px}
+.lq-plus .mini i{width:26px;height:26px;border-radius:50%;border:3px solid var(--ink);background:var(--blue)}
+.lq-cmp{display:flex;gap:10px;width:100%;justify-content:center}
+.lq-cmp button{flex:1;max-width:220px;border:var(--line);border-radius:18px;background:#fff;padding:8px;box-shadow:var(--pop)}
+.lq-cmp button .dots{--d:24px;border:none;padding:4px;gap:4px}
+.lq-cmp button .dots .r{gap:4px}
+.lq-cmp button.ok{background:#d8f7e2}
+.lq-cmp button.ng{background:#eee;animation:shake .35s}
+.lq-eq{font-size:clamp(2rem,10vw,2.8rem);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+.lq-eq .bx{display:inline-block;min-width:1.4em;border:4px dashed var(--orange);border-radius:12px;color:var(--orange);padding:0 6px}
+.lq-seq{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.lq-seq span{min-width:62px;height:62px;border:3px solid var(--ink);border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.lq-seq span.qq{border:4px dashed var(--orange);color:var(--orange)}
+.lq-seq em{font-style:normal;font-size:.9rem;color:var(--blue2)}
+.lq-order{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.lq-order .btn{min-width:70px;min-height:70px;font-size:2rem;padding:0 10px;background:#fff}
+.lq-order .btn.used{visibility:hidden}
+.lq-slots{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.lq-slots span{min-width:56px;height:56px;border:3px dashed #c9bfb2;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:#fff}
+.lq-slots span.f{border:3px solid var(--ink);background:#d8f7e2}
+.lq-coins{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+.coin{border-radius:50%;border:3px solid rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:.95rem;font-weight:800;color:#3b2a1e;position:relative;box-shadow:inset 0 -4px 0 rgba(0,0,0,.12)}
+.coin.hole::before{content:"";position:absolute;width:22%;height:22%;border-radius:50%;background:#fff;border:2px solid rgba(0,0,0,.3);top:12%}
+.coin span{position:relative;top:12%}
+.coin.v1{width:52px;height:52px;background:#e6e6e6}.coin.v5{width:58px;height:58px;background:#e8c35a}.coin.v10{width:62px;height:62px;background:#c98a52}
+.coin.v50{width:58px;height:58px;background:#d6d6d6}.coin.v100{width:66px;height:66px;background:#cfcfcf}
+.coin.tag::after{content:attr(data-v);position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.85rem;color:var(--blue2);white-space:nowrap}
+.lq-pics{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;font-size:2rem;max-width:330px;line-height:1.1}
+.lq-pics i{font-style:normal;transition:opacity .3s,filter .3s}
+.lq-pics i.add{filter:drop-shadow(0 0 4px var(--blue))}
+.lq-pics i.gone{opacity:.25;filter:grayscale(1)}
+.lq-pics .sep{width:100%;height:0}
+.lclock{width:200px;height:200px}
+.lclock .hh{stroke:var(--red);stroke-width:9;stroke-linecap:round}
+.lclock .mh{stroke:var(--blue2);stroke-width:6;stroke-linecap:round}
+.lclock.hl .hh{stroke:#ff2b4a;filter:drop-shadow(0 0 6px #ff2b4a)}
+
+/* けっか */
+.lr-stars{font-size:3.2rem;letter-spacing:6px}
+.lr-stars span{opacity:.25;filter:grayscale(1)}
+.lr-stars span.on{opacity:1;filter:none}
+.ltoast{position:fixed;left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:60;background:var(--ink);color:#fff;padding:12px 20px;border-radius:99px;font-size:1.1rem;max-width:calc(100% - 32px);text-align:center;pointer-events:none;animation:ltoast 2.4s forwards}
+@keyframes ltoast{0%{opacity:0;transform:translate(-50%,20px)}10%,85%{opacity:1;transform:translate(-50%,0)}100%{opacity:0}}
+@media (max-width:360px){.dots .r{grid-template-columns:repeat(5,36px)}.dot{width:36px;height:36px}}
+/* もんだい画面の ヘッダー（スマホ はばで はみださない） */
+#lplay .hdr{gap:6px}
+#lplay .hdr .btn.ghost{padding:6px 10px}
+#lplay .hdr .coins{min-width:0;padding:2px 8px;white-space:nowrap}
+#lplay .prog{flex-wrap:wrap;gap:3px;min-width:0}
+#lplay .prog i{width:12px;height:12px;border-width:2px}
+
+/* ===== しこうりょく ===== */
+.ls-track{font-size:1.15rem;margin:10px 2px 0;color:var(--ink)}
+.ls-list .btn .rs{display:block;font-size:.8rem;color:var(--orange2)}
+/* せんせいキャラ */
+.lq-buddy{position:relative;height:96px;display:flex;align-items:flex-end;gap:6px;margin-bottom:-6px}
+.lq-buddy .lb-stage{position:relative;width:84px;height:100%;flex-shrink:0}
+.lq-buddy .lb-say{position:relative;background:#fff;border:3px solid var(--ink);border-radius:16px;padding:6px 10px;font-size:.95rem;line-height:1.45;box-shadow:0 3px 0 var(--ink);max-width:calc(100% - 96px);margin-bottom:22px;animation:hgSay .25s cubic-bezier(.2,1.8,.4,1) both}
+.lq-buddy .lb-say::before{content:"";position:absolute;left:-12px;bottom:10px;border:7px solid transparent;border-right-color:var(--ink)}
+.lq-buddy .lb-say ruby rt{font-size:.55em}
+/* きそく パズル */
+.pz-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.pz-c{width:52px;height:52px;border:3px solid var(--ink);border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:1.8rem;color:var(--orange);transition:background .25s,box-shadow .25s}
+.pz-c.q{border:4px dashed var(--orange)}
+.pz-c.hl{box-shadow:0 0 0 4px var(--yellow)}
+.pz-c.g0{background:#fff1b8}.pz-c.g1{background:#d8f0ff}
+.pz-c.ans{box-shadow:0 0 0 4px var(--green)}
+.pz-c svg,.lq-pick svg.pzi{width:84%;height:84%}
+.lq-pick{display:grid;grid-template-columns:repeat(var(--n,3),1fr);gap:10px}
+.lq-pick .btn{min-height:86px;padding:6px;background:#fff}
+.lq-pick .btn svg{width:62px;height:62px;max-width:100%}
+.lq-pick .btn.ok{background:#c8f0c0}
+.lq-pick .btn.ng{background:#e5ded3;opacity:.6;animation:shake .35s}
+/* かたち まわし */
+.pz-base{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}
+.pz-rot{width:118px;height:118px;transition:transform .6s cubic-bezier(.3,1.3,.5,1);display:flex}
+.pz-rot svg{width:100%;height:100%}
+.pz-rot.hl{filter:drop-shadow(0 0 8px var(--yellow))}
+.pz-turns{font-size:2.2rem;color:var(--blue2)}
+.pz-spin{min-height:56px!important;font-size:1.1rem!important}
+/* めいろ */
+.mz{position:relative;display:grid;border:4px solid var(--ink);border-radius:10px;background:#fffdf4;touch-action:none;user-select:none}
+.mz-c{width:var(--cs);height:var(--cs);border:0 solid var(--ink);box-sizing:border-box;display:flex;align-items:center;justify-content:center;transition:background .3s}
+.mz-c.glow{background:#fff1b8;box-shadow:inset 0 0 0 3px var(--yellow)}
+.mz-i{font-size:calc(var(--cs)*.62);line-height:1}
+.mz-me{position:absolute;left:0;top:0;width:var(--cs);height:var(--cs);display:flex;align-items:center;justify-content:center;transition:transform .16s ease-out;z-index:2;pointer-events:none;font-size:calc(var(--cs)*.7)}
+.mz-me img{width:92%;height:92%;object-fit:contain;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.mz-me.bump img{animation:shake .3s}
+.mz-line{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.mz-trail{stroke-dasharray:2000;stroke-dashoffset:2000;animation:mzdraw 2.2s ease-out forwards}
+@keyframes mzdraw{to{stroke-dashoffset:0}}
+.mz-pad{display:grid;grid-template-columns:repeat(3,72px);gap:8px;justify-content:center}
+.mz-pad .btn{min-height:64px;font-size:1.8rem;padding:0;background:#fff}
+.mz-pad .mz-hint{background:var(--paper2)}
+/* せんせい えらび */
+.le-buddy{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.le-buddy button{aspect-ratio:3/4;border:3px solid var(--ink);border-radius:14px;background:#fff;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:.62rem;line-height:1.1;overflow:hidden}
+.le-buddy button img{width:100%;height:78%;object-fit:contain}
+.le-buddy button.on{background:var(--yellow);box-shadow:0 0 0 4px var(--orange)}
+.le-buddy .any{font-size:1.6rem}
+@media (max-width:380px){.lq-pick .btn{min-height:74px}.lq-pick .btn svg{width:52px;height:52px}.mz-pad{grid-template-columns:repeat(3,64px)}}
+/* レイアウト調整（スマホ・タブレット） */
+.lq-bar .btn{white-space:nowrap;font-size:.9rem;padding:4px 4px}
+.mz-pad{grid-template-columns:repeat(3,64px)}
+.mz-pad .btn{min-height:54px}
+@media (max-width:420px){.pz-row{gap:4px}.pz-c{width:40px;height:40px;border-width:2px;border-radius:9px}}
+@media (min-width:700px){.lq-buddy{height:120px}.lq-buddy .lb-stage{width:104px}.pz-c{width:64px;height:64px}.lq-pick .btn svg{width:84px;height:84px}.pz-rot{width:150px;height:150px}}
