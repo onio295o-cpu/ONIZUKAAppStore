@@ -437,7 +437,7 @@ function choicesFor(ans, n, lo = 0, hi = 20){
 function renderInput(ctx, T){
   if(T.input){ T.input(ctx); return; }
   const n = ctx.choices.length, box = document.createElement('div');
-  box.className = 'lq-ans' + (ctx.choices.some(c => String(c).length > 3) ? ' txt' : ''); box.style.setProperty('--n', n > 4 ? 3 : n);
+  box.className = 'lq-ans' + (ctx.choices.some(c => String(c).length > 3) ? ' txt' : ''); box.style.setProperty('--n', n > 4 ? 3 : n === 4 ? 2 : n);   // 4つは 2×2
   ctx.choices.forEach(c => {
     const b = document.createElement('button'); b.className = 'btn'; b.textContent = c; b.dataset.v = c;
     b.onclick = () => submit(ctx, c, b); box.append(b);
@@ -473,14 +473,14 @@ async function submit(ctx, v, btn){
   }catch(e){ if(e !== STOP) console.error(e); }
 }
 function markAnswer(ctx){ ctx.inp.querySelectorAll('.lq-ans .btn, .lq-pick .btn').forEach(b => { if(String(b.dataset.v) === String(ctx.ans)) b.classList.add('ok'); }); }
-function showFb(html){ const f = $('lqFb'); f.innerHTML = html; f.classList.remove('hide'); }
+function showFb(html, cls = ''){ const f = $('lqFb'); f.innerHTML = html; f.className = 'panel lq-fb ' + cls; }
 async function feedback(ctx, ok){
   const first = ok && ctx.tries === 0;
   if(!ctx.recorded) P.streak = first ? (P.streak || 0) + 1 : 0;   // 1かいめで せいかいした かずの れんぞく
   record(ctx, first);
   if(ok) Buddy.say(first ? pickOne(['すごい！', 'やったね！', 'よく かんがえたね！']) : 'できたね！', pickOne(['laugh', 'clap', 'victory']), 2600);
   else Buddy.say('いっしょに たしかめよう', 'point', 2600);
-  showFb(`<div class="big ${ok ? '' : 'no'}">${ok ? (first ? 'せいかい！' : 'できたね！') : `こたえは ${esc(ctx.ansLabel ?? ctx.ans)}`}</div><div class="ex" id="lqEx"></div>`);
+  showFb(`<div class="fq">${ruby(ctx.text || '')}</div><div class="big ${ok ? '' : 'no'}">${ok ? (first ? '⭕ せいかい！' : '⭕ できたね！') : '❌ ざんねん'}</div><div class="fa"><small>こたえ</small> ${ruby(String(ctx.ansLabel ?? ctx.ans))}</div><div class="ex" id="lqEx"></div>`, 'cover');
   const T = TYPES[ctx.q.t];
   await Voice.say(ok ? (first ? 'せいかい！' : 'できたね！') : (ctx.ansSay === '' ? 'いっしょに たしかめよう' : `こたえは ${ctx.ansSay ?? ctx.ansLabel ?? ctx.ans}`));
   const ex = T.explain ? await T.explain(ctx) : ctx.expl;
@@ -515,6 +515,8 @@ const starsFor = c => c >= 9 ? 3 : c >= 7 ? 2 : c >= 5 ? 1 : 0;
 function finishStage(){
   Run.token++;
   const n = P.qs.length, c = P.correct, stars = starsFor(Math.round(c * 10 / n));
+  // ステージ クリア（ほし 1こ いじょう）の ごほうび動画（約40びょう）。おわったら けっかを 出す
+  if(stars >= 1 && !P.rewarded && typeof window.rewardVideo === 'function'){ P.rewarded = true; Voice.stop(); if(window.rewardVideo(() => finishStage())) return; }
   const g = Progress.of(P.pid);
   let unlocked = false; const ni = P.weak ? -1 : nextIndex(P.stages, P.index);
   if(!P.weak){
@@ -849,7 +851,7 @@ Object.assign(TYPES, {
       if(q.en){ const b = document.createElement('button'); b.className = 'btn sub lq-en'; b.textContent = '🔊 English'; b.onclick = () => { tap(); enSay(c, q.en); }; c.vis.append(b); } },
     async intro(c){ if(c.q.en){ await Voice.say(c.q.text); await enSay(c, c.q.en); c.say = ''; } },
     input(c){ const q = c.q, box = document.createElement('div');
-      box.className = 'lq-ans' + (q.cbig ? ' cbig' : ' txt'); box.style.setProperty('--n', c.choices.length > 4 ? 3 : c.choices.length > 2 && !q.cbig && c.choices.some(x => reading(x).length > 5) ? 1 : c.choices.length);
+      box.className = 'lq-ans' + (q.cbig ? ' cbig' : ' txt'); box.style.setProperty('--n', c.choices.length > 4 ? 3 : c.choices.length === 4 || (c.choices.length === 3 && !q.cbig && c.choices.some(x => reading(x).length > 5)) ? 2 : c.choices.length);   // 4つ・ながい 3つは 2れつ
       c.choices.forEach(ch => { const b = document.createElement('button'); b.className = 'btn'; b.innerHTML = ruby(ch); b.dataset.v = ch;
         b.onclick = () => { if(q.enChoices && !c.locked) enSay(c, reading(ch)); submit(c, ch, b); }; box.append(b); });
       c.inp.append(box); },
@@ -917,7 +919,7 @@ function shapeSVG(cells, cls = ''){
   return `<svg viewBox="-0.15 -0.15 ${S + .3} ${S + .3}" class="pzs ${cls}">${cells.map(p => `<rect x="${p.x + ox + .04}" y="${p.y + oy + .04}" width=".92" height=".92" rx=".14" fill="${p.c ? '#ff8a3d' : '#43a6ff'}" stroke="#3b2a1e" stroke-width=".09"/>${p.c ? `<circle cx="${p.x + ox + .5}" cy="${p.y + oy + .5}" r=".17" fill="#fff"/>` : ''}`).join('')}</svg>`;
 }
 function pickButtons(ctx, html){
-  const box = document.createElement('div'); box.className = 'lq-pick'; box.style.setProperty('--n', ctx.q.choices.length);
+  const box = document.createElement('div'); box.className = 'lq-pick'; box.style.setProperty('--n', ctx.q.choices.length === 4 ? 2 : ctx.q.choices.length);
   ctx.q.choices.forEach((c, i) => { const b = document.createElement('button'); b.className = 'btn'; b.dataset.v = i; b.innerHTML = html(c, i); b.onclick = () => submit(ctx, i, b); box.append(b); });
   ctx.inp.append(box); return box;
 }

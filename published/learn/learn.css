@@ -331,3 +331,26 @@
   .s2-slots>span{width:40px;height:40px;font-size:1.5rem}
 }
 @media (prefers-reduced-motion:reduce){.s2-flip,.s2-over{transition:none}.s2-show,.s2-poly .s2-in,.s2-house .who.pop{animation:none}}
+
+/* ===== 1がめんに おさめる（スマホ）：もんだい・こたえ・せつめい ===== */
+#lplay .wrap{gap:8px;padding-top:max(8px,env(safe-area-inset-top))}
+.lq-bar .btn{min-height:40px;font-size:.9rem}
+.lq-panel{padding:10px 10px}
+.lq-text{font-size:clamp(1.15rem,5.2vw,1.5rem);line-height:1.5;min-height:0}
+.lq-vis{min-height:0;margin-top:4px}
+.lq-big{font-size:clamp(3.2rem,18vw,5.5rem)}
+.lq-flag{font-size:clamp(5rem,26vw,7.5rem)}
+.lq-planet .lpl{width:130px;height:130px}
+.lq-ans{gap:10px}
+.lq-ans .btn{min-height:68px;padding:6px 8px;line-height:1.25}
+.lq-ans.txt .btn{font-size:clamp(1.1rem,5vw,1.45rem)}
+/* こたえと せつめいは うえに かさねて 出す */
+.lq-fb.cover{position:fixed;left:50%;bottom:max(12px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(94vw,520px);max-height:86vh;overflow:auto;z-index:12;
+  box-shadow:0 0 0 100vmax rgba(59,42,30,.45),0 6px 0 var(--ink);animation:fbUp .3s cubic-bezier(.2,1.3,.4,1) both}
+@keyframes fbUp{from{transform:translate(-50%,40px);opacity:0}}
+.lq-fb .fq{font-size:1rem;color:var(--ink2);line-height:1.5}
+.lq-fb .fa{font-size:clamp(1.6rem,8vw,2.2rem);margin:2px 0;color:var(--ink)}
+.lq-fb .fa small{font-size:.9rem;background:var(--ink);color:#fff;border-radius:99px;padding:1px 10px;vertical-align:middle;margin-right:6px}
+.lq-fb.cover .big{font-size:1.6rem}
+.lq-fb.cover .ex{font-size:1.1rem;text-align:left;background:#fff;border:3px solid var(--ink);border-radius:14px;padding:8px 12px;margin:8px 0 10px}
+.lq-fb.cover .ex:empty{display:none}

@@ -293,6 +293,7 @@ button{font:inherit;color:inherit;border:none;cursor:pointer;background:none}
 /* ===== ごほうび：4問ごと（ハチャメチャ ショー） ===== */
 .showveil{position:fixed;inset:0;z-index:14;background:radial-gradient(circle,rgba(255,240,180,.35),rgba(59,42,30,.55));display:flex;align-items:flex-end;justify-content:center;padding-bottom:max(20px,env(safe-area-inset-bottom))}
 .showveil .btn{min-height:56px;font-size:1.1rem;background:#fff}
+.showveil{z-index:16;background:none}   /* ショーの 上に スキップを 出す（ショーは がめん いっぱいで 見えなく なるので） */
 .showtitle{left:0;right:0;top:5%;text-align:center;font-size:clamp(1.8rem,9vw,3rem);color:#fff;-webkit-text-stroke:6px var(--ink);paint-order:stroke fill;text-shadow:0 5px 0 var(--ink);animation:titlein .6s cubic-bezier(.3,1.6,.5,1) both}
 @keyframes titlein{from{transform:translateY(-120%) rotate(-8deg)}to{transform:none}}
 .rain{top:-30vh;width:min(26vw,130px);height:min(22vh,170px);left:var(--x);animation:rain var(--t) cubic-bezier(.5,0,.8,1) forwards;animation-delay:var(--d)}
@@ -1947,9 +1948,10 @@ function crew(d, n){
 }
 // 鼻毛劇場：ボーボボの はなげに のび太が からまる／ジャイアンが はなに すいこまれる
 const NG = window.NG_IMAGES || {};
+const HG_K = .66;   // 鼻毛劇場の じかんを ちぢめる（だいたい 5びょう）
 function hanage(kind){
   if(!window.BoboboAnimator || !window.CutoutActor) return false;
-  const D = kind === 'g' ? 7800 : 6600, isG = kind === 'g';
+  const D = (kind === 'g' ? 7800 : 6600) * HG_K, isG = kind === 'g';
   const d = fxAdd('hg', `<div class="hg-grid"></div><div class="hg-cam"><div class="hg-bb"></div><div class="hg-t in"><div class="cw"></div></div><canvas class="hg-hair"></canvas></div><div class="hg-speed"></div>
     <div class="hg-hud"><div>ボーボボ<div class="hg-hp"><i></i></div></div><span class="hg-vs">VS</span><div class="r">${isG ? 'ジャイアン' : 'のび太'}<div class="hg-hp"><i class="hp2"></i></div></div></div><div class="hg-combo"></div><div class="hg-scan"></div>`, D);
   const cam = d.querySelector('.hg-cam'), host = d.querySelector('.hg-bb'), tg = d.querySelector('.hg-t'), cw = tg.querySelector('.cw'), cv = d.querySelector('.hg-hair');
@@ -1990,7 +1992,7 @@ function hanage(kind){
       drawNoseHair(x, nx + (i % 2 ? 3 : -3), ny, ex, ey, {n:3, t:now + i * 120, w:7, sway:22 + i * 2, seed:i + 1, spread:5});
     }
   })(performance.now());
-  const T = (ms, fn) => setTimeout(() => d.isConnected && fn(), ms);
+  const T = (ms, fn) => setTimeout(() => d.isConnected && fn(), ms * HG_K);
   big('ROUND 1'); sfx('fanfare');
   T(800, () => { big('FIGHT!'); sfx('crit'); glitch(); });
   if(isG){
@@ -2001,7 +2003,7 @@ function hanage(kind){
     T(3250, () => { say('b', 'いただきまーす！', true); });
     T(3500, () => { tg.classList.remove('shake', 'spin', 'in'); tg.style.transition = 'none'; tg.style.transformOrigin = '50% 50%'; d.classList.add('speed');
       hair.anchor = .5; fxw('ズボボボボ！', 'right:4%;top:24%'); sfx('boing'); hit(30); hp(20);
-      suck = {t0:performance.now(), dur:1500, x0:tg.offsetLeft + tg.offsetWidth / 2, y0:tg.offsetTop + tg.offsetHeight / 2,
+      suck = {t0:performance.now(), dur:1500 * HG_K, x0:tg.offsetLeft + tg.offsetWidth / 2, y0:tg.offsetTop + tg.offsetHeight / 2,
         onDone:(nx, ny) => { hair.out = performance.now(); d.classList.remove('speed'); const g = document.createElement('div'); g.className = 'hg-gulp'; g.style.cssText = `left:${nx}px;top:${ny}px`; cam.append(g); setTimeout(() => g.remove(), 900); big('ごっくん！'); sfx('pop'); }};
     });
     T(5700, () => say('b', '……ちょっと しょっぱい。'));
@@ -2156,15 +2158,12 @@ function bigShow(done){
   showDone = done; setSlow(1.8);
   $('showveil').classList.remove('hide');
   // ショーは 毎回 ランダム（鼻毛劇場はボーボボ、ほかは いろんなキャラ）。つづけて 同じのは 出さない
-  const kind = pick(['hg-g', 'hg-n', 'crew', 'mix', 'whip', 'dora', 'sheet', 'sheet', 'baseball', 'baseball'].filter(k => k !== SHOW_MEM.lastShow || k === 'sheet')); SHOW_MEM.lastShow = kind;
-  if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, kind === 'hg-g' ? 7800 : 6700)); return; }
+  const kind = pick(['hg-g', 'hg-n', 'gag', 'gag', 'gag', 'gag', 'gag', 'gag'].filter(k => k !== SHOW_MEM.lastShow || k === 'gag')); SHOW_MEM.lastShow = kind;   // くるりん系の ショーは ぬいた
+  if(kind.startsWith('hg') && hanage(kind.slice(3))){ showTimers.push(setTimeout(endShow, (kind === 'hg-g' ? 7800 : 6700) * HG_K)); return; }
+  if(window.playGag){ const d = fxAdd('gg-host', '', 9000, 'inset:0;pointer-events:none'); playGag(d, endShow); showTimers.push(setTimeout(endShow, 8000)); return; }
   if(kind === 'whip' && whipShow()){ showTimers.push(setTimeout(endShow, 6300)); return; }
   if(kind === 'dora' && doraShow()){ showTimers.push(setTimeout(endShow, 7000)); return; }
   // やきゅう → サッカー → ボーボボの 鼻毛で ほけんしつ（約50びょう）。出る キャラが そろって いる ときだけ
-  const SC = window.SHEET_CHARS || {};
-  if(kind === 'baseball' && window.baseballDemo && window.CutoutActor && window.BoboboAnimator && ['chiikawa', 'usagi', 'hachiware', 'chase', 'marshall', 'happy'].every(k => SC[k])){
-    const d = fxAdd('bd-host', '', 70000, 'inset:0;pointer-events:none'); baseballDemo(d, endShow); return;
-  }
   if(kind === 'sheet' && sheetShow()){ showTimers.push(setTimeout(endShow, 9300)); return; }
   fxAdd('showtitle', '', 6200).textContent = pick([t('ハチャメチャ タイム！', 'ハチャメチャ タイム！'), 'へんてこ ショー！', 'おまつり だー！']);
   sfx('fanfare'); document.body.classList.add('shake'); setTimeout(() => document.body.classList.remove('shake'), 1300);
@@ -2172,6 +2171,12 @@ function bigShow(done){
   const keys = shuffle(Object.keys(CRAZY)).slice(0, bb ? 0 : 2);   // 1つずつ じっくり 見せる
   keys.forEach((k, i) => showTimers.push(setTimeout(() => { CRAZY[k](PATTERNS); confetti(24); shock(45); sceneFx('flash'); }, 400 + i * 3200)));
   showTimers.push(setTimeout(endShow, bb ? 6300 : 7000));
+}
+function rewardVideo(done){
+  const SC = window.SHEET_CHARS || {};
+  if(!(window.baseballDemo && window.CutoutActor && window.BoboboAnimator && ['chiikawa', 'usagi', 'hachiware', 'chase', 'marshall', 'happy'].every(k => SC[k]))) return false;
+  showDone = done; $('showveil').classList.remove('hide');
+  const d = fxAdd('bd-host', '', 60000, 'inset:0;pointer-events:none'); baseballDemo(d, endShow); return true;
 }
 function endShow(){
   showTimers.forEach(clearTimeout); showTimers = []; bbStop(); setSlow(1);
@@ -2186,7 +2191,7 @@ function finalReward(){
   const after = () => { if(S && S.id === id) result(); };
   word(S.firstOk >= TOTAL ? t('ぜんぶ せいかい！', '全問 正解！') : t('12もん クリア！', '12問 クリア！')); sfx('win'); confetti(40);
   setTimeout(() => {
-    if(S && S.id === id && playStory(after)) return;
+    if(S && S.id === id && (rewardVideo(after) || playStory(after))) return;
     fireworks(15000); showDone = after; setSlow(1.8); $('showveil').classList.remove('hide');
     const keys = shuffle(Object.keys(CRAZY));
     const bb = bobobo('hyper', 6300);
@@ -2302,6 +2307,7 @@ show('home');
 <script src="learn/puzzles2.js"></script>
 <script src="learn/shikou2.js"></script>
 <script src="demo/baseball.js"></script>
+<script src="demo/gags.js"></script>
 
 
 

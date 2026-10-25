@@ -55,7 +55,8 @@
     const cv = document.createElement('canvas'); cv.className = 'bd-hair'; S.append(cv);
     let alive = true; const run = { stop(){ alive = false; actors.forEach(a => { try{ a.destroy(); }catch(e){} }); S.remove(); } };
     const actors = [], W = () => S.clientWidth, H = () => S.clientHeight;
-    const wait = async ms => { await sleep(ms); if(!alive || !S.isConnected) throw 'stop'; };
+    const TS = .76;   // ぜんたいを 約40びょうに
+    const wait = async ms => { await sleep(ms * TS); if(!alive || !S.isConnected) throw 'stop'; };
     const SND = typeof sfx === 'function' ? sfx : () => {};
     // 声：キャラごとに 高さを かえて よむ（よみあげ オフなら だまって すすむ）
     const VOICE = {nobita:[1.35, 1.05], gian:[.55, .9], ref:[1.6, 1.05], bobo:[.45, .85], chii:[1.9, 1.1], chase:[1.2, 1.05]};
@@ -75,7 +76,7 @@
     }
     // うごかす（ゆっくり）：x・b・r（回転）を ms かけて
     function move(el, to, ms, fn = ease){
-      const f = {x:el.x, b:el.b, r:el.r || 0}, t0 = performance.now();
+      ms *= TS; const f = {x:el.x, b:el.b, r:el.r || 0}, t0 = performance.now();
       return new Promise(res => { (function step(now){ if(!alive) return res(); const u = Math.min(1, (now - t0) / ms), e = fn(u);
         for(const k of ['x', 'b', 'r']) if(to[k] != null) el[k] = f[k] + (to[k] - f[k]) * e;
         if(to.arc) el.style.marginBottom = (Math.sin(u * Math.PI) * to.arc) + '%';
@@ -92,7 +93,7 @@
     // ボール：x・b（%）を ベジェで とばす
     const ball = document.createElement('div'); ball.className = 'bd-ball'; ball.innerHTML = BALL_B; ball.style.display = 'none'; S.append(ball);
     function fly(from, to, peak, ms, spin = 900){
-      ball.style.display = ''; const t0 = performance.now();
+      ms *= TS; ball.style.display = ''; const t0 = performance.now();
       return new Promise(res => { (function step(now){ if(!alive) return res(); const u = Math.min(1, (now - t0) / ms);
         const x = from[0] + (to[0] - from[0]) * u, b = from[1] + (to[1] - from[1]) * u + Math.sin(u * Math.PI) * peak;
         ball.style.left = x + '%'; ball.style.bottom = b + '%'; ball.style.rotate = (u * spin) + 'deg';
