@@ -55,7 +55,7 @@
     const cv = document.createElement('canvas'); cv.className = 'bd-hair'; S.append(cv);
     let alive = true; const run = { stop(){ alive = false; actors.forEach(a => { try{ a.destroy(); }catch(e){} }); S.remove(); } };
     const actors = [], W = () => S.clientWidth, H = () => S.clientHeight;
-    const wait = async ms => { await sleep(ms); if(!alive) throw 'stop'; };
+    const wait = async ms => { await sleep(ms); if(!alive || !S.isConnected) throw 'stop'; };
     const SND = typeof sfx === 'function' ? sfx : () => {};
     // 声：キャラごとに 高さを かえて よむ（よみあげ オフなら だまって すすむ）
     const VOICE = {nobita:[1.35, 1.05], gian:[.55, .9], ref:[1.6, 1.05], bobo:[.45, .85], chii:[1.9, 1.1], chase:[1.2, 1.05]};
@@ -116,7 +116,7 @@
         await wait(2400); say(chase, 'いくよ！ それっ！'); talk('chase', 'いくよ！ それっ！'); chase.pose('jump');
         await wait(1100); chase.pose('point'); SND('whoosh2');
         await fly([58, 38], [36, 16], 6, 1300);   // ゆっくり ピッチング
-        nob.pose('ガッツポーズ'); bat.style.rotate = '40deg'; SND('hit'); pop('カキーン！', 40, 46);
+        nob.pose('驚き'); bat.style.rotate = '40deg'; SND('hit'); pop('カキーン！', 40, 46);
         // ボールは たかく あがって … ジャイアンの あたまへ
         await fly([36, 16], [84, 27], 40, 2200, 1600);
         SND('crash'); pop('ゴツン！', 76, 40); gian.pose('びっくり');
@@ -170,8 +170,10 @@
           const dpr = Math.min(2, devicePixelRatio || 1); if(cv.width !== Math.round(W() * dpr)){ cv.width = Math.round(W() * dpr); cv.height = Math.round(H() * dpr); }
           x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W(), H());
           const np = bb.nosePoint && bb.nosePoint(); if(!np) return;
-          const sx = bbEl.offsetLeft + np.x, sy = bbEl.offsetTop + np.y;
-          const tx = nob.offsetLeft + nob.offsetWidth / 2, ty = nob.offsetTop + nob.offsetHeight * .55, k = Math.min(1, (now - hair.t0) / 600);
+          // translate（中央よせ）や 回転も ふくめた 本当の 位置で 計算する
+          const R = S.getBoundingClientRect(), cvs = bbEl.querySelector('canvas'), bR = (cvs || bbEl).getBoundingClientRect(), nR = nob.getBoundingClientRect();
+          const sx = bR.left - R.left + np.x, sy = bR.top - R.top + np.y;
+          const tx = nR.left - R.left + nR.width / 2, ty = nR.top - R.top + nR.height * .5, k = Math.min(1, (now - hair.t0) / 600);
           for(let i = 0; i < 6; i++) global.drawNoseHair && drawNoseHair(x, sx, sy, sx + (tx - sx) * k + (i - 3) * 6, sy + (ty - sy) * k + Math.sin(i * 1.7) * 10, {n:3, t:now + i * 120, w:7, sway:18, seed:i + 1, spread:5});
         })(performance.now());
         await wait(800); st2.remove(); nob.classList.add('bd-wrap'); SND('hit'); pop('シュルルル！', 56, 36); nob.pose('驚き');
@@ -190,7 +192,7 @@
         bb.play('victory'); say(bbEl, 'しんぱい いらない。\nかならず げんきに なる！', 2800); talk('bobo', 'しんぱい いらない。かならず げんきに なる！');
         await wait(3000);
         // ---------- 5. おしまい：のび太 げんきに なって でてくる ----------
-        nob.style.opacity = 1; nob.style.scale = '1'; nob.r = 0; nob.style.rotate = '0deg'; put(nob, 77, 5, 24, nob.style.aspectRatio); nob.pose('ばんざい');
+        nob.style.opacity = 1; nob.style.scale = '1'; nob.r = 0; nob.style.rotate = '0deg'; put(nob, 77, 5, 24, nob.style.aspectRatio); nob.pose('くすくす笑い'); move(nob, {arc:8}, 700);
         say(nob, 'なおったー！\nみんな ありがとう！', 2800); talk('nobita', 'なおったー！ みんな ありがとう！'); SND('win');
         ref.pose('victory'); chii.pose('victory'); usa.pose('dance'); hachi.pose('clap'); chase.pose('victory'); gian.pose('大笑い');
         cap('🎉 おしまい');
