@@ -313,6 +313,7 @@ const prevIndex = (stages, i) => { const tr = stages[i].track; if(!tr) return i 
 const nextIndex = (stages, i) => { const tr = stages[i].track; for(let j = i + 1; j < stages.length; j++) if(!tr || stages[j].track === tr) return j; return -1; };
 const resumeKey = (sid, age, stid) => `${sid}:${age}:${stid}`;
 function isOpen(g, sid, age, stages, i){
+  return true;   // ぜんぶの ステージを いつでも あそべる（じゅんばんに あける しくみは つかわない）
   const j = prevIndex(stages, i), rec = Progress.stage(g, sid, age, stages[i].id);
   if(j < 0 || (rec && rec.plays > 0)) return true;
   const prev = Progress.stage(g, sid, age, stages[j].id); return !!(prev && prev.stars >= 1);
@@ -523,14 +524,14 @@ function finishStage(){
     const sa = Progress.subj(g, P.subject.id).ages[P.age] || (Progress.subj(g, P.subject.id).ages[P.age] = {stages:{}});
     const old = sa.stages[P.stage.id] || {stars:0, best:0, plays:0};
     sa.stages[P.stage.id] = {stars:Math.max(old.stars, stars), best:Math.max(old.best, c), plays:old.plays + 1, last:c, n, at:Date.now()};
-    unlocked = stars >= 1 && old.stars < 1 && ni >= 0;
+    unlocked = false;   // ぜんぶ あいているので「あいたよ」は 出さない
     if(g.resume) delete g.resume[P.rk];
     Progress.put(P.pid, g);
   }
   $('lqProg').innerHTML = P.qs.map(() => '<i class="done"></i>').join('');
   $('lqText').innerHTML = ''; $('lqVis').innerHTML = ''; $('lqIn').innerHTML = '';
   const msg = stars === 3 ? 'すごい！ ほしが 3こ！' : stars === 2 ? 'よく できました！ ほしが 2こ' : stars === 1 ? 'がんばったね！ ほしが 1こ' : 'もういちど ちょうせん してみよう';
-  const hasNext = ni >= 0 && (stars >= 1 || (Progress.stage(g, P.subject.id, P.age, P.stages[ni].id) || {}).plays);
+  const hasNext = ni >= 0;
   showFb(`<div class="big">${P.weak ? 'にがて れんしゅう おしまい' : 'ステージ クリア'}</div>
     <div class="lr-stars">${[1, 2, 3].map(k => `<span class="${k <= stars ? 'on' : ''}">⭐</span>`).join('')}</div>
     <div class="ex">${n}もん ちゅう ${c}もん せいかい<br>${msg}${unlocked ? '<br>🔓 つぎの ステージが あそべるように なったよ' : ''}</div>
