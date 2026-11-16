@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>名古屋バス 時刻表</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <style>
@@ -909,6 +908,28 @@
   #map .leaflet-control-zoom a { color: var(--navy); font-family: var(--font-body); }
   .map-msg { border: 2px solid var(--border); font-weight: 700; }
 
+  /* ---------- on-demand route map ---------- */
+  .map-card { padding: 12px; }
+  .map-open-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 16px;
+    border: 2px solid var(--border);
+    background: var(--bg);
+    color: var(--dep-dark);
+    font-family: var(--font-body);
+    font-size: 15px;
+    font-weight: 800;
+    box-shadow: 0 3px 0 var(--border);
+    cursor: pointer;
+  }
+  .map-open-btn:active { transform: translateY(2px); box-shadow: none; }
+  #mapPanel { margin-top: 12px; }
+  #mapPanel[hidden] { display: none; }
+  #mapPanel:not([hidden]) { animation: viewIn .25s ease-out; }
+  .map-loading { font-size: 13px; color: var(--text-dim); padding: 8px 2px; }
+  .map-loading[hidden] { display: none; }
+
   /* ---------- motion ---------- */
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
@@ -999,9 +1020,13 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="card-title" id="mapTitle">バス停の場所・ルート</div>
-  <div id="map"></div>
+<div class="card map-card">
+  <button type="button" class="map-open-btn" id="mapToggle" aria-expanded="false">🗺 地図でルートを見る</button>
+  <div id="mapPanel" hidden>
+    <div class="card-title" id="mapTitle">バス停の場所・ルート</div>
+    <div class="map-loading" id="mapLoading">地図を読み込み中…</div>
+    <div id="map"></div>
+  </div>
 </div>
 
 <div class="footer-note" id="source">出典: 名古屋市交通局 市バスGTFS-JPデータ</div>
@@ -1086,7 +1111,6 @@
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 let IDX = null;       // data/index.json
 let PATTERNS = null;  // data/patterns.json
@@ -1260,6 +1284,57 @@ function addBaseTiles(target, i = 0) {
   layer.addTo(target);
 }
 
+// Leaflet is only fetched the first time a map is opened, so ルート検索 starts fast
+const LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/";
+let leafletPromise = null;
+function ensureLeaflet() {
+  if (window.L) return Promise.resolve();
+  if (!leafletPromise) {
+    leafletPromise = new Promise((resolve, reject) => {
+      const css = document.createElement("link");
+      css.rel = "stylesheet";
+      css.href = LEAFLET + "leaflet.min.css";
+      // before our own styles, so ours still win on equal specificity
+      document.head.insertBefore(css, document.head.querySelector("style"));
+      const js = document.createElement("script");
+      js.src = LEAFLET + "leaflet.min.js";
+      js.onload = () => resolve();
+      js.onerror = () => { leafletPromise = null; css.remove(); js.remove(); reject(new Error("地図を読み込めませんでした")); };
+      document.head.appendChild(js);
+    });
+  }
+  return leafletPromise;
+}
+
+let mapOpen = false;  // the ルート検索 map is closed until asked for
+let lastMapDep = null; // the departure the map should show once it is open
+
+async function toggleRouteMap() {
+  const btn = document.getElementById("mapToggle");
+  const panel = document.getElementById("mapPanel");
+  mapOpen = !mapOpen;
+  btn.setAttribute("aria-expanded", String(mapOpen));
+  btn.textContent = mapOpen ? "🗺 地図を閉じる" : "🗺 地図でルートを見る";
+  panel.hidden = !mapOpen;
+  if (!mapOpen) return;
+  const loading = document.getElementById("mapLoading");
+  loading.hidden = false;
+  loading.textContent = "地図を読み込み中…";
+  try {
+    await ensureLeaflet();
+  } catch (e) {
+    loading.textContent = "地図を読み込めませんでした。通信状況を確認して、もう一度開いてください。";
+    return;
+  }
+  if (!mapOpen) return;
+  loading.hidden = true;
+  lastViewKey = null; // centre and draw the route afresh each time the map opens
+  renderMap(lastMapDep);
+  map.invalidateSize();
+  // road shapes arrive a moment later; redraw once they do (keeping the view)
+  if (!LEGS) loadLegs().then(() => { if (mapOpen) renderMap(lastMapDep); });
+}
+
 // two-line map label: time on top, stop name underneath
 function twoLine(top, bottom) {
   const el = document.createElement("div");
@@ -1350,6 +1425,8 @@ function syncMidLabels() {
 }
 
 function renderMap(dep) {
+  lastMapDep = dep;
+  if (!mapOpen || !window.L) return; // the map is opened on demand
   if (!map) {
     map = L.map("map", { zoomControl: false, attributionControl: true, zoomSnap: 0.25 });
     L.control.zoom({ position: "topright", zoomInTitle: "拡大", zoomOutTitle: "縮小" }).addTo(map);
@@ -2197,11 +2274,16 @@ function showView(view) {
   }
   try { history.replaceState(null, "", view === "route" ? location.pathname : `#${view}`); } catch (e) {}
   if (view === "map") {
-    initStopMap();
-    stopMap.invalidateSize();
+    if (!window.L) mapMessage("地図を読み込み中…");
+    ensureLeaflet().then(() => {
+      if (currentView !== "map") return;
+      if (!stopMap) mapMessage("");
+      initStopMap();
+      stopMap.invalidateSize();
+    }).catch(() => mapMessage("地図を読み込めませんでした。通信状況を確認してください。"));
   } else if (view === "stops") {
     buildStopsView();
-  } else if (map) {
+  } else if (map && mapOpen) {
     map.invalidateSize();
   }
   window.scrollTo(0, 0);
@@ -2253,7 +2335,7 @@ function init([index, patterns]) {
   render();
   setInterval(render, 15000);
   initTabs();
-  loadLegs().then(() => render());
+  document.getElementById("mapToggle").onclick = toggleRouteMap;
 
   document.getElementById("nextCard").onclick = openDetail;
   document.getElementById("detailBtn").onclick = (e) => { e.stopPropagation(); openDetail(); };
